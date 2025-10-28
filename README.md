@@ -134,23 +134,21 @@ We welcome contributions from the community! If you'd like to contribute:
 4. Submit a pull request
 5. Ensure all tests pass and code follows project standards
 
-For major changes, please open an issue first to discuss what you would like to change.
-
 ### License
 
 This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
 
 #### What this means:
-- ✅ **Free for personal, educational, and non-commercial use**
-- ✅ **You can modify and share** under the same license
-- ✅ **Attribution required** - credit must be given to RailNet Project and Team error2k21
-- ⚠️ **Commercial use requires permission** - contact us for commercial licensing
+- **Free for personal, educational, and non-commercial use**
+- **You can modify and share** under the same license
+- **Attribution required** - credit must be given to RailNet Project and Team error2k21
+- **Commercial use requires permission** - contact us for commercial licensing
 
 #### Commercial Use
 If you plan to use RailNet for commercial purposes (selling, deploying in a commercial product, or using in a commercial service), you **MUST**:
 
 1. **Contact us for commercial licensing**
-   - Email: error2k21.team@gmail.com
+   - Email: aammojahid@gmail.com
    - GitHub: https://github.com/mojahid2021/RailNet
 
 2. **Provide attribution and credit** to Team error2k21
@@ -172,5 +170,3 @@ See the [LICENSE](LICENSE) file for the full legal text.
 
 #### © 2025 RailNet Project — Developed by Team error2k21
 _An open, scalable, and intelligent railway management ecosystem for the next generation of smart transport._
-
-**Contact**: error2k21.team@gmail.com | **Repository**: https://github.com/mojahid2021/RailNet
