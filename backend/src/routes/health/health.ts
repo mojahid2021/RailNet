@@ -1,40 +1,60 @@
-import { FastifyInstance } from 'fastify';
+import { FastifyPluginAsync } from 'fastify';
+import { HealthController } from '../../controllers/health.controller';
+import { HealthService } from '../../services/health.service';
 
 /**
- * Health route
+ * Health route (plugin style)
  * - GET /health
- * - Response: { status: 'ok' | 'fail', uptime: number, timestamp: string }
- *
- * Folderized under `src/routes/health` so each route can grow its own
- * handlers, schemas and tests independently.
+ * - Response: HealthStatus
  */
-const healthRoute = async (server: FastifyInstance) => {
+const healthRoute: FastifyPluginAsync = async (server) => {
+  const healthService = new HealthService();
+  const healthController = new HealthController(healthService);
+
   server.get(
     '/health',
     {
       schema: {
         description: 'Health check endpoint',
+        tags: ['Health'],
         response: {
           200: {
             type: 'object',
             properties: {
-              status: { type: 'string' },
-              uptime: { type: 'number' },
-              timestamp: { type: 'string' }
+              success: { type: 'boolean' },
+              message: { type: 'string' },
+              data: {
+                type: 'object',
+                properties: {
+                  status: { type: 'string' },
+                  uptime: { type: 'number' },
+                  timestamp: { type: 'string' },
+                  environment: { type: 'string' },
+                  database: { type: 'string' },
+                  version: { type: 'string' },
+                },
+              },
+              timestamp: { type: 'string' },
             },
-            required: ['status', 'uptime', 'timestamp']
-          }
-        }
-      }
+          },
+          503: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+              error: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string' },
+                  code: { type: 'string' },
+                },
+              },
+              timestamp: { type: 'string' },
+            },
+          },
+        },
+      },
     },
-    async (request, reply) => {
-      // lightweight health response (suitable for k8s readiness/liveness)
-      return {
-        status: 'ok',
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString()
-      };
-    }
+    (request, reply) => healthController.check(request, reply)
   );
 };
 
