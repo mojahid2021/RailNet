@@ -45,6 +45,7 @@ src/
 ### Local Development with Docker
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/mojahid2021/RailNet.git
    cd RailNet
@@ -52,16 +53,19 @@ src/
    ```
 
 2. **Start services with Docker Compose**
+
    ```bash
    docker-compose up -d
    ```
 
 3. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 4. **Set up the database**
+
    ```bash
    # Generate Prisma client
    npm run db:generate
@@ -71,6 +75,7 @@ src/
    ```
 
 5. **Start development server**
+
    ```bash
    npm run dev
    ```
@@ -80,6 +85,7 @@ The API will be available at `http://localhost:3000`
 ### Manual Setup
 
 1. **Install dependencies**
+
    ```bash
    npm install
    ```
@@ -90,18 +96,21 @@ The API will be available at `http://localhost:3000`
    - Update `.env` with your database credentials
 
 3. **Configure environment**
+
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
 4. **Set up the database**
+
    ```bash
    npm run db:generate
    npm run db:migrate
    ```
 
 5. **Start the server**
+
    ```bash
    npm run dev
    ```
@@ -109,16 +118,19 @@ The API will be available at `http://localhost:3000`
 ## 📖 API Documentation
 
 ### Base URL
+
 ```
 http://localhost:3000/api/v1
 ```
 
 ### Health Check
+
 ```http
 GET /health
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -134,11 +146,13 @@ Response:
 ```
 
 ### Hello World
+
 ```http
 GET /hello
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -205,11 +219,13 @@ npm run test:watch
 ### Docker Deployment
 
 1. **Build the image**
+
    ```bash
    docker build -t railnet-backend .
    ```
 
 2. **Run with Docker Compose**
+
    ```bash
    docker-compose -f docker-compose.prod.yml up -d
    ```

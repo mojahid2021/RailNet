@@ -130,11 +130,13 @@ src/
 ### Manual Setup
 
 1. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 2. **Set up PostgreSQL**
+
    ```sql
    CREATE DATABASE railnet_db;
    CREATE USER railnet_user WITH PASSWORD 'railnet_password';
@@ -142,18 +144,21 @@ src/
    ```
 
 3. **Set up Redis**
+
    ```bash
    # Install Redis and start service
    redis-server
    ```
 
 4. **Configure environment**
+
    ```bash
    cp .env.example .env
    # Update DATABASE_URL and other variables
    ```
 
 5. **Initialize database**
+
    ```bash
    npm run db:generate
    npm run db:migrate
@@ -164,21 +169,25 @@ src/
 ### Daily Development Cycle
 
 1. **Pull latest changes**
+
    ```bash
    git pull origin main
    ```
 
 2. **Create feature branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 3. **Start development server**
+
    ```bash
    npm run dev
    ```
 
 4. **Make changes with TDD approach**
+
    ```bash
    # Write tests first
    npm run test:watch
@@ -188,6 +197,7 @@ src/
    ```
 
 5. **Code quality checks**
+
    ```bash
    npm run lint
    npm run format
@@ -195,17 +205,20 @@ src/
    ```
 
 6. **Run full test suite**
+
    ```bash
    npm run test:coverage
    ```
 
 7. **Commit changes**
+
    ```bash
    git add .
    git commit -m "feat: add your feature description"
    ```
 
 8. **Push and create PR**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -251,6 +264,7 @@ npm run typecheck   # TypeScript checking
 If your feature requires database changes:
 
 1. **Modify Prisma schema** (`src/prisma/schema.prisma`)
+
    ```prisma
    model NewModel {
      id        String   @id @default(cuid())
@@ -263,11 +277,13 @@ If your feature requires database changes:
    ```
 
 2. **Generate migration**
+
    ```bash
    npx prisma migrate dev --name add_new_model
    ```
 
 3. **Update Prisma client**
+
    ```bash
    npm run db:generate
    ```
@@ -671,6 +687,7 @@ describe('User API', () => {
 ### Test Coverage
 
 Aim for:
+
 - **Controllers**: 80%+ coverage
 - **Services**: 90%+ coverage
 - **Utilities**: 95%+ coverage
@@ -740,6 +757,7 @@ Aim for:
 ### Security Headers
 
 Configured via Helmet:
+
 - Content Security Policy
 - X-Frame-Options
 - X-Content-Type-Options
@@ -750,11 +768,13 @@ Configured via Helmet:
 ### Docker Deployment
 
 1. **Build image**
+
    ```bash
    docker build -t railnet-backend .
    ```
 
 2. **Run with docker-compose**
+
    ```bash
    docker-compose -f docker-compose.prod.yml up -d
    ```
@@ -837,6 +857,7 @@ npm test -- --inspect-brk
 ### Logs
 
 Check logs in:
+
 - `logs/` directory
 - Docker container logs: `docker logs railnet_app`
 - Database logs: `docker logs railnet_postgres`
@@ -899,6 +920,7 @@ Check logs in:
 ## Support
 
 For questions or issues:
+
 1. Check this documentation
 2. Review existing issues
 3. Create a new issue with detailed information
