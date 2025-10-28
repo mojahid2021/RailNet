@@ -1,5 +1,7 @@
 # RailNet — A Comprehensive Railway Management System.
 
+![Project Logo](assets/banner.png)
+
 RailNet is a mobile (Android) passenger railway application backed by a robust microservices backend and non relational database (PostgreSQL). It models stations, tracks (graph), trains, schedules and passenger bookings with seat allocation, while providing advanced capabilities: AI-based ETA & demand prediction, simulated real-time train tracking (position interpolation from schedules), dynamic fare pricing, analytics dashboards, and a secure, auditable booking pipeline.
 
 ---
