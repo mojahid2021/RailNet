@@ -93,8 +93,84 @@ RailNet is a mobile (Android) passenger railway application backed by a robust m
   6. **Integrations** — Payment Gateway, Push Notification provider (FCM / Worker), Mapping APIs for UI base maps.
   7. **Observability** — Logs, Health Checks.
 
-### License
-This project is licensed under the GPL-3.0 license — you are free to use, modify, and distribute it, provided that proper credit is given.
+### System Architecture & Workflow
 
-#### © 2025 RailNet Project — Developed by Team error2k21.
+For a detailed view of the system architecture and workflows, please refer to [WORKFLOW.md](WORKFLOW.md).
+
+#### High-level System Overview
+```
+┌─────────────────┐      ┌─────────────────┐      ┌──────────────────┐
+│  Mobile App     │◄────►│  API Gateway    │◄────►│  Microservices   │
+│  (Android)      │      │  (NGINX + JWT)  │      │  (Node.js/TS)    │
+└─────────────────┘      └─────────────────┘      └──────────────────┘
+                                  │                         │
+                                  ▼                         ▼
+                         ┌─────────────────────────────────────┐
+                         │  Data Layer                         │
+                         │  • PostgreSQL (Primary DB)          │
+                         │  • Redis (Cache & Locks)            │
+                         │  • MinIO/S3 (Object Storage)        │
+                         └─────────────────────────────────────┘
+
+┌─────────────────┐      
+│  Admin Dashboard│◄───── Connected to same backend infrastructure
+│  (Web)          │      
+└─────────────────┘      
+```
+
+### Contributors & Team
+
+#### Core Team (Team error2k21)
+- **Project Lead & Architect**: [Mojahid](https://github.com/mojahid2021)
+- **Backend Development**: Team error2k21
+- **Mobile Development**: Team error2k21
+- **Database & Infrastructure**: Team error2k21
+
+#### Contributing
+We welcome contributions from the community! If you'd like to contribute:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with proper documentation
+4. Submit a pull request
+5. Ensure all tests pass and code follows project standards
+
+For major changes, please open an issue first to discuss what you would like to change.
+
+### License
+
+This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
+
+#### What this means:
+- ✅ **Free for personal, educational, and non-commercial use**
+- ✅ **You can modify and share** under the same license
+- ✅ **Attribution required** - credit must be given to RailNet Project and Team error2k21
+- ⚠️ **Commercial use requires permission** - contact us for commercial licensing
+
+#### Commercial Use
+If you plan to use RailNet for commercial purposes (selling, deploying in a commercial product, or using in a commercial service), you **MUST**:
+
+1. **Contact us for commercial licensing**
+   - Email: error2k21.team@gmail.com
+   - GitHub: https://github.com/mojahid2021/RailNet
+
+2. **Provide attribution and credit** to Team error2k21
+
+3. **Notify us** of your commercial use
+
+Commercial licenses are granted on a case-by-case basis and may involve licensing fees or other agreements.
+
+#### Attribution Requirements
+When using this software, you must:
+- Clearly state that the original work is by RailNet Project and Team error2k21
+- Include a link to: https://github.com/mojahid2021/RailNet
+- Indicate any modifications made
+- Maintain all copyright notices
+
+See the [LICENSE](LICENSE) file for the full legal text.
+
+---
+
+#### © 2025 RailNet Project — Developed by Team error2k21
 _An open, scalable, and intelligent railway management ecosystem for the next generation of smart transport._
+
+**Contact**: error2k21.team@gmail.com | **Repository**: https://github.com/mojahid2021/RailNet
