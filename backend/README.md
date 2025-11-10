@@ -148,7 +148,7 @@ Response:
 ### Hello World
 
 ```http
-GET /hello
+GET /api/v1/hello
 ```
 
 Response:

@@ -1,10 +1,23 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
+}
+
+val localProperties = Properties().apply {
+    val localProps = rootProject.file("local.properties")
+    if (localProps.exists()) {
+        load(localProps.inputStream())
+    }
 }
 
 android {
     namespace = "com.mojahid2021.railnet"
     compileSdk = 36
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "com.mojahid2021.railnet"
@@ -14,6 +27,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["MAPS_API_KEY"] = properties.get("MAPS_API_KEY") ?: ""
+        buildConfigField("String", "MAPS_API_KEY", "\"${localProperties.getProperty("MAPS_API_KEY") ?: ""}\"")
+
     }
 
     buildTypes {
