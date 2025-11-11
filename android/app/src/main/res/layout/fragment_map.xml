@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/primaryBackground"
     tools:context=".map.MapFragment">
 
@@ -10,5 +11,19 @@
         android:id="@+id/mapView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <!-- Recenter button (hidden by default). Shows when user moves the map. -->
+    <ImageButton
+        android:id="@+id/btn_my_location"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/selected_nav_background"
+        android:scaleType="centerInside"
+        app:tint="@color/white"
+        android:src="@drawable/common_pointer"
+        android:contentDescription="@string/recenter"
+        android:visibility="gone"
+        android:layout_gravity="bottom|end" />
 
 </FrameLayout>

@@ -6,10 +6,15 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.drawable.Drawable;
+import android.graphics.LinearGradient;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Shader;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
+import android.view.View;
+import android.widget.ImageButton;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -19,7 +24,6 @@ import androidx.fragment.app.Fragment;
 
 import android.util.TypedValue;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 
@@ -41,6 +45,9 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.mojahid2021.railnet.R;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MapFragment extends Fragment {
     private MapView mapView;
     private GoogleMap googleMap;
@@ -49,12 +56,25 @@ public class MapFragment extends Fragment {
     private Marker currentLocationMarker;
     private Circle accuracyCircle;
     private boolean movedToCurrentLocation = false;
+    // last known location used to compute bearing fallback
+    private Location lastLocation = null;
 
     // keep pulse animator reference to cancel when fragment pauses/destroys
     private ValueAnimator pulseAnimator;
 
-    // desired marker size in dp
-    private static final float MARKER_DP_SIZE = 24f;
+    // desired base marker size in dp (reasonable default)
+    private static final float MARKER_DP_SIZE = 28f;
+
+    // caching last used dp to avoid recreating icon too often
+    private int lastMarkerDp = -1;
+
+    // cache generated descriptors by dp size
+    private final Map<Integer, BitmapDescriptor> pointerCache = new HashMap<>();
+
+    // whether the map should follow the user's live location
+    private boolean followUser = true;
+
+    private ImageButton btnMyLocation;
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -78,10 +98,43 @@ public class MapFragment extends Fragment {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
 
         mapView = view.findViewById(R.id.mapView);
+        btnMyLocation = view.findViewById(R.id.btn_my_location);
+        btnMyLocation.setVisibility(View.GONE);
+
+        btnMyLocation.setOnClickListener(v -> {
+            // On recenter: re-enable follow mode and center to current marker
+            followUser = true;
+            btnMyLocation.setVisibility(View.GONE);
+            if (currentLocationMarker != null && googleMap != null) {
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocationMarker.getPosition(), 17f));
+            }
+        });
 
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(map -> {
             googleMap = map;
+
+            // If user moves the camera (gestures), show recenter button and stop auto-follow
+            googleMap.setOnCameraMoveStartedListener(reason -> {
+                if (reason == GoogleMap.OnCameraMoveStartedListener.REASON_GESTURE) {
+                    // user initiated move; stop following
+                    followUser = false;
+                    if (btnMyLocation != null) btnMyLocation.setVisibility(View.VISIBLE);
+                }
+            });
+
+            // update marker size on camera idle so the icon scales nicely with zoom
+            googleMap.setOnCameraIdleListener(() -> {
+                if (currentLocationMarker == null || googleMap == null) return;
+                float zoom = googleMap.getCameraPosition().zoom;
+                int dp = getScaledDpForZoom(zoom);
+                if (dp != lastMarkerDp) {
+                    BitmapDescriptor icon = getPointerDescriptor(requireContext(), dp);
+                    currentLocationMarker.setIcon(icon);
+                    lastMarkerDp = dp;
+                }
+            });
+
             // Always follow user's live location; ask permission if needed
             if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 enableLocationOnMap();
@@ -94,18 +147,153 @@ public class MapFragment extends Fragment {
         return view;
     }
 
-    private BitmapDescriptor bitmapDescriptorFromVector(Context context, int vectorResId) {
-        Drawable vectorDrawable = ContextCompat.getDrawable(context, vectorResId);
-        if (vectorDrawable == null) return null;
+    // Wrapper: get from cache or create and cache a pointer descriptor for dp size
+    private BitmapDescriptor getPointerDescriptor(Context context, int dpSize) {
+        BitmapDescriptor d = pointerCache.get(dpSize);
+        if (d != null) return d;
+        BitmapDescriptor created = createPointerDescriptor(context, dpSize);
+        pointerCache.put(dpSize, created);
+        return created;
+    }
 
-        // scale vector to the desired dp size for consistent on-screen size
-        int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, MARKER_DP_SIZE, context.getResources().getDisplayMetrics());
+    // Create a mannequin/human-like BitmapDescriptor (head + torso + limbs + subtle shadow)
+    private BitmapDescriptor createPointerDescriptor(Context context, int dpSize) {
+        if (dpSize <= 0) dpSize = Math.round(MARKER_DP_SIZE);
+        int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dpSize, context.getResources().getDisplayMetrics());
 
-        vectorDrawable.setBounds(0, 0, px, px);
         Bitmap bitmap = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
-        vectorDrawable.draw(canvas);
+
+        // Soft shadow under feet
+        Paint shadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        shadowPaint.setColor(0x33000000);
+        float cx = px * 0.5f;
+        float cy = px * 0.88f;
+        float rx = px * 0.30f;
+        float ry = px * 0.09f;
+        RectF shadowOval = new RectF(cx - rx, cy - ry, cx + rx, cy + ry);
+        canvas.drawOval(shadowOval, shadowPaint);
+
+        // Mannequin proportions
+        float headCx = px * 0.5f;
+        float headCy = px * 0.26f;
+        float headR = px * 0.14f;
+
+        float torsoTop = headCy + headR * 0.9f;
+        float torsoBottom = px * 0.6f;
+        float torsoW = px * 0.34f;
+        float torsoLeft = headCx - torsoW / 2f;
+        float torsoRight = headCx + torsoW / 2f;
+        float torsoRadius = px * 0.06f;
+
+        // Cobalt-blue palette optimized for white map backgrounds
+        int topColor = 0xFF1E88E5;    // Cobalt / Blue 600 (brighter)
+        int bottomColor = 0xFF0D47A1; // Deep navy for contrast
+        int outlineColor = 0xFF062F4A; // Dark outline for crisp edges on white
+
+        // prepare stroke paint for thin outline
+        Paint strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        strokePaint.setStyle(Paint.Style.STROKE);
+        strokePaint.setColor(outlineColor);
+        strokePaint.setStrokeWidth(Math.max(1f, px * 0.04f));
+
+        // Head gradient
+        LinearGradient headGrad = new LinearGradient(0, headCy - headR, 0, headCy + headR, topColor, bottomColor, Shader.TileMode.CLAMP);
+        Paint headPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        headPaint.setShader(headGrad);
+        canvas.drawCircle(headCx, headCy, headR, headPaint);
+        // outline head
+        canvas.drawCircle(headCx, headCy, headR, strokePaint);
+
+        // Subtle highlight on head
+        Paint hl = new Paint(Paint.ANTI_ALIAS_FLAG);
+        hl.setColor(0x33FFFFFF);
+        canvas.drawCircle(headCx - headR * 0.35f, headCy - headR * 0.45f, headR * 0.45f, hl);
+
+        // Torso gradient
+        LinearGradient torsoGrad = new LinearGradient(0, torsoTop, 0, torsoBottom, topColor, bottomColor, Shader.TileMode.CLAMP);
+        Paint torsoPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        torsoPaint.setShader(torsoGrad);
+
+        RectF torsoRect = new RectF(torsoLeft, torsoTop, torsoRight, torsoBottom);
+        canvas.drawRoundRect(torsoRect, torsoRadius, torsoRadius, torsoPaint);
+        // outline torso for contrast on white maps
+        canvas.drawRoundRect(torsoRect, torsoRadius, torsoRadius, strokePaint);
+
+        // Arms (simple rounded rectangles) — left and right
+        float armW = torsoW * 0.28f;
+        float armH = (torsoBottom - torsoTop) * 0.9f;
+        float armTop = torsoTop + (torsoBottom - torsoTop) * 0.05f;
+        RectF leftArm = new RectF(torsoLeft - armW * 0.9f, armTop, torsoLeft + armW * 0.1f, armTop + armH);
+        RectF rightArm = new RectF(torsoRight - armW * 0.1f, armTop, torsoRight + armW * 0.9f, armTop + armH);
+        canvas.drawRoundRect(leftArm, armW * 0.5f, armW * 0.5f, torsoPaint);
+        canvas.drawRoundRect(rightArm, armW * 0.5f, armW * 0.5f, torsoPaint);
+        canvas.drawRoundRect(leftArm, armW * 0.5f, armW * 0.5f, strokePaint);
+        canvas.drawRoundRect(rightArm, armW * 0.5f, armW * 0.5f, strokePaint);
+
+        // Legs (two narrow rounded rectangles) from torsoBottom down to near bottom
+        float legW = torsoW * 0.34f;
+        float legH = px * 0.28f;
+        RectF leftLeg = new RectF(headCx - legW - legW * 0.15f, torsoBottom, headCx - legW * 0.15f, torsoBottom + legH);
+        RectF rightLeg = new RectF(headCx + legW * 0.15f, torsoBottom, headCx + legW + legW * 0.15f, torsoBottom + legH);
+        canvas.drawRoundRect(leftLeg, legW * 0.4f, legW * 0.4f, torsoPaint);
+        canvas.drawRoundRect(rightLeg, legW * 0.4f, legW * 0.4f, torsoPaint);
+        canvas.drawRoundRect(leftLeg, legW * 0.4f, legW * 0.4f, strokePaint);
+        canvas.drawRoundRect(rightLeg, legW * 0.4f, legW * 0.4f, strokePaint);
+
+        // Small glossy stripe on torso for extra depth
+        Paint stripe = new Paint(Paint.ANTI_ALIAS_FLAG);
+        stripe.setColor(0x22FFFFFF);
+        float sx = headCx - torsoW * 0.15f;
+        RectF stripeRect = new RectF(sx, torsoTop + (torsoBottom - torsoTop) * 0.15f, sx + torsoW * 0.12f, torsoTop + (torsoBottom - torsoTop) * 0.6f);
+        canvas.drawRoundRect(stripeRect, torsoRadius * 0.5f, torsoRadius * 0.5f, stripe);
+
+        // Tail (path) — simple triangular shape for pointer
+        Paint tailPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        tailPaint.setColor(bottomColor);
+        tailPaint.setStyle(Paint.Style.FILL);
+
+        // Triangle path: tip at bottom center, base corners at torso bottom corners
+        // place tip very close to bitmap bottom so anchor(0.5,1.0) matches tip position
+        float tailTipY = px - Math.max(1f, px * 0.03f);
+        float tailLeftX = headCx - legW * 0.5f;
+        float tailRightX = headCx + legW * 0.5f;
+
+        // Slightly rounded triangular path for tail
+        android.graphics.Path tail = new android.graphics.Path();
+        tail.moveTo(headCx, tailTipY);
+        tail.lineTo(tailLeftX, torsoBottom);
+        tail.lineTo(tailRightX, torsoBottom);
+        tail.close();
+
+        // Tail gradient: deep navy at base to cobalt at tip for contrast
+        LinearGradient lgTail = new LinearGradient(0, torsoBottom, 0, tailTipY, bottomColor, topColor, Shader.TileMode.CLAMP);
+        tailPaint.setShader(lgTail);
+        canvas.drawPath(tail, tailPaint);
+
         return BitmapDescriptorFactory.fromBitmap(bitmap);
+    }
+
+    // compute bearing in degrees from 'from' to 'to' (0..360, clockwise from north)
+    private float bearingBetween(LatLng from, LatLng to) {
+        double lat1 = Math.toRadians(from.latitude);
+        double lon1 = Math.toRadians(from.longitude);
+        double lat2 = Math.toRadians(to.latitude);
+        double lon2 = Math.toRadians(to.longitude);
+        double dLon = lon2 - lon1;
+        double y = Math.sin(dLon) * Math.cos(lat2);
+        double x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+        double brng = Math.toDegrees(Math.atan2(y, x));
+        brng = (brng + 360.0) % 360.0;
+        return (float) brng;
+    }
+
+    // Decide marker dp size based on zoom (you can tweak these thresholds)
+    private int getScaledDpForZoom(float zoom) {
+        // zoom typically ranges roughly 2..21; adjust factors to taste
+        if (zoom < 12f) return Math.round(MARKER_DP_SIZE * 0.7f);
+        if (zoom < 15f) return Math.round(MARKER_DP_SIZE * 0.85f);
+        return Math.round(MARKER_DP_SIZE);
     }
 
     private void enableLocationOnMap() {
@@ -157,27 +345,43 @@ public class MapFragment extends Fragment {
 
                         // Create custom marker if needed
                         if (currentLocationMarker == null) {
-                            BitmapDescriptor icon = bitmapDescriptorFromVector(requireContext(), R.drawable.ic_profile);
-                            MarkerOptions opts = new MarkerOptions().position(latLng).anchor(0.5f, 0.5f);
-                            if (icon != null) opts.icon(icon);
+                            int dp = getScaledDpForZoom(googleMap.getCameraPosition().zoom);
+                            BitmapDescriptor icon = getPointerDescriptor(requireContext(), dp);
+                            MarkerOptions opts = new MarkerOptions().position(latLng).anchor(0.5f, 1.0f).icon(icon);
                             currentLocationMarker = googleMap.addMarker(opts);
                             // make marker flat so rotation works
                             if (currentLocationMarker != null) currentLocationMarker.setFlat(true);
+                            lastMarkerDp = dp;
+                            // set initial rotation if available
+                            if (location.hasBearing()) currentLocationMarker.setRotation(location.getBearing());
                         } else {
                             // animate marker position smoothly
                             animateMarkerToPosition(currentLocationMarker, latLng);
-                            float bearing = location.hasBearing() ? location.getBearing() : 0f;
+                            float bearing;
+                            // prefer device-provided bearing when moving at speed
+                            if (location.hasBearing() && location.getSpeed() > 0.5f) {
+                                bearing = location.getBearing();
+                            } else if (lastLocation != null) {
+                                bearing = bearingBetween(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()), latLng);
+                            } else {
+                                bearing = 0f;
+                            }
                             animateMarkerRotation(currentLocationMarker, bearing);
                         }
 
                         // Always follow the user — auto-center
-                        if (!movedToCurrentLocation) {
-                            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f));
-                            movedToCurrentLocation = true;
-                        } else {
-                            // small camera movement to follow user smoothly
-                            googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+                        if (followUser) {
+                            if (!movedToCurrentLocation) {
+                                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f));
+                                movedToCurrentLocation = true;
+                            } else {
+                                // small camera movement to follow user smoothly
+                                googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+                            }
                         }
+
+                        // store lastLocation for next bearing calculation
+                        lastLocation = location;
                     }
                 }
             };
@@ -190,11 +394,13 @@ public class MapFragment extends Fragment {
             if (location != null && googleMap != null) {
                 LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
                 if (currentLocationMarker == null) {
-                    BitmapDescriptor icon = bitmapDescriptorFromVector(requireContext(), R.drawable.ic_profile);
-                    MarkerOptions opts = new MarkerOptions().position(latLng).anchor(0.5f, 0.5f);
-                    if (icon != null) opts.icon(icon);
+                    int dp = getScaledDpForZoom(googleMap.getCameraPosition().zoom);
+                    BitmapDescriptor icon = getPointerDescriptor(requireContext(), dp);
+                    MarkerOptions opts = new MarkerOptions().position(latLng).anchor(0.5f, 1.0f).icon(icon);
                     currentLocationMarker = googleMap.addMarker(opts);
                     if (currentLocationMarker != null) currentLocationMarker.setFlat(true);
+                    lastMarkerDp = dp;
+                    if (location.hasBearing()) currentLocationMarker.setRotation(location.getBearing());
                 } else {
                     currentLocationMarker.setPosition(latLng);
                 }
@@ -209,6 +415,9 @@ public class MapFragment extends Fragment {
                     );
                     startPulseAnimation(accuracyCircle, baseRadius);
                 }
+
+                // set lastLocation from last known
+                lastLocation = location;
 
                 if (!movedToCurrentLocation) {
                     googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f));
@@ -308,6 +517,8 @@ public class MapFragment extends Fragment {
     public void onDestroyView() {
         if (mapView != null) mapView.onDestroy();
         stopLocationUpdates();
+        // clear cached pointer descriptors to free memory
+        pointerCache.clear();
         super.onDestroyView();
     }
 
