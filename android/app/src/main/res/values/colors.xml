@@ -10,7 +10,8 @@
 
     <color name="lightGray">#B6B7BC</color>
     <color name="lightBlueGray">#E6EBEF</color>
-    
+    <color name="primaryBackground">#F2F9FC</color>
+
     <color name="transparent">#00000000</color>
 
 </resources>

@@ -24,6 +24,7 @@ import com.mojahid2021.railnet.train.TrainFragment;
 
 public class MainActivity extends AppCompatActivity {
     private LinearLayout homeLayout, trainLayout, mapLayout, profileLayout;
+    private LinearLayout homeIconLayout, trainIconLayout, mapIconLayout, profileIconLayout;
     private ImageView homeIcon, trainIcon, mapIcon, profileIcon;
     private TextView homeText, trainText, mapText, profileText;
 
@@ -42,6 +43,11 @@ public class MainActivity extends AppCompatActivity {
         trainLayout = findViewById(R.id.trainLayout);
         mapLayout = findViewById(R.id.mapLayout);
         profileLayout = findViewById(R.id.profileLayout);
+
+        homeIconLayout = findViewById(R.id.homeIconLayout);
+        trainIconLayout = findViewById(R.id.trainIconLayout);
+        mapIconLayout = findViewById(R.id.mapIconLayout);
+        profileIconLayout = findViewById(R.id.profileIconLayout);
 
         homeIcon = findViewById(R.id.homeIcon);
         trainIcon = findViewById(R.id.trainIcon);
@@ -66,20 +72,20 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         if (layout == homeLayout) {
+            homeIconLayout.setBackgroundResource(R.drawable.selected_nav_background);
             homeIcon.setColorFilter(ContextCompat.getColor(this, R.color.white));
-            homeIcon.setBackgroundResource(R.drawable.selected_nav_background);
             homeText.setTextColor(ContextCompat.getColor(this, R.color.primary));
         } else if (layout == trainLayout) {
-            trainLayout.setBackgroundResource(R.drawable.selected_nav_background);
-            trainIcon.setColorFilter(ContextCompat.getColor(this, R.color.primary));
+            trainIconLayout.setBackgroundResource(R.drawable.selected_nav_background);
+            trainIcon.setColorFilter(ContextCompat.getColor(this, R.color.white));
             trainText.setTextColor(ContextCompat.getColor(this, R.color.primary));
         } else if (layout == mapLayout) {
-            mapLayout.setBackgroundResource(R.drawable.selected_nav_background);
-            mapIcon.setColorFilter(ContextCompat.getColor(this, R.color.primary));
+            mapIconLayout.setBackgroundResource(R.drawable.selected_nav_background);
+            mapIcon.setColorFilter(ContextCompat.getColor(this, R.color.white));
             mapText.setTextColor(ContextCompat.getColor(this, R.color.primary));
         } else if (layout == profileLayout) {
-            profileLayout.setBackgroundResource(R.drawable.selected_nav_background);
-            profileIcon.setColorFilter(ContextCompat.getColor(this, R.color.primary));
+            profileIconLayout.setBackgroundResource(R.drawable.selected_nav_background);
+            profileIcon.setColorFilter(ContextCompat.getColor(this, R.color.white));
             profileText.setTextColor(ContextCompat.getColor(this, R.color.primary));
         }
 
@@ -113,10 +119,10 @@ public class MainActivity extends AppCompatActivity {
         mapIcon.setColorFilter(ContextCompat.getColor(this, R.color.darkPurple));
         profileIcon.setColorFilter(ContextCompat.getColor(this, R.color.darkPurple));
 
-        homeLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent));
-        trainLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent));
-        mapLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent));
-        profileLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent));
+        homeIconLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent));
+        trainIconLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent));
+        mapIconLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent));
+        profileIconLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent));
 
         homeText.setTextColor(ContextCompat.getColor(this, R.color.darkPurple));
         trainText.setTextColor(ContextCompat.getColor(this, R.color.darkPurple));

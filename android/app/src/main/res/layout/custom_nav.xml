@@ -1,80 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:padding="5dp"
-    android:gravity="center"
+    android:layout_height="wrap_content"
     android:background="@color/white"
-    android:layout_height="wrap_content">
+    android:gravity="center"
+    android:padding="5dp">
+
     <LinearLayout
         android:id="@+id/homeLayout"
         android:layout_width="wrap_content"
-        android:orientation="vertical"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:layout_height="wrap_content">
-        <ImageView
-            android:id="@+id/homeIcon"
-            android:layout_width="30dp"
-            android:src="@drawable/ic_home"
-            android:layout_height="30dp"/>
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/homeIconLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp">
+
+            <ImageView
+                android:id="@+id/homeIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/homeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Home"/>
+            android:text="Home" />
     </LinearLayout>
+
     <LinearLayout
         android:id="@+id/trainLayout"
         android:layout_width="wrap_content"
-        android:orientation="vertical"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:layout_height="wrap_content">
-        <ImageView
-            android:id="@+id/trainIcon"
-            android:layout_width="30dp"
-            android:src="@drawable/ic_train"
-            android:layout_height="30dp"/>
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/trainIconLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp">
+
+            <ImageView
+                android:id="@+id/trainIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_train" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/trainText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Train"/>
+            android:text="Train" />
     </LinearLayout>
+
     <LinearLayout
         android:id="@+id/mapLayout"
         android:layout_width="wrap_content"
-        android:orientation="vertical"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:layout_height="wrap_content">
-        <ImageView
-            android:id="@+id/mapIcon"
-            android:layout_width="30dp"
-            android:src="@drawable/ic_map"
-            android:layout_height="30dp"/>
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/mapIconLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp">
+
+            <ImageView
+                android:id="@+id/mapIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_map" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/mapText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Map"/>
+            android:text="Map" />
     </LinearLayout>
+
     <LinearLayout
         android:id="@+id/profileLayout"
         android:layout_width="wrap_content"
-        android:orientation="vertical"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:layout_height="wrap_content">
-        <ImageView
-            android:id="@+id/profileIcon"
-            android:layout_width="30dp"
-            android:src="@drawable/ic_profile"
-            android:layout_height="30dp"/>
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/profileIconLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp">
+
+            <ImageView
+                android:id="@+id/profileIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_profile" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/profileText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Profile"/>
+            android:text="Profile" />
     </LinearLayout>
 </LinearLayout>
