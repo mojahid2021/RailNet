@@ -43,6 +43,13 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.MapStyleOptions;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import android.util.Log;
+import java.nio.charset.StandardCharsets;
+
 import com.mojahid2021.railnet.R;
 
 import java.util.HashMap;
@@ -113,6 +120,76 @@ public class MapFragment extends Fragment {
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(map -> {
             googleMap = map;
+
+            // Apply custom map style. Try raw resource first, then fall back to assets.
+            boolean styleApplied = false;
+            try {
+                try {
+                    MapStyleOptions rawStyle = MapStyleOptions.loadRawResourceStyle(requireContext(), R.raw.map_style);
+                    if (googleMap.setMapStyle(rawStyle)) {
+                        styleApplied = true;
+                        Log.d("MapFragment", "Applied map style from raw resource");
+                    } else {
+                        Log.d("MapFragment", "Raw resource style parsed but setMapStyle returned false - will try reading raw text");
+                        // Extra diagnostic: read the raw resource as text and try applying it directly
+                        try (InputStream ris = requireContext().getResources().openRawResource(R.raw.map_style)) {
+                            ByteArrayOutputStream rbaos = new ByteArrayOutputStream();
+                            byte[] rbuf = new byte[1024];
+                            int rlen;
+                            while ((rlen = ris.read(rbuf)) != -1) {
+                                rbaos.write(rbuf, 0, rlen);
+                            }
+                            String rawJson = new String(rbaos.toByteArray(), StandardCharsets.UTF_8);
+                            boolean successFromRawText = googleMap.setMapStyle(new MapStyleOptions(rawJson));
+                            Log.d("MapFragment", "Attempted setMapStyle from raw resource text, success=" + successFromRawText);
+                            if (!successFromRawText) {
+                                Log.d("MapFragment", "Raw resource JSON (first 1000 chars): \n" + (rawJson.length() > 1000 ? rawJson.substring(0, 1000) : rawJson));
+                            } else {
+                                styleApplied = true;
+                            }
+                        } catch (Exception exReadRaw) {
+                            Log.w("MapFragment", "Failed to read/parse raw resource as text: " + Log.getStackTraceString(exReadRaw));
+                        }
+                    }
+                } catch (Exception exRaw) {
+                    Log.w("MapFragment", "Raw resource style load failed, will try assets: " + Log.getStackTraceString(exRaw));
+                }
+
+                if (!styleApplied) {
+                    // fallback: try loading from assets/map_style.json
+                    InputStream is = null;
+                    try {
+                        is = requireContext().getAssets().open("map_style.json");
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        byte[] buffer = new byte[1024];
+                        int len;
+                        while ((len = is.read(buffer)) != -1) {
+                            baos.write(buffer, 0, len);
+                        }
+                        String json = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+                        boolean success = googleMap.setMapStyle(new MapStyleOptions(json));
+                        if (success) {
+                            styleApplied = true;
+                            Log.d("MapFragment", "Map style applied successfully from assets");
+                        } else {
+                            Log.e("MapFragment", "Failed to apply map style from assets — setMapStyle returned false");
+                            Log.d("MapFragment", "Style JSON (first 600 chars): " + (json.length() > 600 ? json.substring(0, 600) : json));
+                        }
+                    } finally {
+                        if (is != null) try { is.close(); } catch (Exception ignore) {}
+                    }
+                }
+
+                if (!styleApplied) {
+                    Log.e("MapFragment", "No map style applied (both raw and assets attempts failed)");
+                    if (isAdded()) {
+                        Toast.makeText(requireContext(), "Map style failed to load. Check logs for details.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+            } catch (Exception e) {
+                Log.e("MapFragment", "Error loading map style", e);
+            }
 
             // If user moves the camera (gestures), show recenter button and stop auto-follow
             googleMap.setOnCameraMoveStartedListener(reason -> {
