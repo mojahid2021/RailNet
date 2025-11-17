@@ -14,4 +14,10 @@
 
     <color name="transparent">#00000000</color>
 
+    <!-- Accent colors -->
+    <color name="success">#4CAF50</color>
+    <color name="warning">#FF9800</color>
+    <color name="error">#F44336</color>
+    <color name="primaryLight">#E3F4FB</color>
+
 </resources>

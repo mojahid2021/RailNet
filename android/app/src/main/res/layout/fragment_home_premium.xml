@@ -199,7 +199,7 @@
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
                                 android:layout_gravity="center"
-                                android:contentDescription="Swap Stations"
+                                android:contentDescription="@string/swap_stations"
                                 android:rotation="90"
                                 android:src="@drawable/ic_train"
                                 app:tint="@color/white" />
@@ -269,7 +269,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:contentDescription="Date Selection"
+                            android:contentDescription="@string/date_selection"
                             android:src="@drawable/ic_calendar"
                             app:tint="@color/primary" />
 
@@ -279,7 +279,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
                             android:layout_weight="1"
-                            android:text="Today, Nov 12"
+                            android:text="@string/today_date"
                             android:textColor="@color/darkIndigo"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -287,7 +287,7 @@
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:contentDescription="Arrow Icon"
+                            android:contentDescription="@string/arrow_icon"
                             android:src="@drawable/ic_arrow_forward"
                             app:tint="@color/lightGray" />
                     </LinearLayout>
@@ -603,6 +603,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:baselineAligned="false"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -635,7 +636,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="08:00 AM"
+                                android:text="@string/departure_time_1"
                                 android:textColor="@color/lightGray"
                                 android:textSize="13sp" />
                         </LinearLayout>
@@ -649,7 +650,7 @@
                                 android:layout_width="28dp"
                                 android:layout_height="28dp"
                                 android:layout_gravity="center"
-                                android:contentDescription="Train Route"
+                                android:contentDescription="@string/train_route"
                                 android:src="@drawable/ic_train"
                                 app:tint="@color/primary" />
                         </FrameLayout>
@@ -684,7 +685,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="02:30 PM"
+                                android:text="@string/arrival_time_1"
                                 android:textColor="@color/lightGray"
                                 android:textSize="13sp" />
                         </LinearLayout>
@@ -700,6 +701,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
+                        android:baselineAligned="false"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -707,7 +709,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="12 Trains Available"
+                            android:text="@string/trains_available_12"
                             android:textColor="@color/primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -720,7 +722,7 @@
                             android:paddingTop="6dp"
                             android:paddingEnd="12dp"
                             android:paddingBottom="6dp"
-                            android:text="From ৳450"
+                            android:text="@string/price_from_450"
                             android:textColor="@color/darkIndigo"
                             android:textSize="13sp"
                             android:textStyle="bold" />
@@ -755,6 +757,7 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:baselineAligned="false"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -787,7 +790,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="09:30 AM"
+                                android:text="@string/departure_time_2"
                                 android:textColor="@color/lightGray"
                                 android:textSize="13sp" />
                         </LinearLayout>
@@ -801,7 +804,7 @@
                                 android:layout_width="28dp"
                                 android:layout_height="28dp"
                                 android:layout_gravity="center"
-                                android:contentDescription="Train Route"
+                                android:contentDescription="@string/train_route"
                                 android:src="@drawable/ic_train"
                                 app:tint="@color/primary" />
                         </FrameLayout>
@@ -836,7 +839,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="05:45 PM"
+                                android:text="@string/arrival_time_2"
                                 android:textColor="@color/lightGray"
                                 android:textSize="13sp" />
                         </LinearLayout>
@@ -852,6 +855,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
+                        android:baselineAligned="false"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -859,7 +863,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="8 Trains Available"
+                            android:text="@string/trains_available_8"
                             android:textColor="@color/primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -872,7 +876,7 @@
                             android:paddingTop="6dp"
                             android:paddingEnd="12dp"
                             android:paddingBottom="6dp"
-                            android:text="From ৳520"
+                            android:text="@string/price_from_520"
                             android:textColor="@color/darkIndigo"
                             android:textSize="13sp"
                             android:textStyle="bold" />

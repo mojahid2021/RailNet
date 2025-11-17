@@ -8,13 +8,42 @@
   {
     "elementType": "labels.text.fill",
     "stylers": [
-      { "color": "#202124" }
+      { "color": "#202124" },
+      { "visibility": "on" }
     ]
   },
   {
     "elementType": "labels.text.stroke",
     "stylers": [
       { "color": "#ffffff" }
+    ]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "labels",
+    "stylers": [
+      { "visibility": "off" }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "all",
+    "stylers": [
+      { "visibility": "off" }
+    ]
+  },
+  {
+    "featureType": "poi.business",
+    "elementType": "labels",
+    "stylers": [
+      { "visibility": "off" }
+    ]
+  },
+  {
+    "featureType": "transit",
+    "elementType": "all",
+    "stylers": [
+      { "visibility": "off" }
     ]
   },
   {
@@ -32,10 +61,10 @@
     ]
   },
   {
-    "featureType": "poi",
+    "featureType": "landscape",
     "elementType": "geometry",
     "stylers": [
-      { "color": "#fafafa" }
+      { "color": "#f8f8f8" }
     ]
   },
   {
