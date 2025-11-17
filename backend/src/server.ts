@@ -1,121 +1,62 @@
-import Fastify from 'fastify';
-import { config } from './config/index';
-import { logger } from './utils/logger';
-import { registerSecurity } from './middleware/security';
-import { registerErrorHandler } from './middleware/errorHandler';
-import { registerRoutes } from './routes';
-import prisma from './utils/database';
+/**
+ * RailNet Backend Server Entry Point
+ * Main application bootstrap with enhanced error handling and graceful shutdown
+ */
 
-// Create Fastify instance with custom logger
-const server = Fastify({
-  logger: false, // We'll use our custom logger
-  disableRequestLogging: true, // We'll handle request logging manually
-  ignoreTrailingSlash: true,
-  bodyLimit: 10485760, // 10MB
-});
+import { startServer } from './core/server';
+import { config } from './core/config';
+import { appLogger } from './core/logger';
 
-// Register custom logger
-server.decorate('logger', logger);
-
-// Health check endpoint (before routes)
-server.get('/health', async (request, reply) => {
+/**
+ * Application entry point
+ * Initializes and starts the RailNet backend server
+ */
+async function main(): Promise<void> {
   try {
-    // Check database connectivity
-    await prisma.$queryRaw`SELECT 1`;
+    appLogger.info('🚀 Starting RailNet Backend Server...');
 
-    return {
-      status: 'ok',
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-      environment: config.env,
-      database: 'connected',
-    };
-  } catch (error) {
-    logger.error('Health check failed', { error });
-    return reply.status(503).send({
-      status: 'error',
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-      database: 'disconnected',
+    // Display startup information
+    appLogger.info('Application Configuration', {
+      environment: config.app.env,
+      port: config.app.port,
+      host: config.app.host,
+      database: config.database.url.replace(/:[^:]+@/, ':***@'), // Hide password
+      version: process.env.npm_package_version || '1.0.0',
     });
-  }
-});
 
-// Root endpoint
-server.get('/', async () => ({
-  message: 'RailNet API Server',
-  version: '1.0.0',
-  environment: config.env,
-  timestamp: new Date().toISOString(),
-}));
+    // Start the server
+    await startServer();
 
-// Graceful shutdown handling
-const gracefulShutdown = async (signal: string) => {
-  logger.info(`Received ${signal}, shutting down gracefully`);
-
-  try {
-    // Close database connections
-    await prisma.$disconnect();
-    logger.info('Database connections closed');
-
-    // Close server
-    await server.close();
-    logger.info('Server closed');
-
-    process.exit(0);
   } catch (error) {
-    logger.error('Error during shutdown', { error });
+    appLogger.error('❌ Failed to start application', { error });
     process.exit(1);
   }
-};
+}
 
-// Handle shutdown signals
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  appLogger.error('Unhandled Promise Rejection', {
+    reason: reason instanceof Error ? reason.message : String(reason),
+    promise: String(promise),
+  });
+  process.exit(1);
+});
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
+  appLogger.error('Uncaught Exception', {
+    error: error.message,
+    stack: error.stack,
+  });
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection', { reason, promise });
-  process.exit(1);
-});
-
-// Start server
-const start = async () => {
-  try {
-    // Register security middleware
-    await registerSecurity(server);
-
-    // Register error handler
-    registerErrorHandler(server);
-
-    // Register all application routes
-    await registerRoutes(server);
-
-    await server.listen({
-      port: config.port,
-      host: config.host
-    });
-
-    logger.info('Server started successfully', {
-      port: config.port,
-      host: config.host,
-      environment: config.env,
-    });
-
-  } catch (err) {
-    logger.error('Failed to start server', { error: err });
-    process.exit(1);
-  }
-};
-
-// Start the server when this file is executed directly
+// Start the application
 if (require.main === module) {
-  start();
+  main().catch((error) => {
+    console.error('Fatal error during startup:', error);
+    process.exit(1);
+  });
 }
 
-export default server;
+export default main;

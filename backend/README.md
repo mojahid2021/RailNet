@@ -117,50 +117,64 @@ The API will be available at `http://localhost:3000`
 
 ## 📖 API Documentation
 
-### Base URL
+Comprehensive API documentation is available in [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md).
 
-```
-http://localhost:3000/api/v1
-```
+### Quick Reference
 
-### Health Check
+**Base URL:** `http://localhost:3000/api/v1`
 
-```http
-GET /health
-```
+**Authentication Endpoints:**
+- `POST /auth/register` - Register new passenger account
+- `POST /auth/admin/register` - Register new admin account
+- `POST /auth/admin/register-staff` - Register new staff account (admin only)
+- `POST /auth/login` - Passenger login
+- `POST /auth/admin/login` - Admin login
+- `POST /auth/staff/login` - Staff login
+- `GET /auth/profile` - Get user profile (authenticated)
+- `POST /auth/refresh` - Refresh access token
 
-Response:
+**Health Endpoints:**
+- `GET /health` - Basic health check
+- `GET /health/detailed` - Detailed system health
+- `GET /health/ready` - Readiness check
 
-```json
-{
-  "success": true,
-  "data": {
-    "status": "ok",
-    "uptime": 123.45,
-    "timestamp": "2024-01-01T00:00:00.000Z",
-    "environment": "development",
-    "database": "connected",
-    "version": "1.0.0"
-  }
-}
-```
+### Example Usage
 
-### Hello World
+```bash
+# Register passenger
+curl -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"passenger@example.com","password":"StrongPass123!","firstName":"John","lastName":"Doe"}'
 
-```http
-GET /api/v1/hello
-```
+# Register admin
+curl -X POST http://localhost:3000/api/v1/auth/admin/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"StrongAdminPass123!","firstName":"Admin","lastName":"User"}'
 
-Response:
+# Admin login
+curl -X POST http://localhost:3000/api/v1/auth/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"StrongAdminPass123!"}'
 
-```json
-{
-  "success": true,
-  "data": {
-    "message": "Hello from RailNet API!"
-  },
-  "timestamp": "2024-01-01T00:00:00.000Z"
-}
+# Register staff (requires admin token)
+curl -X POST http://localhost:3000/api/v1/auth/admin/register-staff \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ADMIN_JWT_TOKEN" \
+  -d '{"email":"staff@example.com","password":"StrongStaffPass123!","firstName":"Jane","lastName":"Smith"}'
+
+# Staff login
+curl -X POST http://localhost:3000/api/v1/auth/staff/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"staff@example.com","password":"StrongStaffPass123!"}'
+
+# Passenger login
+curl -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"passenger@example.com","password":"StrongPass123!"}'
+
+# Get profile (use token from login response)
+curl -X GET http://localhost:3000/api/v1/auth/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
 ## 🛠️ Development
