@@ -759,6 +759,298 @@ Authorization: Bearer <admin-jwt-token>
 
 ---
 
+## Coach Type Management Endpoints
+
+RailNet provides comprehensive coach type management for railway class of travel administration. Coach types define different service classes with varying pricing structures.
+
+### Coach Type Data Model
+
+```typescript
+interface CoachType {
+  id: string;           // Unique identifier
+  name: string;         // Coach type name (e.g., "AC Berth")
+  code: string;         // Auto-generated code (e.g., "ACBERTH")
+  description?: string; // Optional description
+  ratePerKm: number;    // Rate per kilometer in INR
+  isActive: boolean;    // Active status
+  createdAt: Date;      // Creation timestamp
+  updatedAt: Date;      // Last update timestamp
+}
+```
+
+### Default Coach Types
+
+The system includes these predefined coach types with different pricing tiers:
+
+| Coach Type | Rate per Km (INR) | Description |
+|------------|-------------------|-------------|
+| Shovan | 0.5 | Lowest cost general class |
+| Shovan Chair | 0.75 | General class with assigned seating |
+| First Class Seat | 1.5 | First class seating |
+| First Class Berth | 2.0 | First class sleeping berth |
+| Snigdha | 1.0 | Premium non-AC class |
+| AC Seat | 2.5 | Air-conditioned seating |
+| AC Berth | 3.0 | Air-conditioned sleeping berth |
+| AC Cabin | 4.0 | Highest cost air-conditioned cabin |
+
+### Coach Type Code Generation
+
+Coach type codes are automatically generated from the name:
+- "AC Berth" → "ACBERTH"
+- "First Class Seat" → "FIRSTCL"
+- "Shovan Chair" → "SHOVANC"
+
+### Create Coach Type
+
+Create a new coach type (admin only).
+
+**Endpoint:** `POST /coach-types/admin/coach-types`
+
+**Headers:**
+```
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Request Body:**
+```json
+{
+  "name": "Business Class",
+  "description": "Premium business class seating",
+  "ratePerKm": 5.0
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Coach type created successfully",
+  "data": {
+    "coachType": {
+      "id": "coach-type-uuid",
+      "name": "Business Class",
+      "code": "BUSINES",
+      "description": "Premium business class seating",
+      "ratePerKm": 5.0,
+      "isActive": true,
+      "createdAt": "2025-11-18T10:30:00.000Z",
+      "updatedAt": "2025-11-18T10:30:00.000Z"
+    }
+  },
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+**Validation Rules:**
+- Name: Required, 1-100 characters
+- Description: Optional, max 500 characters
+- Rate per Km: Required, 0-100 INR
+
+**Error Responses:**
+- `400` - Validation error
+- `403` - Forbidden (admin access required)
+- `409` - Coach type with this name already exists
+
+### Get All Coach Types
+
+Retrieve all active coach types (public access).
+
+**Endpoint:** `GET /coach-types/coach-types`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "coach-type-uuid-1",
+      "name": "Shovan",
+      "code": "SHOVAN",
+      "description": "Lowest cost general class",
+      "ratePerKm": 0.5,
+      "isActive": true,
+      "createdAt": "2025-11-18T10:00:00.000Z",
+      "updatedAt": "2025-11-18T10:00:00.000Z"
+    },
+    {
+      "id": "coach-type-uuid-2",
+      "name": "AC Berth",
+      "code": "ACBERTH",
+      "description": "Air-conditioned sleeping berth",
+      "ratePerKm": 3.0,
+      "isActive": true,
+      "createdAt": "2025-11-18T10:15:00.000Z",
+      "updatedAt": "2025-11-18T10:15:00.000Z"
+    }
+  ],
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+### Get Coach Type by ID
+
+Retrieve a specific coach type by its unique identifier (public access).
+
+**Endpoint:** `GET /coach-types/coach-types/{id}`
+
+**Parameters:**
+- `id` (path): Coach type UUID
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "coach-type-uuid",
+    "name": "AC Berth",
+    "code": "ACBERTH",
+    "description": "Air-conditioned sleeping berth",
+    "ratePerKm": 3.0,
+    "isActive": true,
+    "createdAt": "2025-11-18T10:00:00.000Z",
+    "updatedAt": "2025-11-18T10:00:00.000Z"
+  },
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
+- `404` - Coach type not found
+
+### Search Coach Types
+
+Search coach types by name, code, or description (public access).
+
+**Endpoint:** `GET /coach-types/coach-types/search/{query}`
+
+**Parameters:**
+- `query` (path): Search term (minimum 1 character)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "coach-type-uuid",
+      "name": "AC Berth",
+      "code": "ACBERTH",
+      "description": "Air-conditioned sleeping berth",
+      "ratePerKm": 3.0,
+      "isActive": true,
+      "createdAt": "2025-11-18T10:00:00.000Z",
+      "updatedAt": "2025-11-18T10:00:00.000Z"
+    }
+  ],
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+### Update Coach Type
+
+Update coach type information (admin only).
+
+**Endpoint:** `PUT /coach-types/admin/coach-types/{id}`
+
+**Headers:**
+```
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Parameters:**
+- `id` (path): Coach type UUID
+
+**Request Body:**
+```json
+{
+  "name": "Premium AC Berth",
+  "ratePerKm": 3.5
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Coach type updated successfully",
+  "data": {
+    "coachType": {
+      "id": "coach-type-uuid",
+      "name": "Premium AC Berth",
+      "code": "PREMIUM",
+      "description": "Air-conditioned sleeping berth",
+      "ratePerKm": 3.5,
+      "isActive": true,
+      "createdAt": "2025-11-18T10:00:00.000Z",
+      "updatedAt": "2025-11-18T10:30:00.000Z"
+    }
+  },
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+**Validation Rules:**
+- Name: Optional, 1-100 characters if provided
+- Description: Optional, max 500 characters if provided
+- Rate per Km: Optional, 0-100 INR if provided
+
+**Error Responses:**
+- `400` - Validation error
+- `403` - Forbidden (admin access required)
+- `404` - Coach type not found
+
+### Deactivate Coach Type
+
+Deactivate a coach type (admin only - soft delete).
+
+**Endpoint:** `DELETE /coach-types/admin/coach-types/{id}`
+
+**Headers:**
+```
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Parameters:**
+- `id` (path): Coach type UUID
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Coach type deactivated successfully",
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
+- `403` - Forbidden (admin access required)
+- `404` - Coach type not found
+
+### Initialize Default Coach Types
+
+Initialize the system with default coach types (admin only).
+
+**Endpoint:** `POST /coach-types/admin/coach-types/initialize`
+
+**Headers:**
+```
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Default coach types initialized successfully",
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
+- `403` - Forbidden (admin access required)
+
+---
+
 ## Error Codes
 
 ### Authentication Errors
@@ -994,7 +1286,6 @@ The following endpoints are planned for future releases:
 - `POST /auth/change-password` - Change password
 
 ### Railway Operations
-- `GET /stations` - List railway stations
 - `GET /trains` - List available trains
 - `POST /bookings` - Create train booking
 - `GET /bookings` - List user bookings
@@ -1004,7 +1295,6 @@ The following endpoints are planned for future releases:
 - `GET /admin/users` - User management
 - `GET /admin/bookings` - Booking management
 - `POST /admin/trains` - Add new trains
-- `PUT /admin/stations` - Update station information
 
 ---
 
