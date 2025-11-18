@@ -59,6 +59,33 @@ export interface User {
 
 export type UserRole = 'ADMIN' | 'STAFF' | 'PASSENGER';
 
+// Station Types
+export interface Station {
+  id: string;
+  name: string;
+  code: string;
+  city: string;
+  state: string;
+  country: string;
+  latitude?: number;
+  longitude?: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateStationData {
+  name: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface UpdateStationData {
+  name?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
 // Authentication Types
 export interface JWTPayload {
   userId: string;

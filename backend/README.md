@@ -1,6 +1,6 @@
 # RailNet Backend
 
-A production-ready railway management system backend built with Fastify, TypeScript, and PostgreSQL.
+A production-ready railway management system backend built with Fastify, TypeScript, and PostgreSQL. Features comprehensive station management, role-based authentication, and robust API infrastructure for railway operations.
 
 ## 🚀 Features
 
@@ -10,6 +10,7 @@ A production-ready railway management system backend built with Fastify, TypeScr
 - **Redis**: Caching and session management
 - **JWT Authentication**: Secure token-based authentication
 - **Role-based Authorization**: Admin, Staff, and Passenger roles
+- **Station Management**: Complete railway station CRUD operations (admin only)
 - **Security**: Helmet, CORS, Rate limiting, Input validation
 - **Logging**: Structured logging with Winston
 - **Health Checks**: Comprehensive health monitoring
@@ -22,15 +23,14 @@ A production-ready railway management system backend built with Fastify, TypeScr
 
 ```
 src/
-├── config/           # Configuration management
-├── controllers/      # Request handlers
-├── middleware/       # Custom middleware (auth, security, error handling)
-├── routes/          # Route definitions
-├── services/        # Business logic
-├── utils/           # Utility functions
-├── errors/          # Custom error classes
-├── prisma/          # Database schema and migrations
-└── server.ts        # Application entry point
+├── core/             # Core application setup (server, config, database)
+├── features/         # Feature-based modules
+│   ├── auth/         # Authentication & authorization
+│   ├── health/       # Health check endpoints
+│   └── stations/     # Station management
+├── shared/           # Shared utilities and constants
+├── types/            # TypeScript type definitions
+└── server.ts         # Application entry point
 ```
 
 ## 📋 Prerequisites
@@ -80,7 +80,7 @@ src/
    npm run dev
    ```
 
-The API will be available at `http://localhost:3000`
+The API will be available at `http://localhost:3001`
 
 ### Manual Setup
 
@@ -115,15 +115,56 @@ The API will be available at `http://localhost:3000`
    npm run dev
    ```
 
-## 📖 API Documentation
+## 🚂 Station Management
 
-Comprehensive API documentation is available in [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md).
+RailNet includes comprehensive station management capabilities for railway infrastructure administration.
+
+### Features
+
+- **Station Creation**: Create new railway stations with location coordinates
+- **Station Codes**: Auto-generated unique station codes from station names
+- **Location Support**: Store latitude and longitude coordinates
+- **Search Functionality**: Search stations by name, code, or city
+- **Admin Controls**: Full CRUD operations restricted to administrators
+- **Soft Deletion**: Stations can be deactivated rather than permanently deleted
+
+### Station Data Model
+
+```typescript
+interface Station {
+  id: string;           // Unique identifier
+  name: string;         // Station name (required)
+  code: string;         // Auto-generated code (e.g., "CENTRAL")
+  city: string;         // City name
+  state: string;        // State/Province
+  country: string;      // Country
+  latitude?: number;    // GPS latitude (-90 to 90)
+  longitude?: number;   // GPS longitude (-180 to 180)
+  isActive: boolean;    // Active status
+  createdAt: Date;      // Creation timestamp
+  updatedAt: Date;      // Last update timestamp
+}
+```
+
+### Station Code Generation
+
+Station codes are automatically generated from the station name:
+
+- "Central Station" → "CENTRA"
+- "Grand Central Terminal" → "GRANDC"
+- "New York Penn Station" → "NEWWYO"
+
+### API Permissions
+
+- **Public Access**: View stations, search stations
+- **Admin Only**: Create, update, deactivate stations
 
 ### Quick Reference
 
-**Base URL:** `http://localhost:3000/api/v1`
+**Base URL:** `http://localhost:3001/api/v1`
 
 **Authentication Endpoints:**
+
 - `POST /auth/register` - Register new passenger account
 - `POST /auth/admin/register` - Register new admin account
 - `POST /auth/admin/register-staff` - Register new staff account (admin only)
@@ -134,47 +175,82 @@ Comprehensive API documentation is available in [`docs/API_DOCUMENTATION.md`](do
 - `POST /auth/refresh` - Refresh access token
 
 **Health Endpoints:**
+
 - `GET /health` - Basic health check
 - `GET /health/detailed` - Detailed system health
 - `GET /health/ready` - Readiness check
+
+**Station Management Endpoints (Admin Only):**
+
+- `POST /stations/admin/stations` - Create new station (admin only)
+- `PUT /stations/admin/stations/:id` - Update station (admin only)
+- `DELETE /stations/admin/stations/:id` - Deactivate station (admin only)
+
+**Public Station Endpoints:**
+
+- `GET /stations/stations` - Get all active stations
+- `GET /stations/stations/:id` - Get station by ID
+- `GET /stations/stations/search/:query` - Search stations by name/code/city
 
 ### Example Usage
 
 ```bash
 # Register passenger
-curl -X POST http://localhost:3000/api/v1/auth/register \
+curl -X POST http://localhost:3001/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"passenger@example.com","password":"StrongPass123!","firstName":"John","lastName":"Doe"}'
 
 # Register admin
-curl -X POST http://localhost:3000/api/v1/auth/admin/register \
+curl -X POST http://localhost:3001/api/v1/auth/admin/register \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@example.com","password":"StrongAdminPass123!","firstName":"Admin","lastName":"User"}'
 
 # Admin login
-curl -X POST http://localhost:3000/api/v1/auth/admin/login \
+curl -X POST http://localhost:3001/api/v1/auth/admin/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@example.com","password":"StrongAdminPass123!"}'
 
 # Register staff (requires admin token)
-curl -X POST http://localhost:3000/api/v1/auth/admin/register-staff \
+curl -X POST http://localhost:3001/api/v1/auth/admin/register-staff \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ADMIN_JWT_TOKEN" \
   -d '{"email":"staff@example.com","password":"StrongStaffPass123!","firstName":"Jane","lastName":"Smith"}'
 
 # Staff login
-curl -X POST http://localhost:3000/api/v1/auth/staff/login \
+curl -X POST http://localhost:3001/api/v1/auth/staff/login \
   -H "Content-Type: application/json" \
   -d '{"email":"staff@example.com","password":"StrongStaffPass123!"}'
 
 # Passenger login
-curl -X POST http://localhost:3000/api/v1/auth/login \
+curl -X POST http://localhost:3001/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"passenger@example.com","password":"StrongPass123!"}'
 
 # Get profile (use token from login response)
-curl -X GET http://localhost:3000/api/v1/auth/profile \
+curl -X GET http://localhost:3001/api/v1/auth/profile \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Create station (admin only)
+curl -X POST http://localhost:3001/api/v1/stations/admin/stations \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ADMIN_JWT_TOKEN" \
+  -d '{"name":"Central Station","latitude":40.7128,"longitude":-74.0060}'
+
+# Get all stations (public)
+curl -X GET http://localhost:3001/api/v1/stations/stations
+
+# Search stations (public)
+curl -X GET http://localhost:3001/api/v1/stations/stations/search/central
+
+# Update station (admin only)
+curl -X PUT http://localhost:3001/api/v1/stations/admin/stations/STATION_ID \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ADMIN_JWT_TOKEN" \
+  -d '{"name":"Updated Central Station","latitude":40.7130,"longitude":-74.0065}'
+
+# Deactivate station (admin only)
+curl -X DELETE http://localhost:3001/api/v1/stations/admin/stations/STATION_ID \
+  -H "Authorization: Bearer ADMIN_JWT_TOKEN"
 ```
 
 ## 🛠️ Development
@@ -209,7 +285,7 @@ npm run typecheck   # Run TypeScript type checking
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `NODE_ENV` | Environment mode | `development` |
-| `PORT` | Server port | `3000` |
+| `PORT` | Server port | `3001` |
 | `DATABASE_URL` | PostgreSQL connection string | Required |
 | `JWT_SECRET` | JWT signing secret | Required |
 | `REDIS_URL` | Redis connection URL | Optional |
@@ -227,6 +303,22 @@ npm run test:coverage
 # Run tests in watch mode
 npm run test:watch
 ```
+
+### API Testing with Postman
+
+A comprehensive Postman collection is available for testing all API endpoints:
+
+- **Collection File**: `RailNet_Backend_Postman_Collection.json`
+- **Features**: Automated token management, environment variables, comprehensive test coverage
+- **Endpoints Covered**: Authentication, health checks, station management
+- **Import Instructions**: Import the JSON file into Postman and configure environment variables
+
+**Environment Variables:**
+
+- `baseURL`: `http://localhost:3001` (or your server URL)
+- `adminToken`: JWT token for admin operations
+- `staffToken`: JWT token for staff operations
+- `passengerToken`: JWT token for passenger operations
 
 ## 🚀 Deployment
 

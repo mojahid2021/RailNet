@@ -24,7 +24,7 @@ export function registerErrorHandler(server: FastifyInstance): void {
       // Handle Fastify validation errors - convert to ZodError format
       const validationErrors = error.validation || [];
       const zodError: ZodError = {
-        issues: validationErrors.map((err: any) => ({
+        issues: validationErrors.map((err: { instancePath?: string; message?: string }) => ({
           code: 'custom',
           path: err.instancePath ? err.instancePath.split('/').filter(Boolean) : [],
           message: err.message || 'Validation error',

@@ -6,7 +6,7 @@ RailNet is a comprehensive railway management system backend API built with Fast
 
 ### Base URL
 ```
-http://localhost:3000/api/v1
+http://localhost:3001/api/v1
 ```
 
 ### API Versioning
@@ -461,9 +461,308 @@ Kubernetes-style readiness probe for container orchestration.
 
 ---
 
+## Station Management Endpoints
+
+RailNet provides comprehensive station management capabilities for railway infrastructure administration.
+
+### Station Data Model
+
+```typescript
+interface Station {
+  id: string;           // Unique identifier
+  name: string;         // Station name (required)
+  code: string;         // Auto-generated code (e.g., "CENTRAL")
+  city: string;         // City name
+  state: string;        // State/Province
+  country: string;      // Country (default: "India")
+  latitude?: number;    // GPS latitude (-90 to 90)
+  longitude?: number;   // GPS longitude (-180 to 180)
+  isActive: boolean;    // Active status
+  createdAt: Date;      // Creation timestamp
+  updatedAt: Date;      // Last update timestamp
+}
+```
+
+### Station Code Generation
+
+Station codes are automatically generated from the station name:
+
+- "Central Station" → "CENTRA"
+- "Grand Central Terminal" → "GRANDC"
+- "New York Penn Station" → "NEWWYO"
+
+### Create Station
+
+Create a new railway station (admin only).
+
+**Endpoint:** `POST /stations/admin/stations`
+
+**Headers:**
+
+```text
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Request Body:**
+
+```json
+{
+  "name": "Central Station",
+  "latitude": 40.7128,
+  "longitude": -74.0060
+}
+```
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "message": "Station created successfully",
+  "data": {
+    "station": {
+      "id": "station-uuid",
+      "name": "Central Station",
+      "code": "CENTRA",
+      "city": "Central Station",
+      "state": "",
+      "country": "India",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "isActive": true,
+      "createdAt": "2025-11-18T10:30:00.000Z",
+      "updatedAt": "2025-11-18T10:30:00.000Z"
+    }
+  },
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+**Validation Rules:**
+
+- Name: Required, 1-100 characters
+- Latitude: Optional, -90 to 90
+- Longitude: Optional, -180 to 180
+
+**Error Responses:**
+
+- `400` - Validation error
+- `403` - Forbidden (admin access required)
+- `409` - Station with this name already exists
+
+### Get All Stations
+
+Retrieve all active railway stations (public access).
+
+**Endpoint:** `GET /stations/stations`
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "station-uuid-1",
+      "name": "Central Station",
+      "code": "CENTRA",
+      "city": "Central Station",
+      "state": "",
+      "country": "India",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "isActive": true,
+      "createdAt": "2025-11-18T10:00:00.000Z",
+      "updatedAt": "2025-11-18T10:00:00.000Z"
+    },
+    {
+      "id": "station-uuid-2",
+      "name": "Grand Central Station",
+      "code": "GRANDC",
+      "city": "Grand Central Station",
+      "state": "",
+      "country": "India",
+      "latitude": 40.7527,
+      "longitude": -73.9772,
+      "isActive": true,
+      "createdAt": "2025-11-18T10:15:00.000Z",
+      "updatedAt": "2025-11-18T10:15:00.000Z"
+    }
+  ],
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+### Get Station by ID
+
+Retrieve a specific station by its unique identifier (public access).
+
+**Endpoint:** `GET /stations/stations/{id}`
+
+**Parameters:**
+
+- `id` (path): Station UUID
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "station-uuid",
+    "name": "Central Station",
+    "code": "CENTRA",
+    "city": "Central Station",
+    "state": "",
+    "country": "India",
+    "latitude": 40.7128,
+    "longitude": -74.006,
+    "isActive": true,
+    "createdAt": "2025-11-18T10:00:00.000Z",
+    "updatedAt": "2025-11-18T10:00:00.000Z"
+  },
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
+
+- `404` - Station not found
+
+### Search Stations
+
+Search stations by name, code, or city (public access).
+
+**Endpoint:** `GET /stations/stations/search/{query}`
+
+**Parameters:**
+
+- `query` (path): Search term (minimum 1 character)
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "station-uuid",
+      "name": "Central Station",
+      "code": "CENTRA",
+      "city": "Central Station",
+      "state": "",
+      "country": "India",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "isActive": true,
+      "createdAt": "2025-11-18T10:00:00.000Z",
+      "updatedAt": "2025-11-18T10:00:00.000Z"
+    }
+  ],
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+### Update Station
+
+Update station information (admin only).
+
+**Endpoint:** `PUT /stations/admin/stations/{id}`
+
+**Headers:**
+
+```text
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Parameters:**
+
+- `id` (path): Station UUID
+
+**Request Body:**
+
+```json
+{
+  "name": "Updated Central Station",
+  "latitude": 40.7130,
+  "longitude": -74.0065
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Station updated successfully",
+  "data": {
+    "station": {
+      "id": "station-uuid",
+      "name": "Updated Central Station",
+      "code": "UPDATED",
+      "city": "Updated Central Station",
+      "state": "",
+      "country": "India",
+      "latitude": 40.7130,
+      "longitude": -74.0065,
+      "isActive": true,
+      "createdAt": "2025-11-18T10:00:00.000Z",
+      "updatedAt": "2025-11-18T10:30:00.000Z"
+    }
+  },
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+**Validation Rules:**
+
+- Name: Optional, 1-100 characters if provided
+- Latitude: Optional, -90 to 90 if provided
+- Longitude: Optional, -180 to 180 if provided
+
+**Error Responses:**
+
+- `400` - Validation error
+- `403` - Forbidden (admin access required)
+- `404` - Station not found
+
+### Deactivate Station
+
+Deactivate a station (admin only - soft delete).
+
+**Endpoint:** `DELETE /stations/admin/stations/{id}`
+
+**Headers:**
+
+```text
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Parameters:**
+
+- `id` (path): Station UUID
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Station deactivated successfully",
+  "timestamp": "2025-11-18T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
+
+- `403` - Forbidden (admin access required)
+- `404` - Station not found
+
+---
+
 ## Error Codes
 
 ### Authentication Errors
+
 - `UNAUTHORIZED` - Authentication required
 - `FORBIDDEN` - Insufficient permissions
 - `TOKEN_EXPIRED` - JWT token has expired
@@ -471,16 +770,19 @@ Kubernetes-style readiness probe for container orchestration.
 - `AUTHENTICATION_ERROR` - Invalid credentials
 
 ### Validation Errors
+
 - `VALIDATION_ERROR` - Input validation failed
 - `INVALID_INPUT` - Invalid request data
 - `MISSING_REQUIRED_FIELD` - Required field is missing
 
 ### Resource Errors
+
 - `NOT_FOUND` - Requested resource not found
 - `ALREADY_EXISTS` - Resource already exists
 - `CONFLICT` - Operation conflicts with current state
 
 ### System Errors
+
 - `INTERNAL_ERROR` - Unexpected server error
 - `SERVICE_UNAVAILABLE` - Service temporarily unavailable
 - `DATABASE_ERROR` - Database operation failed
@@ -500,15 +802,19 @@ The API implements rate limiting to prevent abuse:
 ## Security Features
 
 ### CORS
+
 Cross-Origin Resource Sharing is configured based on environment settings.
 
 ### Helmet
+
 Security headers are automatically applied to all responses.
 
 ### Input Validation
+
 All input data is validated using Zod schemas with detailed error messages.
 
 ### JWT Security
+
 - Tokens expire after 24 hours by default
 - Tokens include issuer, audience, and expiration claims
 - Secure token storage recommended on client side

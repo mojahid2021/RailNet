@@ -14,7 +14,14 @@ import { appLogger } from '../logger';
  */
 export function generateToken(payload: JWTPayload): string {
   try {
-    const token = jwt.sign(payload, config.auth.jwt.secret, {
+    const secret = config.auth.jwt.secret;
+    appLogger.debug('Generating JWT token', { 
+      secretLength: secret.length,
+      secretPrefix: secret.substring(0, 10) + '...',
+      payload: { userId: payload.userId, email: payload.email, role: payload.role }
+    });
+    
+    const token = jwt.sign(payload, secret, {
       expiresIn: config.auth.jwt.expiresIn,
       issuer: 'railnet-backend',
       audience: 'railnet-client',

@@ -3,17 +3,18 @@
  * Provides structured server initialization with proper middleware and error handling
  */
 
-import Fastify, { FastifyInstance, FastifyRequest } from 'fastify';
+import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCors from '@fastify/cors';
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyJwt from '@fastify/jwt';
 
 import { config } from '../config';
-import { appLogger, createRequestLogger } from '../logger';
+import { appLogger } from '../logger';
 import { connectDatabase, disconnectDatabase } from '../database';
 import { registerErrorHandler } from '../middleware/errorHandler';
 import { registerRoutes } from './routes';
+import { extractToken, verifyToken } from '../auth/jwt';
 
 import { HTTP_STATUS, TIME_CONSTANTS } from '../../shared/constants';
 
@@ -103,26 +104,56 @@ export async function registerSecurityMiddleware(server: FastifyInstance): Promi
   }
 
   // JWT authentication
-  // JWT authentication - using any due to complex fastify-jwt type definitions
-  await server.register(fastifyJwt as any, {
+  await server.register(fastifyJwt, {
     secret: config.auth.jwt.secret,
     sign: {
       expiresIn: config.auth.jwt.expiresIn,
     },
-    verify: {
-      extractToken: (request: FastifyRequest) => {
-        const authHeader = request.headers.authorization;
-        if (!authHeader) return undefined;
-
-        const parts = authHeader.split(' ');
-        if (parts.length !== 2 || parts[0] !== 'Bearer') {
-          return undefined;
-        }
-
-        return parts[1];
-      },
-    },
   });
+
+  // Add authentication decorators
+  server.decorate('authenticate', async function (request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const token = extractToken(request.headers.authorization);
+      if (!token) {
+        return reply.status(401).send({
+          success: false,
+          error: {
+            code: 'AUTHENTICATION_ERROR',
+            message: 'Authentication required',
+          },
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const decoded = verifyToken(token);
+      (request as FastifyRequest & { user: typeof decoded }).user = decoded;
+
+      appLogger.debug('JWT verification successful', { userId: decoded.userId });
+    } catch (error) {
+      appLogger.error('JWT verification failed', { 
+        error: error instanceof Error ? error.message : String(error),
+        authHeader: request.headers.authorization?.substring(0, 20) + '...'
+      });
+      return reply.status(401).send({
+        success: false,
+        error: {
+          code: 'AUTHENTICATION_ERROR',
+          message: 'Authentication required',
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
+  server.decorate('auth', function (authFunctions: Function[]) {
+    return async function (this: FastifyInstance, request: FastifyRequest, reply: FastifyReply) {
+      for (const authFunction of authFunctions) {
+        await authFunction.call(this, request, reply);
+      }
+    };
+  });
+
   appLogger.info('JWT authentication middleware registered');
 }
 
@@ -131,31 +162,46 @@ export async function registerSecurityMiddleware(server: FastifyInstance): Promi
  */
 export async function registerApplicationMiddleware(server: FastifyInstance): Promise<void> {
   // Request logging middleware
-  server.addHook('onRequest', createRequestLogger() as any);
+  server.addHook('onRequest', async (request) => {
+    const startTime = Date.now();
+    const requestId = request.headers['x-request-id'] as string ||
+      `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  // Add request context
-  server.addHook('onRequest', async (request: FastifyRequest & { timestamp?: Date }) => {
-    // Generate request ID if not present
-    if (!request.headers['x-request-id']) {
-      request.headers['x-request-id'] = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    }
+    // Add request ID to request object
+    (request as FastifyRequest & { requestId?: string }).requestId = requestId;
 
-    // Add timestamp
-    request.timestamp = new Date();
-  });
-
-  // Add response context
-  server.addHook('onResponse', async (request: FastifyRequest & { timestamp?: Date }, reply) => {
-    const duration = Date.now() - (request.timestamp?.getTime() || Date.now());
-
-    // Log response details
-    appLogger.debug('Request completed', {
+    // Create request logger with context
+    const requestLogger = appLogger.child({
+      requestId,
       method: request.method,
       url: request.url,
-      statusCode: reply.statusCode,
-      duration,
-      requestId: request.headers['x-request-id'] as string,
+      ip: request.ip,
+      userAgent: request.headers['user-agent'],
     });
+
+    // Store logger on request for use in handlers
+    (request as FastifyRequest & { logger?: typeof appLogger }).logger = requestLogger;
+
+    // Log request start
+    requestLogger.info('Request started');
+
+    // Store start time for response logging
+    (request as FastifyRequest & { startTime?: number }).startTime = startTime;
+  });
+
+  // Response logging middleware
+  server.addHook('onResponse', async (request, reply) => {
+    const startTime = (request as FastifyRequest & { startTime?: number }).startTime || Date.now();
+    const duration = Date.now() - startTime;
+    const requestLogger = (request as FastifyRequest & { logger?: typeof appLogger }).logger || appLogger;
+
+    // Log response details
+    requestLogger.logRequest(
+      request.method,
+      request.url,
+      reply.statusCode,
+      duration
+    );
   });
 }
 
@@ -166,8 +212,15 @@ export function registerHealthChecks(server: FastifyInstance): void {
   // Basic health check
   server.get('/health', async (request, reply) => {
     try {
-      // Check database connectivity
-      await connectDatabase();
+      // Check database connectivity (optional)
+      let dbStatus = 'disconnected';
+      try {
+        await connectDatabase();
+        dbStatus = 'connected';
+      } catch {
+        // Database not available, but server can still respond
+        dbStatus = 'disconnected';
+      }
 
       const health = {
         status: 'healthy',
@@ -176,7 +229,7 @@ export function registerHealthChecks(server: FastifyInstance): void {
         environment: config.app.env,
         version: process.env.npm_package_version || '1.0.0',
         checks: {
-          database: 'connected',
+          database: dbStatus,
         },
       };
 
@@ -330,17 +383,28 @@ export async function startServer(serverConfig?: Partial<ServerConfig>): Promise
     // Register error handler
     registerErrorHandler(server);
 
-    // Register health checks
-    registerHealthChecks(server);
-
     // Register application routes
     await registerRoutes(server);
 
     // Setup graceful shutdown
     setupGracefulShutdown(server);
 
-    // Connect to database
-    await connectDatabase();
+    appLogger.info('Attempting database connection...');
+
+    // Connect to database (optional for development)
+    try {
+      await connectDatabase();
+      appLogger.info('Database connection successful');
+    } catch (error) {
+      if (config.app.env === 'development') {
+        appLogger.warn('Database connection failed, continuing in development mode', { error });
+        appLogger.warn('Some features may not work without a database connection');
+      } else {
+        throw error; // Re-throw in production
+      }
+    }
+
+    appLogger.info('Starting server listener...');
 
     // Start listening
     await server.listen(finalConfig);
@@ -354,6 +418,12 @@ export async function startServer(serverConfig?: Partial<ServerConfig>): Promise
 
   } catch (error) {
     appLogger.error('❌ Failed to start server', { error });
+    appLogger.error('Server startup error details:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      port: finalConfig.port,
+      host: finalConfig.host,
+    });
     process.exit(1);
   }
 }

@@ -10,6 +10,7 @@ import { appLogger } from '../logger';
 // Import route modules
 import { createHealthRoutes } from '../../features/health/routes';
 import { createAuthRoutes } from '../../features/auth/routes';
+import { createStationRoutes } from '../../features/stations/routes';
 
 /**
  * Register all application routes
@@ -26,11 +27,11 @@ export async function registerRoutes(server: FastifyInstance): Promise<void> {
   // Register routes under API versioning
   await server.register(
     async (apiServer) => {
-      // Health routes (available at multiple endpoints)
-      apiServer.register(createHealthRoutes(), { prefix: '/health' });
-
       // Authentication routes
       apiServer.register(createAuthRoutes(), { prefix: '/auth' });
+
+      // Station routes
+      apiServer.register(createStationRoutes(), { prefix: '/stations' });
 
       // Future route modules can be added here
       // apiServer.register(createUserRoutes(), { prefix: '/users' });
@@ -46,19 +47,6 @@ export async function registerRoutes(server: FastifyInstance): Promise<void> {
 
   // Register health routes at root level for load balancers and monitoring
   server.register(createHealthRoutes(), { prefix: '/health' });
-
-  // Register root API information endpoint
-  server.get(`${apiPrefix}/${version}`, async () => ({
-    name: 'RailNet API',
-    version: process.env.npm_package_version || '1.0.0',
-    environment: config.app.env,
-    timestamp: new Date().toISOString(),
-    documentation: `${config.app.host}:${config.app.port}${apiPrefix}/${version}/documentation`,
-    endpoints: {
-      health: `${apiPrefix}/${version}/health`,
-      auth: `${apiPrefix}/${version}/auth`,
-    },
-  }));
 
   appLogger.info('Routes registration completed');
 }
