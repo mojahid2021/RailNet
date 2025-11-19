@@ -43,6 +43,9 @@ export const createStationRoutes = (): FastifyPluginAsync => {
           required: ['name'],
           properties: {
             name: { type: 'string', minLength: 1, maxLength: 100 },
+            city: { type: 'string', minLength: 1, maxLength: 100 },
+            state: { type: 'string', minLength: 1, maxLength: 100 },
+            country: { type: 'string', minLength: 1, maxLength: 100 },
             latitude: { type: 'number', minimum: -90, maximum: 90 },
             longitude: { type: 'number', minimum: -180, maximum: 180 },
           },

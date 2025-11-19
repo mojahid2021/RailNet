@@ -5,29 +5,37 @@
 RailNet is a comprehensive railway management system backend API built with Fastify, TypeScript, and Prisma. This API provides endpoints for user authentication, health monitoring, and railway operations management.
 
 ### Base URL
+
 ```
 http://localhost:3001/api/v1
 ```
 
 ### API Versioning
+
 All API endpoints are versioned under `/api/v1/`. The API follows semantic versioning principles.
 
 ### Authentication
+
 The API uses JWT (JSON Web Tokens) for authentication. Include the token in the Authorization header:
+
 ```
 Authorization: Bearer <your-jwt-token>
 ```
 
 ### User Roles
+
 The system supports three user roles:
+
 - **ADMIN**: System administrators with full access
 - **STAFF**: Railway staff (checkers) with operational access
 - **PASSENGER**: Regular users for booking and travel
 
 ### Response Format
+
 All responses follow a consistent JSON structure:
 
 **Success Response:**
+
 ```json
 {
   "success": true,
@@ -38,6 +46,7 @@ All responses follow a consistent JSON structure:
 ```
 
 **Error Response:**
+
 ```json
 {
   "success": false,
@@ -51,6 +60,7 @@ All responses follow a consistent JSON structure:
 ```
 
 ### HTTP Status Codes
+
 - `200` - Success
 - `201` - Created
 - `400` - Bad Request
@@ -74,6 +84,7 @@ Register a new user account in the system.
 **Endpoint:** `POST /auth/register`
 
 **Request Body:**
+
 ```json
 {
   "email": "passenger@example.com",
@@ -84,6 +95,7 @@ Register a new user account in the system.
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -103,12 +115,14 @@ Register a new user account in the system.
 ```
 
 **Validation Rules:**
+
 - Email: Must be valid email format
 - Password: Minimum 8 characters, must contain uppercase, lowercase, number, and special character
 - First Name: 1-50 characters
 - Last Name: 1-50 characters
 
 **Error Responses:**
+
 - `400` - Validation error or user already exists
 - `409` - Email already registered
 
@@ -119,6 +133,7 @@ Register a new admin account in the system (separate endpoint for administrators
 **Endpoint:** `POST /auth/admin/register`
 
 **Request Body:**
+
 ```json
 {
   "email": "admin@example.com",
@@ -129,6 +144,7 @@ Register a new admin account in the system (separate endpoint for administrators
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -148,12 +164,14 @@ Register a new admin account in the system (separate endpoint for administrators
 ```
 
 **Validation Rules:**
+
 - Email: Must be valid email format
 - Password: Minimum 8 characters, must contain uppercase, lowercase, number, and special character
 - First Name: 1-50 characters
 - Last Name: 1-50 characters
 
 **Error Responses:**
+
 - `400` - Validation error or admin already exists
 - `409` - Email already registered
 
@@ -164,11 +182,13 @@ Register a new staff account (admin only - requires authentication).
 **Endpoint:** `POST /auth/admin/register-staff`
 
 **Headers:**
+
 ```
 Authorization: Bearer <admin-jwt-token>
 ```
 
 **Request Body:**
+
 ```json
 {
   "email": "staff@example.com",
@@ -179,6 +199,7 @@ Authorization: Bearer <admin-jwt-token>
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -198,12 +219,14 @@ Authorization: Bearer <admin-jwt-token>
 ```
 
 **Validation Rules:**
+
 - Email: Must be valid email format
 - Password: Minimum 8 characters, must contain uppercase, lowercase, number, and special character
 - First Name: 1-50 characters
 - Last Name: 1-50 characters
 
 **Error Responses:**
+
 - `400` - Validation error or staff already exists
 - `403` - Forbidden (only admins can register staff)
 - `409` - Email already registered
@@ -215,6 +238,7 @@ Authenticate passenger user credentials and receive access token.
 **Endpoint:** `POST /auth/login`
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -223,6 +247,7 @@ Authenticate passenger user credentials and receive access token.
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -242,6 +267,7 @@ Authenticate passenger user credentials and receive access token.
 ```
 
 **Error Responses:**
+
 - `400` - Invalid request format
 - `401` - Invalid credentials
 
@@ -252,6 +278,7 @@ Authenticate admin user credentials and receive access token.
 **Endpoint:** `POST /auth/admin/login`
 
 **Request Body:**
+
 ```json
 {
   "email": "admin@example.com",
@@ -260,6 +287,7 @@ Authenticate admin user credentials and receive access token.
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -279,6 +307,7 @@ Authenticate admin user credentials and receive access token.
 ```
 
 **Error Responses:**
+
 - `400` - Invalid request format
 - `401` - Invalid credentials
 
@@ -289,6 +318,7 @@ Authenticate staff user credentials and receive access token.
 **Endpoint:** `POST /auth/staff/login`
 
 **Request Body:**
+
 ```json
 {
   "email": "staff@example.com",
@@ -297,6 +327,7 @@ Authenticate staff user credentials and receive access token.
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -316,6 +347,7 @@ Authenticate staff user credentials and receive access token.
 ```
 
 **Error Responses:**
+
 - `400` - Invalid request format
 - `401` - Invalid credentials
 
@@ -326,11 +358,13 @@ Retrieve current authenticated user's profile information.
 **Endpoint:** `GET /auth/profile`
 
 **Headers:**
+
 ```
 Authorization: Bearer <jwt-token>
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -349,6 +383,7 @@ Authorization: Bearer <jwt-token>
 ```
 
 **Error Responses:**
+
 - `401` - Authentication required or invalid token
 
 ### Refresh Token
@@ -370,6 +405,7 @@ Simple health check endpoint for load balancers and monitoring systems.
 **Endpoint:** `GET /health`
 
 **Response (200):**
+
 ```json
 {
   "status": "healthy",
@@ -385,6 +421,7 @@ Simple health check endpoint for load balancers and monitoring systems.
 ```
 
 **Response (503):**
+
 ```json
 {
   "status": "unhealthy",
@@ -406,6 +443,7 @@ Comprehensive health check with system information and detailed service status.
 **Endpoint:** `GET /health/detailed`
 
 **Response (200):**
+
 ```json
 {
   "status": "healthy",
@@ -443,6 +481,7 @@ Kubernetes-style readiness probe for container orchestration.
 **Endpoint:** `GET /health/ready`
 
 **Response (200):**
+
 ```json
 {
   "status": "ready",
@@ -451,6 +490,7 @@ Kubernetes-style readiness probe for container orchestration.
 ```
 
 **Response (503):**
+
 ```json
 {
   "status": "not ready",
@@ -508,6 +548,9 @@ Authorization: Bearer <admin-jwt-token>
 ```json
 {
   "name": "Central Station",
+  "city": "Central Station",
+  "state": "",
+  "country": "India",
   "latitude": 40.7128,
   "longitude": -74.0060
 }
@@ -796,6 +839,7 @@ The system includes these predefined coach types with different pricing tiers:
 ### Coach Type Code Generation
 
 Coach type codes are automatically generated from the name:
+
 - "AC Berth" → "ACBERTH"
 - "First Class Seat" → "FIRSTCL"
 - "Shovan Chair" → "SHOVANC"
@@ -807,11 +851,13 @@ Create a new coach type (admin only).
 **Endpoint:** `POST /coach-types/admin/coach-types`
 
 **Headers:**
+
 ```
 Authorization: Bearer <admin-jwt-token>
 ```
 
 **Request Body:**
+
 ```json
 {
   "name": "Business Class",
@@ -821,6 +867,7 @@ Authorization: Bearer <admin-jwt-token>
 ```
 
 **Response (201):**
+
 ```json
 {
   "success": true,
@@ -842,11 +889,13 @@ Authorization: Bearer <admin-jwt-token>
 ```
 
 **Validation Rules:**
+
 - Name: Required, 1-100 characters
 - Description: Optional, max 500 characters
 - Rate per Km: Required, 0-100 INR
 
 **Error Responses:**
+
 - `400` - Validation error
 - `403` - Forbidden (admin access required)
 - `409` - Coach type with this name already exists
@@ -858,6 +907,7 @@ Retrieve all active coach types (public access).
 **Endpoint:** `GET /coach-types/coach-types`
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -894,9 +944,11 @@ Retrieve a specific coach type by its unique identifier (public access).
 **Endpoint:** `GET /coach-types/coach-types/{id}`
 
 **Parameters:**
+
 - `id` (path): Coach type UUID
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -915,6 +967,7 @@ Retrieve a specific coach type by its unique identifier (public access).
 ```
 
 **Error Responses:**
+
 - `404` - Coach type not found
 
 ### Search Coach Types
@@ -924,9 +977,11 @@ Search coach types by name, code, or description (public access).
 **Endpoint:** `GET /coach-types/coach-types/search/{query}`
 
 **Parameters:**
+
 - `query` (path): Search term (minimum 1 character)
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -953,14 +1008,17 @@ Update coach type information (admin only).
 **Endpoint:** `PUT /coach-types/admin/coach-types/{id}`
 
 **Headers:**
+
 ```
 Authorization: Bearer <admin-jwt-token>
 ```
 
 **Parameters:**
+
 - `id` (path): Coach type UUID
 
 **Request Body:**
+
 ```json
 {
   "name": "Premium AC Berth",
@@ -969,6 +1027,7 @@ Authorization: Bearer <admin-jwt-token>
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -990,11 +1049,13 @@ Authorization: Bearer <admin-jwt-token>
 ```
 
 **Validation Rules:**
+
 - Name: Optional, 1-100 characters if provided
 - Description: Optional, max 500 characters if provided
 - Rate per Km: Optional, 0-100 INR if provided
 
 **Error Responses:**
+
 - `400` - Validation error
 - `403` - Forbidden (admin access required)
 - `404` - Coach type not found
@@ -1006,14 +1067,17 @@ Deactivate a coach type (admin only - soft delete).
 **Endpoint:** `DELETE /coach-types/admin/coach-types/{id}`
 
 **Headers:**
+
 ```
 Authorization: Bearer <admin-jwt-token>
 ```
 
 **Parameters:**
+
 - `id` (path): Coach type UUID
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -1023,6 +1087,7 @@ Authorization: Bearer <admin-jwt-token>
 ```
 
 **Error Responses:**
+
 - `403` - Forbidden (admin access required)
 - `404` - Coach type not found
 
@@ -1033,11 +1098,13 @@ Initialize the system with default coach types (admin only).
 **Endpoint:** `POST /coach-types/admin/coach-types/initialize`
 
 **Headers:**
+
 ```
 Authorization: Bearer <admin-jwt-token>
 ```
 
 **Response (200):**
+
 ```json
 {
   "success": true,
@@ -1047,6 +1114,7 @@ Authorization: Bearer <admin-jwt-token>
 ```
 
 **Error Responses:**
+
 - `403` - Forbidden (admin access required)
 
 ---
@@ -1270,6 +1338,7 @@ npm run typecheck
 ### API Documentation Access
 
 When running the server, API documentation is available at:
+
 ```
 http://localhost:3000/api/v1/documentation
 ```
@@ -1281,17 +1350,20 @@ http://localhost:3000/api/v1/documentation
 The following endpoints are planned for future releases:
 
 ### User Management
+
 - `GET /users` - List users (admin only)
 - `PUT /auth/profile` - Update user profile
 - `POST /auth/change-password` - Change password
 
 ### Railway Operations
+
 - `GET /trains` - List available trains
 - `POST /bookings` - Create train booking
 - `GET /bookings` - List user bookings
 - `DELETE /bookings/{id}` - Cancel booking
 
 ### Administrative
+
 - `GET /admin/users` - User management
 - `GET /admin/bookings` - Booking management
 - `POST /admin/trains` - Add new trains
@@ -1301,6 +1373,7 @@ The following endpoints are planned for future releases:
 ## Support
 
 For API support or questions:
+
 - Check the health endpoints for system status
 - Review error messages for detailed information
 - Ensure proper authentication for protected endpoints
