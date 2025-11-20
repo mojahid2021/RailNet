@@ -1,50 +1,52 @@
 /**
- * Coach Type routes for RailNet Backend
- * Handles coach type management operations (admin only)
+ * Coach routes for RailNet Backend
+ * Handles coach management operations
  */
 
 import { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { appLogger } from '../../core/logger';
 import { HTTP_STATUS } from '../../shared/constants';
-import { CoachTypeService, CreateCoachTypeData } from './service';
+import { CoachService, CreateCoachData } from './service';
 
 // Validation schemas
-const createCoachTypeSchema = z.object({
-  name: z.string().min(1, 'Coach type name is required').max(100, 'Coach type name too long'),
-  description: z.string().max(500, 'Description too long').optional(),
-  ratePerKm: z.number().min(0, 'Rate per km must be positive').max(100, 'Rate per km too high'),
+const createCoachSchema = z.object({
+  trainId: z.string().min(1, 'Train ID is required'),
+  coachTypeId: z.string().min(1, 'Coach type ID is required'),
+  coachNumber: z.string().min(1, 'Coach number is required').max(10, 'Coach number too long'),
+  totalSeats: z.number().int().min(1, 'Total seats must be at least 1').max(200, 'Total seats too high'),
 });
 
-const updateCoachTypeSchema = z.object({
-  name: z.string().min(1, 'Coach type name is required').max(100, 'Coach type name too long').optional(),
-  description: z.string().max(500, 'Description too long').optional(),
-  ratePerKm: z.number().min(0, 'Rate per km must be positive').max(100, 'Rate per km too high').optional(),
+const updateCoachSchema = z.object({
+  coachTypeId: z.string().min(1, 'Coach type ID is required').optional(),
+  coachNumber: z.string().min(1, 'Coach number is required').max(10, 'Coach number too long').optional(),
+  totalSeats: z.number().int().min(1, 'Total seats must be at least 1').max(200, 'Total seats too high').optional(),
 });
 
 /**
- * Coach Type routes (admin only)
+ * Coach routes
  */
-export const createCoachTypeRoutes = (): FastifyPluginAsync => {
+export const createCoachRoutes = (): FastifyPluginAsync => {
   return async (server) => {
-    // Initialize coach type service
-    const coachTypeService = new CoachTypeService();
+    // Initialize coach service
+    const coachService = new CoachService();
 
     /**
-     * Create a new coach type (admin only)
+     * Create a new coach (admin only)
      */
-    server.post('/admin', {
+    server.post('/admin/coaches', {
       schema: {
-        description: 'Create a new coach type (admin only)',
-        tags: ['Coach Types'],
+        description: 'Create a new coach (admin only)',
+        tags: ['Coaches'],
         security: [{ bearerAuth: [] }],
         body: {
           type: 'object',
-          required: ['name', 'ratePerKm'],
+          required: ['trainId', 'coachTypeId', 'coachNumber', 'totalSeats'],
           properties: {
-            name: { type: 'string', minLength: 1, maxLength: 100 },
-            description: { type: 'string', maxLength: 500 },
-            ratePerKm: { type: 'number', minimum: 0, maximum: 100 },
+            trainId: { type: 'string' },
+            coachTypeId: { type: 'string' },
+            coachNumber: { type: 'string', minLength: 1, maxLength: 10 },
+            totalSeats: { type: 'number', minimum: 1, maximum: 200 },
           },
         },
         response: {
@@ -56,17 +58,35 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
               data: {
                 type: 'object',
                 properties: {
-                  coachType: {
+                  coach: {
                     type: 'object',
                     properties: {
                       id: { type: 'string' },
-                      name: { type: 'string' },
-                      code: { type: 'string' },
-                      description: { type: 'string' },
-                      ratePerKm: { type: 'number' },
+                      trainId: { type: 'string' },
+                      coachTypeId: { type: 'string' },
+                      coachNumber: { type: 'string' },
+                      totalSeats: { type: 'number' },
                       isActive: { type: 'boolean' },
                       createdAt: { type: 'string', format: 'date-time' },
                       updatedAt: { type: 'string', format: 'date-time' },
+                      coachType: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          name: { type: 'string' },
+                          code: { type: 'string' },
+                          description: { type: 'string' },
+                          ratePerKm: { type: 'number' },
+                        },
+                      },
+                      train: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          name: { type: 'string' },
+                          number: { type: 'string' },
+                        },
+                      },
                     },
                   },
                 },
@@ -115,14 +135,14 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
             success: false,
             error: {
               code: 'FORBIDDEN',
-              message: 'Only administrators can create coach types',
+              message: 'Only administrators can create coaches',
             },
             timestamp: new Date().toISOString(),
           });
         }
 
         // Validate request body
-        const validation = createCoachTypeSchema.safeParse(request.body);
+        const validation = createCoachSchema.safeParse(request.body);
         if (!validation.success) {
           return reply.status(HTTP_STATUS.BAD_REQUEST).send({
             success: false,
@@ -135,33 +155,34 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
           });
         }
 
-        const coachTypeData: CreateCoachTypeData = validation.data;
+        const coachData: CreateCoachData = validation.data;
 
-        // Create coach type
-        const coachType = await coachTypeService.createCoachType(coachTypeData);
+        // Create coach
+        const coach = await coachService.createCoach(coachData);
 
-        appLogger.info('Coach type created successfully', {
-          coachTypeId: coachType.id,
-          coachTypeName: coachType.name,
-          coachTypeCode: coachType.code,
+        appLogger.info('Coach created successfully', {
+          coachId: coach.id,
+          coachNumber: coach.coachNumber,
+          trainId: coach.trainId,
+          coachTypeId: coach.coachTypeId,
           createdBy: user.userId,
         });
 
         return reply.status(HTTP_STATUS.CREATED).send({
           success: true,
-          message: 'Coach type created successfully',
-          data: { coachType },
+          message: 'Coach created successfully',
+          data: { coach },
           timestamp: new Date().toISOString(),
         });
 
       } catch (error) {
-        appLogger.error('Coach type creation failed', { error });
+        appLogger.error('Coach creation failed', { error });
 
         return reply.status(HTTP_STATUS.BAD_REQUEST).send({
           success: false,
           error: {
-            code: (error as { code?: string }).code || 'COACH_TYPE_CREATION_ERROR',
-            message: (error as { message?: string }).message || 'Coach type creation failed',
+            code: (error as { code?: string }).code || 'COACH_CREATION_ERROR',
+            message: (error as { message?: string }).message || 'Coach creation failed',
           },
           timestamp: new Date().toISOString(),
         });
@@ -169,12 +190,19 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
     });
 
     /**
-     * Get all coach types
+     * Get coaches by train ID
      */
-    server.get('/', {
+    server.get('/trains/:trainId/coaches', {
       schema: {
-        description: 'Get all active coach types',
-        tags: ['Coach Types'],
+        description: 'Get all coaches for a specific train',
+        tags: ['Coaches'],
+        params: {
+          type: 'object',
+          required: ['trainId'],
+          properties: {
+            trainId: { type: 'string' },
+          },
+        },
         response: {
           200: {
             type: 'object',
@@ -186,13 +214,31 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
                   type: 'object',
                   properties: {
                     id: { type: 'string' },
-                    name: { type: 'string' },
-                    code: { type: 'string' },
-                    description: { type: 'string' },
-                    ratePerKm: { type: 'number' },
+                    trainId: { type: 'string' },
+                    coachTypeId: { type: 'string' },
+                    coachNumber: { type: 'string' },
+                    totalSeats: { type: 'number' },
                     isActive: { type: 'boolean' },
                     createdAt: { type: 'string', format: 'date-time' },
                     updatedAt: { type: 'string', format: 'date-time' },
+                    coachType: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        name: { type: 'string' },
+                        code: { type: 'string' },
+                        description: { type: 'string' },
+                        ratePerKm: { type: 'number' },
+                      },
+                    },
+                    train: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        name: { type: 'string' },
+                        number: { type: 'string' },
+                      },
+                    },
                   },
                 },
               },
@@ -203,22 +249,24 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
       },
     }, async (request, reply) => {
       try {
-        const coachTypes = await coachTypeService.getAllCoachTypes();
+        const { trainId } = request.params as { trainId: string };
+
+        const coaches = await coachService.getCoachesByTrain(trainId);
 
         return reply.status(HTTP_STATUS.OK).send({
           success: true,
-          data: coachTypes,
+          data: coaches,
           timestamp: new Date().toISOString(),
         });
 
       } catch (error) {
-        appLogger.error('Failed to get coach types', { error });
+        appLogger.error('Failed to get coaches by train', { error });
 
-        return reply.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
+        return reply.status(HTTP_STATUS.BAD_REQUEST).send({
           success: false,
           error: {
-            code: 'COACH_TYPES_FETCH_ERROR',
-            message: 'Failed to retrieve coach types',
+            code: 'GET_COACHES_ERROR',
+            message: 'Failed to get coaches',
           },
           timestamp: new Date().toISOString(),
         });
@@ -226,18 +274,18 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
     });
 
     /**
-     * Get coach type by ID
+     * Get coach by ID
      */
-    server.get('/:id', {
+    server.get('/coaches/:id', {
       schema: {
-        description: 'Get coach type by ID',
-        tags: ['Coach Types'],
+        description: 'Get a coach by ID',
+        tags: ['Coaches'],
         params: {
           type: 'object',
+          required: ['id'],
           properties: {
             id: { type: 'string' },
           },
-          required: ['id'],
         },
         response: {
           200: {
@@ -247,14 +295,37 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
               data: {
                 type: 'object',
                 properties: {
-                  id: { type: 'string' },
-                  name: { type: 'string' },
-                  code: { type: 'string' },
-                  description: { type: 'string' },
-                  ratePerKm: { type: 'number' },
-                  isActive: { type: 'boolean' },
-                  createdAt: { type: 'string', format: 'date-time' },
-                  updatedAt: { type: 'string', format: 'date-time' },
+                  coach: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string' },
+                      trainId: { type: 'string' },
+                      coachTypeId: { type: 'string' },
+                      coachNumber: { type: 'string' },
+                      totalSeats: { type: 'number' },
+                      isActive: { type: 'boolean' },
+                      createdAt: { type: 'string', format: 'date-time' },
+                      updatedAt: { type: 'string', format: 'date-time' },
+                      coachType: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          name: { type: 'string' },
+                          code: { type: 'string' },
+                          description: { type: 'string' },
+                          ratePerKm: { type: 'number' },
+                        },
+                      },
+                      train: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          name: { type: 'string' },
+                          number: { type: 'string' },
+                        },
+                      },
+                    },
+                  },
                 },
               },
               timestamp: { type: 'string', format: 'date-time' },
@@ -279,89 +350,34 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
     }, async (request, reply) => {
       try {
         const { id } = request.params as { id: string };
-        const coachType = await coachTypeService.getCoachTypeById(id);
 
-        return reply.status(HTTP_STATUS.OK).send({
-          success: true,
-          data: coachType,
-          timestamp: new Date().toISOString(),
-        });
+        const coach = await coachService.getCoachById(id);
 
-      } catch (error) {
-        appLogger.error('Failed to get coach type by ID', { error, coachTypeId: (request.params as { id: string }).id });
-
-        const statusCode = (error as { name?: string }).name === 'NotFoundError' ? HTTP_STATUS.NOT_FOUND : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-        return reply.status(statusCode).send({
-          success: false,
-          error: {
-            code: (error as { name?: string }).name === 'NotFoundError' ? 'COACH_TYPE_NOT_FOUND' : 'COACH_TYPE_FETCH_ERROR',
-            message: (error as { message?: string }).message || 'Failed to retrieve coach type',
-          },
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
-
-    /**
-     * Search coach types
-     */
-    server.get('/search/:query', {
-      schema: {
-        description: 'Search coach types by name, code, or description',
-        tags: ['Coach Types'],
-        params: {
-          type: 'object',
-          properties: {
-            query: { type: 'string', minLength: 1 },
-          },
-          required: ['query'],
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              data: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'string' },
-                    name: { type: 'string' },
-                    code: { type: 'string' },
-                    description: { type: 'string' },
-                    ratePerKm: { type: 'number' },
-                    isActive: { type: 'boolean' },
-                    createdAt: { type: 'string', format: 'date-time' },
-                    updatedAt: { type: 'string', format: 'date-time' },
-                  },
-                },
-              },
-              timestamp: { type: 'string', format: 'date-time' },
+        if (!coach) {
+          return reply.status(HTTP_STATUS.NOT_FOUND).send({
+            success: false,
+            error: {
+              code: 'COACH_NOT_FOUND',
+              message: 'Coach not found',
             },
-          },
-        },
-      },
-    }, async (request, reply) => {
-      try {
-        const { query } = request.params as { query: string };
-        const coachTypes = await coachTypeService.searchCoachTypes(query);
+            timestamp: new Date().toISOString(),
+          });
+        }
 
         return reply.status(HTTP_STATUS.OK).send({
           success: true,
-          data: coachTypes,
+          data: { coach },
           timestamp: new Date().toISOString(),
         });
 
       } catch (error) {
-        appLogger.error('Failed to search coach types', { error, query: (request.params as { query: string }).query });
+        appLogger.error('Failed to get coach by ID', { error });
 
-        return reply.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send({
+        return reply.status(HTTP_STATUS.BAD_REQUEST).send({
           success: false,
           error: {
-            code: 'COACH_TYPES_SEARCH_ERROR',
-            message: 'Failed to search coach types',
+            code: 'GET_COACH_ERROR',
+            message: 'Failed to get coach',
           },
           timestamp: new Date().toISOString(),
         });
@@ -369,26 +385,26 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
     });
 
     /**
-     * Update coach type (admin only)
+     * Update coach (admin only)
      */
-    server.put('/admin/:id', {
+    server.put('/admin/coaches/:id', {
       schema: {
-        description: 'Update coach type information (admin only)',
-        tags: ['Coach Types'],
+        description: 'Update a coach (admin only)',
+        tags: ['Coaches'],
         security: [{ bearerAuth: [] }],
         params: {
           type: 'object',
+          required: ['id'],
           properties: {
             id: { type: 'string' },
           },
-          required: ['id'],
         },
         body: {
           type: 'object',
           properties: {
-            name: { type: 'string', minLength: 1, maxLength: 100 },
-            description: { type: 'string', maxLength: 500 },
-            ratePerKm: { type: 'number', minimum: 0, maximum: 100 },
+            coachTypeId: { type: 'string' },
+            coachNumber: { type: 'string', minLength: 1, maxLength: 10 },
+            totalSeats: { type: 'number', minimum: 1, maximum: 200 },
           },
         },
         response: {
@@ -400,17 +416,35 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
               data: {
                 type: 'object',
                 properties: {
-                  coachType: {
+                  coach: {
                     type: 'object',
                     properties: {
                       id: { type: 'string' },
-                      name: { type: 'string' },
-                      code: { type: 'string' },
-                      description: { type: 'string' },
-                      ratePerKm: { type: 'number' },
+                      trainId: { type: 'string' },
+                      coachTypeId: { type: 'string' },
+                      coachNumber: { type: 'string' },
+                      totalSeats: { type: 'number' },
                       isActive: { type: 'boolean' },
                       createdAt: { type: 'string', format: 'date-time' },
                       updatedAt: { type: 'string', format: 'date-time' },
+                      coachType: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          name: { type: 'string' },
+                          code: { type: 'string' },
+                          description: { type: 'string' },
+                          ratePerKm: { type: 'number' },
+                        },
+                      },
+                      train: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          name: { type: 'string' },
+                          number: { type: 'string' },
+                        },
+                      },
                     },
                   },
                 },
@@ -459,7 +493,7 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
             success: false,
             error: {
               code: 'FORBIDDEN',
-              message: 'Only administrators can update coach types',
+              message: 'Only administrators can update coaches',
             },
             timestamp: new Date().toISOString(),
           });
@@ -468,7 +502,7 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
         const { id } = request.params as { id: string };
 
         // Validate request body
-        const validation = updateCoachTypeSchema.safeParse(request.body);
+        const validation = updateCoachSchema.safeParse(request.body);
         if (!validation.success) {
           return reply.status(HTTP_STATUS.BAD_REQUEST).send({
             success: false,
@@ -481,32 +515,42 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
           });
         }
 
-        // Update coach type
-        const coachType = await coachTypeService.updateCoachType(id, validation.data);
+        const updateData = validation.data;
 
-        appLogger.info('Coach type updated successfully', {
-          coachTypeId: coachType.id,
-          coachTypeName: coachType.name,
+        // Update coach
+        const coach = await coachService.updateCoach(id, updateData);
+
+        appLogger.info('Coach updated successfully', {
+          coachId: coach.id,
           updatedBy: user.userId,
         });
 
         return reply.status(HTTP_STATUS.OK).send({
           success: true,
-          message: 'Coach type updated successfully',
-          data: { coachType },
+          message: 'Coach updated successfully',
+          data: { coach },
           timestamp: new Date().toISOString(),
         });
 
       } catch (error) {
-        appLogger.error('Coach type update failed', { error, coachTypeId: (request.params as { id: string }).id });
+        appLogger.error('Coach update failed', { error });
 
-        const statusCode = (error as { name?: string }).name === 'NotFoundError' ? HTTP_STATUS.NOT_FOUND : HTTP_STATUS.BAD_REQUEST;
+        if ((error as { message?: string }).message?.includes('not found')) {
+          return reply.status(HTTP_STATUS.NOT_FOUND).send({
+            success: false,
+            error: {
+              code: 'COACH_NOT_FOUND',
+              message: 'Coach not found',
+            },
+            timestamp: new Date().toISOString(),
+          });
+        }
 
-        return reply.status(statusCode).send({
+        return reply.status(HTTP_STATUS.BAD_REQUEST).send({
           success: false,
           error: {
-            code: (error as { name?: string }).name === 'NotFoundError' ? 'COACH_TYPE_NOT_FOUND' : 'COACH_TYPE_UPDATE_ERROR',
-            message: (error as { message?: string }).message || 'Coach type update failed',
+            code: 'COACH_UPDATE_ERROR',
+            message: (error as { message?: string }).message || 'Coach update failed',
           },
           timestamp: new Date().toISOString(),
         });
@@ -514,19 +558,19 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
     });
 
     /**
-     * Deactivate coach type (admin only)
+     * Delete coach (admin only)
      */
-    server.delete('/admin/:id', {
+    server.delete('/admin/coaches/:id', {
       schema: {
-        description: 'Deactivate a coach type (admin only)',
-        tags: ['Coach Types'],
+        description: 'Delete a coach (admin only)',
+        tags: ['Coaches'],
         security: [{ bearerAuth: [] }],
         params: {
           type: 'object',
+          required: ['id'],
           properties: {
             id: { type: 'string' },
           },
-          required: ['id'],
         },
         response: {
           200: {
@@ -578,7 +622,7 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
             success: false,
             error: {
               code: 'FORBIDDEN',
-              message: 'Only administrators can deactivate coach types',
+              message: 'Only administrators can delete coaches',
             },
             timestamp: new Date().toISOString(),
           });
@@ -586,30 +630,39 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
 
         const { id } = request.params as { id: string };
 
-        // Deactivate coach type
-        await coachTypeService.deactivateCoachType(id);
+        // Delete coach
+        await coachService.deleteCoach(id);
 
-        appLogger.info('Coach type deactivated successfully', {
-          coachTypeId: id,
-          deactivatedBy: user.userId,
+        appLogger.info('Coach deleted successfully', {
+          coachId: id,
+          deletedBy: user.userId,
         });
 
         return reply.status(HTTP_STATUS.OK).send({
           success: true,
-          message: 'Coach type deactivated successfully',
+          message: 'Coach deleted successfully',
           timestamp: new Date().toISOString(),
         });
 
       } catch (error) {
-        appLogger.error('Coach type deactivation failed', { error, coachTypeId: (request.params as { id: string }).id });
+        appLogger.error('Coach deletion failed', { error });
 
-        const statusCode = (error as { name?: string }).name === 'NotFoundError' ? HTTP_STATUS.NOT_FOUND : HTTP_STATUS.BAD_REQUEST;
+        if ((error as { message?: string }).message?.includes('not found')) {
+          return reply.status(HTTP_STATUS.NOT_FOUND).send({
+            success: false,
+            error: {
+              code: 'COACH_NOT_FOUND',
+              message: 'Coach not found',
+            },
+            timestamp: new Date().toISOString(),
+          });
+        }
 
-        return reply.status(statusCode).send({
+        return reply.status(HTTP_STATUS.BAD_REQUEST).send({
           success: false,
           error: {
-            code: (error as { name?: string }).name === 'NotFoundError' ? 'COACH_TYPE_NOT_FOUND' : 'COACH_TYPE_DEACTIVATION_ERROR',
-            message: (error as { message?: string }).message || 'Coach type deactivation failed',
+            code: 'COACH_DELETION_ERROR',
+            message: 'Coach deletion failed',
           },
           timestamp: new Date().toISOString(),
         });
@@ -617,19 +670,52 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
     });
 
     /**
-     * Initialize default coach types (admin only)
+     * Get all coaches (admin only)
      */
-    server.post('/admin/initialize', {
+    server.get('/admin/coaches', {
       schema: {
-        description: 'Initialize default coach types (admin only)',
-        tags: ['Coach Types'],
+        description: 'Get all coaches (admin only)',
+        tags: ['Coaches'],
         security: [{ bearerAuth: [] }],
         response: {
           200: {
             type: 'object',
             properties: {
               success: { type: 'boolean' },
-              message: { type: 'string' },
+              data: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    trainId: { type: 'string' },
+                    coachTypeId: { type: 'string' },
+                    coachNumber: { type: 'string' },
+                    totalSeats: { type: 'number' },
+                    isActive: { type: 'boolean' },
+                    createdAt: { type: 'string', format: 'date-time' },
+                    updatedAt: { type: 'string', format: 'date-time' },
+                    coachType: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        name: { type: 'string' },
+                        code: { type: 'string' },
+                        description: { type: 'string' },
+                        ratePerKm: { type: 'number' },
+                      },
+                    },
+                    train: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        name: { type: 'string' },
+                        number: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
               timestamp: { type: 'string', format: 'date-time' },
             },
           },
@@ -660,49 +746,32 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
             success: false,
             error: {
               code: 'FORBIDDEN',
-              message: 'Only administrators can initialize coach types',
+              message: 'Only administrators can view all coaches',
             },
             timestamp: new Date().toISOString(),
           });
         }
 
-        // Initialize default coach types
-        await coachTypeService.initializeDefaultCoachTypes();
-
-        appLogger.info('Default coach types initialized successfully', {
-          initializedBy: user.userId,
-        });
+        const coaches = await coachService.getAllCoaches();
 
         return reply.status(HTTP_STATUS.OK).send({
           success: true,
-          message: 'Default coach types initialized successfully',
+          data: coaches,
           timestamp: new Date().toISOString(),
         });
 
       } catch (error) {
-        appLogger.error('Coach type initialization failed', { error });
+        appLogger.error('Failed to get all coaches', { error });
 
         return reply.status(HTTP_STATUS.BAD_REQUEST).send({
           success: false,
           error: {
-            code: 'COACH_TYPE_INITIALIZATION_ERROR',
-            message: (error as { message?: string }).message || 'Coach type initialization failed',
+            code: 'GET_ALL_COACHES_ERROR',
+            message: 'Failed to get all coaches',
           },
           timestamp: new Date().toISOString(),
         });
       }
-    });
-
-    appLogger.debug('Coach type routes registered', {
-      routes: [
-        'POST /admin/coach-types',
-        'GET /coach-types',
-        'GET /coach-types/:id',
-        'GET /coach-types/search/:query',
-        'PUT /admin/coach-types/:id',
-        'DELETE /admin/coach-types/:id',
-        'POST /admin/coach-types/initialize'
-      ],
     });
   };
 };

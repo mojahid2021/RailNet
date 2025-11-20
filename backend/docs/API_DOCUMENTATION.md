@@ -7,7 +7,7 @@ RailNet is a comprehensive railway management system backend API built with Fast
 ### Base URL
 
 ```
-http://localhost:3001/api/v1
+http://localhost:3000/api/v1
 ```
 
 ### API Versioning
@@ -825,16 +825,15 @@ interface CoachType {
 
 The system includes these predefined coach types with different pricing tiers:
 
-| Coach Type | Rate per Km (INR) | Description |
-|------------|-------------------|-------------|
-| Shovan | 0.5 | Lowest cost general class |
-| Shovan Chair | 0.75 | General class with assigned seating |
-| First Class Seat | 1.5 | First class seating |
-| First Class Berth | 2.0 | First class sleeping berth |
-| Snigdha | 1.0 | Premium non-AC class |
-| AC Seat | 2.5 | Air-conditioned seating |
-| AC Berth | 3.0 | Air-conditioned sleeping berth |
-| AC Cabin | 4.0 | Highest cost air-conditioned cabin |
+| Coach Type | Code | Rate per Km (INR) | Description |
+|------------|------|-------------------|-------------|
+| Shovan | SHOVAN | 0.5 | Lowest cost general class |
+| Shovan Chair | SHOVAN1 | 0.75 | Chair car in Shovan class |
+| First Class Seat / Berth | FIRSTC | 2.0 | First class accommodation with seats and berths |
+| Snigdha | SNIGDH | 1.25 | Premium non-AC class |
+| AC Seat | ACSEAT | 1.5 | Air-conditioned seating |
+| AC Berth | ACBERT | 2.5 | Air-conditioned berth accommodation |
+| AC Cabin | ACCABI | 3.0 | Highest cost air-conditioned cabin |
 
 ### Coach Type Code Generation
 
@@ -848,7 +847,7 @@ Coach type codes are automatically generated from the name:
 
 Create a new coach type (admin only).
 
-**Endpoint:** `POST /coach-types/admin/coach-types`
+**Endpoint:** `POST /coach-types/admin`
 
 **Headers:**
 
@@ -904,7 +903,7 @@ Authorization: Bearer <admin-jwt-token>
 
 Retrieve all active coach types (public access).
 
-**Endpoint:** `GET /coach-types/coach-types`
+**Endpoint:** `GET /coach-types`
 
 **Response (200):**
 
@@ -941,7 +940,7 @@ Retrieve all active coach types (public access).
 
 Retrieve a specific coach type by its unique identifier (public access).
 
-**Endpoint:** `GET /coach-types/coach-types/{id}`
+**Endpoint:** `GET /coach-types/{id}`
 
 **Parameters:**
 
@@ -974,7 +973,7 @@ Retrieve a specific coach type by its unique identifier (public access).
 
 Search coach types by name, code, or description (public access).
 
-**Endpoint:** `GET /coach-types/coach-types/search/{query}`
+**Endpoint:** `GET /coach-types/search/{query}`
 
 **Parameters:**
 
@@ -1005,7 +1004,7 @@ Search coach types by name, code, or description (public access).
 
 Update coach type information (admin only).
 
-**Endpoint:** `PUT /coach-types/admin/coach-types/{id}`
+**Endpoint:** `PUT /coach-types/admin/{id}`
 
 **Headers:**
 
@@ -1064,7 +1063,7 @@ Authorization: Bearer <admin-jwt-token>
 
 Deactivate a coach type (admin only - soft delete).
 
-**Endpoint:** `DELETE /coach-types/admin/coach-types/{id}`
+**Endpoint:** `DELETE /coach-types/admin/{id}`
 
 **Headers:**
 
@@ -1095,7 +1094,7 @@ Authorization: Bearer <admin-jwt-token>
 
 Initialize the system with default coach types (admin only).
 
-**Endpoint:** `POST /coach-types/admin/coach-types/initialize`
+**Endpoint:** `POST /coach-types/admin/initialize`
 
 **Headers:**
 
@@ -1115,6 +1114,357 @@ Authorization: Bearer <admin-jwt-token>
 
 **Error Responses:**
 
+- `403` - Forbidden (admin access required)
+
+---
+
+## Coach Management Endpoints
+
+RailNet provides comprehensive coach management for train configuration. Coaches are assigned to trains with specific coach types, numbers, and seating capacities.
+
+### Coach Data Model
+
+```typescript
+interface Coach {
+  id: string;           // Unique identifier
+  trainId: string;      // Reference to train
+  coachTypeId: string;  // Reference to coach type
+  coachNumber: string;  // Coach number (e.g., "A1", "B2")
+  totalSeats: number;   // Total number of seats/berths
+  isActive: boolean;    // Active status
+  createdAt: Date;      // Creation timestamp
+  updatedAt: Date;      // Last update timestamp
+  coachType: {          // Coach type details
+    id: string;
+    name: string;
+    code: string;
+    description?: string;
+    ratePerKm: number;
+  };
+  train: {              // Train details
+    id: string;
+    name: string;
+    number: string;
+  };
+}
+```
+
+### Coach Number Format
+
+Coach numbers follow a standard format:
+- **Letter prefix**: Indicates coach class (A, B, C, etc.)
+- **Number suffix**: Sequential number within the class
+- Examples: `A1`, `B2`, `S1`, `AC1`
+
+### Create Coach
+
+Create a new coach for a train (admin only).
+
+**Endpoint:** `POST /coaches/admin`
+
+**Headers:**
+```
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Request Body:**
+```json
+{
+  "trainId": "train-uuid",
+  "coachTypeId": "coach-type-uuid",
+  "coachNumber": "A1",
+  "totalSeats": 72
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Coach created successfully",
+  "data": {
+    "coach": {
+      "id": "coach-uuid",
+      "trainId": "train-uuid",
+      "coachTypeId": "coach-type-uuid",
+      "coachNumber": "A1",
+      "totalSeats": 72,
+      "isActive": true,
+      "createdAt": "2025-11-20T10:30:00.000Z",
+      "updatedAt": "2025-11-20T10:30:00.000Z",
+      "coachType": {
+        "id": "coach-type-uuid",
+        "name": "AC Berth",
+        "code": "ACBERT",
+        "description": "Air-conditioned berth accommodation",
+        "ratePerKm": 2.5
+      },
+      "train": {
+        "id": "train-uuid",
+        "name": "Rajdhani Express",
+        "number": "12951"
+      }
+    }
+  },
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+**Validation Rules:**
+- trainId: Required, valid train UUID
+- coachTypeId: Required, valid coach type UUID
+- coachNumber: Required, 1-10 characters, unique per train
+- totalSeats: Required, 1-200 seats
+
+**Error Responses:**
+- `400` - Validation error
+- `403` - Forbidden (admin access required)
+- `404` - Train or coach type not found
+
+### Get Coaches by Train
+
+Retrieve all coaches for a specific train (public access).
+
+**Endpoint:** `GET /trains/{trainId}/coaches`
+
+**Parameters:**
+- `trainId` (path): Train UUID
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "coach-uuid-1",
+      "trainId": "train-uuid",
+      "coachTypeId": "coach-type-uuid-1",
+      "coachNumber": "A1",
+      "totalSeats": 72,
+      "isActive": true,
+      "createdAt": "2025-11-20T10:00:00.000Z",
+      "updatedAt": "2025-11-20T10:00:00.000Z",
+      "coachType": {
+        "id": "coach-type-uuid-1",
+        "name": "AC Berth",
+        "code": "ACBERT",
+        "description": "Air-conditioned berth accommodation",
+        "ratePerKm": 2.5
+      },
+      "train": {
+        "id": "train-uuid",
+        "name": "Rajdhani Express",
+        "number": "12951"
+      }
+    },
+    {
+      "id": "coach-uuid-2",
+      "trainId": "train-uuid",
+      "coachTypeId": "coach-type-uuid-2",
+      "coachNumber": "B1",
+      "totalSeats": 64,
+      "isActive": true,
+      "createdAt": "2025-11-20T10:15:00.000Z",
+      "updatedAt": "2025-11-20T10:15:00.000Z",
+      "coachType": {
+        "id": "coach-type-uuid-2",
+        "name": "AC Seat",
+        "code": "ACSEAT",
+        "description": "Air-conditioned seating",
+        "ratePerKm": 1.5
+      },
+      "train": {
+        "id": "train-uuid",
+        "name": "Rajdhani Express",
+        "number": "12951"
+      }
+    }
+  ],
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+### Get Coach by ID
+
+Retrieve a specific coach by its unique identifier (public access).
+
+**Endpoint:** `GET /coaches/{id}`
+
+**Parameters:**
+- `id` (path): Coach UUID
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "coach": {
+      "id": "coach-uuid",
+      "trainId": "train-uuid",
+      "coachTypeId": "coach-type-uuid",
+      "coachNumber": "A1",
+      "totalSeats": 72,
+      "isActive": true,
+      "createdAt": "2025-11-20T10:00:00.000Z",
+      "updatedAt": "2025-11-20T10:00:00.000Z",
+      "coachType": {
+        "id": "coach-type-uuid",
+        "name": "AC Berth",
+        "code": "ACBERT",
+        "description": "Air-conditioned berth accommodation",
+        "ratePerKm": 2.5
+      },
+      "train": {
+        "id": "train-uuid",
+        "name": "Rajdhani Express",
+        "number": "12951"
+      }
+    }
+  },
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
+- `404` - Coach not found
+
+### Update Coach
+
+Update coach information (admin only).
+
+**Endpoint:** `PUT /coaches/admin/{id}`
+
+**Headers:**
+```
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Parameters:**
+- `id` (path): Coach UUID
+
+**Request Body:**
+```json
+{
+  "coachTypeId": "new-coach-type-uuid",
+  "coachNumber": "A2",
+  "totalSeats": 80
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Coach updated successfully",
+  "data": {
+    "coach": {
+      "id": "coach-uuid",
+      "trainId": "train-uuid",
+      "coachTypeId": "new-coach-type-uuid",
+      "coachNumber": "A2",
+      "totalSeats": 80,
+      "isActive": true,
+      "createdAt": "2025-11-20T10:00:00.000Z",
+      "updatedAt": "2025-11-20T10:30:00.000Z",
+      "coachType": {
+        "id": "new-coach-type-uuid",
+        "name": "First Class Berth",
+        "code": "FIRSTC",
+        "description": "First class accommodation with seats and berths",
+        "ratePerKm": 2.0
+      },
+      "train": {
+        "id": "train-uuid",
+        "name": "Rajdhani Express",
+        "number": "12951"
+      }
+    }
+  },
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+**Validation Rules:**
+- coachTypeId: Optional, valid coach type UUID if provided
+- coachNumber: Optional, 1-10 characters, unique per train if provided
+- totalSeats: Optional, 1-200 seats if provided
+
+**Error Responses:**
+- `400` - Validation error
+- `403` - Forbidden (admin access required)
+- `404` - Coach not found
+
+### Delete Coach
+
+Deactivate a coach (admin only - soft delete).
+
+**Endpoint:** `DELETE /coaches/admin/{id}`
+
+**Headers:**
+```
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Parameters:**
+- `id` (path): Coach UUID
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Coach deleted successfully",
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
+- `403` - Forbidden (admin access required)
+- `404` - Coach not found
+
+### Get All Coaches
+
+Retrieve all coaches across all trains (admin only).
+
+**Endpoint:** `GET /coaches/admin`
+
+**Headers:**
+```
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "coach-uuid-1",
+      "trainId": "train-uuid-1",
+      "coachTypeId": "coach-type-uuid-1",
+      "coachNumber": "A1",
+      "totalSeats": 72,
+      "isActive": true,
+      "createdAt": "2025-11-20T10:00:00.000Z",
+      "updatedAt": "2025-11-20T10:00:00.000Z",
+      "coachType": {
+        "id": "coach-type-uuid-1",
+        "name": "AC Berth",
+        "code": "ACBERT",
+        "description": "Air-conditioned berth accommodation",
+        "ratePerKm": 2.5
+      },
+      "train": {
+        "id": "train-uuid-1",
+        "name": "Rajdhani Express",
+        "number": "12951"
+      }
+    }
+  ],
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
 - `403` - Forbidden (admin access required)
 
 ---
@@ -1867,6 +2217,11 @@ The following endpoints are planned for future releases:
 - `POST /admin/routes` - Create routes ✅ **Implemented**
 - `PUT /admin/routes/{id}` - Update routes ✅ **Implemented**
 - `DELETE /admin/routes/{id}` - Delete routes ✅ **Implemented**
+- `GET /coach-types` - List coach types ✅ **Implemented**
+- `POST /coaches/admin` - Create coaches ✅ **Implemented**
+- `GET /trains/{trainId}/coaches` - Get coaches by train ✅ **Implemented**
+- `PUT /coaches/admin/{id}` - Update coaches ✅ **Implemented**
+- `DELETE /coaches/admin/{id}` - Delete coaches ✅ **Implemented**
 - `GET /trains` - List available trains
 - `POST /bookings` - Create train booking
 - `GET /bookings` - List user bookings
