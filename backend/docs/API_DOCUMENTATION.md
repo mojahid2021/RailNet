@@ -1345,6 +1345,510 @@ http://localhost:3000/api/v1/documentation
 
 ---
 
+## Route Management Endpoints
+
+RailNet provides comprehensive route management for railway network administration. Routes define the paths trains take between stations with detailed stop information.
+
+### Route Data Models
+
+```typescript
+interface RouteStop {
+  id: string;                    // Unique identifier
+  routeId: string;               // Parent route ID
+  stationId: string;             // Station ID
+  stopOrder: number;             // Order in route sequence
+  arrivalTime: string | null;    // Arrival time (HH:MM format)
+  departureTime: string | null;  // Departure time (HH:MM format)
+  distance: number;              // Distance from previous stop (km)
+  distanceFromStart: number;     // Cumulative distance from start (km)
+  platform: string | null;       // Platform number/name
+  isActive: boolean;             // Active status
+  createdAt: Date;               // Creation timestamp
+  updatedAt: Date;               // Last update timestamp
+  station: Station;              // Station details
+}
+
+interface Route {
+  id: string;           // Unique identifier
+  name: string;         // Route name (required)
+  code: string;         // Auto-generated route code (e.g., "DEL-MUM")
+  distance: number;     // Total route distance (km)
+  duration: number;     // Total travel duration (minutes)
+  isActive: boolean;    // Active status
+  createdAt: Date;      // Creation timestamp
+  updatedAt: Date;      // Last update timestamp
+  stops: RouteStop[];   // Route stops with station details
+  stations: Station[];  // All stations on route
+  trainCount?: number;  // Number of trains using this route
+  averageSpeed: number; // Average speed (km/h)
+  stopCount: number;    // Number of stops on route
+}
+```
+
+### Route Features
+
+#### Auto-Generated Route Codes
+
+Routes automatically generate unique codes based on the first and last station codes (e.g., "DEL-MUM" for Delhi to Mumbai). These codes are unique across the system and provide a quick identifier for routes.
+
+#### Travel Validation
+
+The system validates realistic travel times and distances:
+
+- **Minimum Speed**: Routes must have an average speed of at least 30 km/h
+- **Maximum Speed**: Routes cannot exceed 200 km/h average speed
+- **Realistic Duration**: Travel time must be proportional to distance (allowing for stops and realistic speeds)
+
+#### Computed Statistics
+
+Routes automatically calculate:
+
+- **Average Speed**: Distance divided by travel time (hours)
+- **Stop Count**: Total number of stops on the route
+- **Train Count**: Number of trains currently assigned to the route
+
+#### Advanced Filtering
+
+The route listing endpoint supports comprehensive filtering:
+
+- Distance ranges (min/max)
+- Duration ranges (min/max)
+- Sorting by name, distance, duration, or creation date
+- Text search in route names
+- Station-based filtering
+
+### Create Routes
+
+Create one or more new railway routes (admin only).
+
+**Endpoint:** `POST /admin/routes`
+
+**Headers:**
+
+```text
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Request Body:**
+
+```json
+{
+  "routes": [
+    {
+      "name": "Delhi to Mumbai Express Route",
+      "distance": 1384,
+      "duration": 960,
+      "stops": [
+        {
+          "stationId": "station-uuid-1",
+          "departureTime": "06:00",
+          "distanceFromStart": 0,
+          "platform": "1"
+        },
+        {
+          "stationId": "station-uuid-2",
+          "arrivalTime": "08:30",
+          "departureTime": "08:45",
+          "distanceFromStart": 200,
+          "platform": "2"
+        },
+        {
+          "stationId": "station-uuid-3",
+          "arrivalTime": "18:00",
+          "distanceFromStart": 1384
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "message": "1 route(s) created successfully",
+  "data": {
+    "routes": [
+      {
+        "id": "route-uuid",
+        "name": "Delhi to Mumbai Express Route",
+        "code": "DEL-MUM",
+        "distance": 1384,
+        "duration": 960,
+        "isActive": true,
+        "createdAt": "2025-11-20T10:30:00.000Z",
+        "updatedAt": "2025-11-20T10:30:00.000Z",
+        "trainCount": 0,
+        "averageSpeed": 86.25,
+        "stopCount": 3,
+        "stops": [
+          {
+            "id": "stop-uuid-1",
+            "routeId": "route-uuid",
+            "stationId": "station-uuid-1",
+            "stopOrder": 1,
+            "arrivalTime": null,
+            "departureTime": "06:00",
+            "distance": 0,
+            "distanceFromStart": 0,
+            "platform": "1",
+            "isActive": true,
+            "createdAt": "2025-11-20T10:30:00.000Z",
+            "updatedAt": "2025-11-20T10:30:00.000Z",
+            "station": {
+              "id": "station-uuid-1",
+              "name": "New Delhi Station",
+              "code": "NDLS",
+              "city": "New Delhi",
+              "state": "Delhi",
+              "country": "India",
+              "latitude": 28.6139,
+              "longitude": 77.2090,
+              "isActive": true,
+              "createdAt": "2025-11-20T09:00:00.000Z",
+              "updatedAt": "2025-11-20T09:00:00.000Z"
+            }
+          }
+        ],
+        "stations": [
+          {
+            "id": "station-uuid-1",
+            "name": "New Delhi Station",
+            "code": "NDLS",
+            "city": "New Delhi",
+            "state": "Delhi",
+            "country": "India",
+            "latitude": 28.6139,
+            "longitude": 77.2090,
+            "isActive": true,
+            "createdAt": "2025-11-20T09:00:00.000Z",
+            "updatedAt": "2025-11-20T09:00:00.000Z"
+          }
+        ]
+      }
+    ]
+  },
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+**Validation Rules:**
+
+- Routes array: Required, 1-50 routes
+- Name: Required, 1-100 characters
+- Distance: Required, 0-10000 km
+- Duration: Required, 1-10000 minutes
+- Stops: Required, 2-100 stops per route
+- Station ID: Required, valid station UUID
+- Arrival/Departure Time: Optional, HH:MM format (00:00-23:59)
+- Distance from Start: Required, non-negative
+- Platform: Optional, max 10 characters
+
+**Error Responses:**
+
+- `400` - Validation error
+- `403` - Forbidden (admin access required)
+- `404` - Station not found
+- `409` - Route with this name already exists
+
+### Get Routes
+
+Retrieve routes with optional filtering (public access).
+
+**Endpoint:** `GET /routes`
+
+**Query Parameters:**
+
+- `isActive` (boolean): Filter by active status (default: true)
+- `search` (string): Search in route names
+- `stationId` (string): Filter routes that include specific station
+- `minDistance` (number): Minimum route distance in km
+- `maxDistance` (number): Maximum route distance in km
+- `minDuration` (number): Minimum travel duration in minutes
+- `maxDuration` (number): Maximum travel duration in minutes
+- `sortBy` (string): Sort field - `name`, `distance`, `duration`, `createdAt`
+- `sortOrder` (string): Sort order - `asc` or `desc`
+
+**Examples:**
+
+```text
+GET /routes
+GET /routes?isActive=true
+GET /routes?search=express
+GET /routes?stationId=station-uuid
+GET /routes?minDistance=500&maxDistance=1500
+GET /routes?sortBy=distance&sortOrder=desc
+```
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "3 route(s) retrieved successfully",
+  "data": {
+    "routes": [
+      {
+        "id": "route-uuid",
+        "name": "Delhi to Mumbai Express Route",
+        "code": "DEL-MUM",
+        "distance": 1384,
+        "duration": 960,
+        "isActive": true,
+        "createdAt": "2025-11-20T10:30:00.000Z",
+        "updatedAt": "2025-11-20T10:30:00.000Z",
+        "trainCount": 2,
+        "averageSpeed": 86.25,
+        "stopCount": 3,
+        "stops": [
+          {
+            "id": "stop-uuid-1",
+            "routeId": "route-uuid",
+            "stationId": "station-uuid-1",
+            "stopOrder": 1,
+            "arrivalTime": null,
+            "departureTime": "06:00",
+            "distance": 0,
+            "distanceFromStart": 0,
+            "platform": "1",
+            "isActive": true,
+            "createdAt": "2025-11-20T10:30:00.000Z",
+            "updatedAt": "2025-11-20T10:30:00.000Z",
+            "station": {
+              "id": "station-uuid-1",
+              "name": "New Delhi Station",
+              "code": "NDLS",
+              "city": "New Delhi",
+              "state": "Delhi",
+              "country": "India",
+              "latitude": 28.6139,
+              "longitude": 77.2090,
+              "isActive": true,
+              "createdAt": "2025-11-20T09:00:00.000Z",
+              "updatedAt": "2025-11-20T09:00:00.000Z"
+            }
+          }
+        ],
+        "stations": [
+          {
+            "id": "station-uuid-1",
+            "name": "New Delhi Station",
+            "code": "NDLS",
+            "city": "New Delhi",
+            "state": "Delhi",
+            "country": "India",
+            "latitude": 28.6139,
+              "longitude": 77.2090,
+              "isActive": true,
+              "createdAt": "2025-11-20T09:00:00.000Z",
+              "updatedAt": "2025-11-20T09:00:00.000Z"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+### Get Route by ID
+
+Retrieve a specific route by its ID (public access).
+
+**Endpoint:** `GET /routes/{routeId}`
+
+**Parameters:**
+
+- `routeId` (path): Route UUID
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Route retrieved successfully",
+  "data": {
+    "route": {
+      "id": "route-uuid",
+      "name": "Delhi to Mumbai Express Route",
+      "code": "DEL-MUM",
+      "distance": 1384,
+      "duration": 960,
+      "isActive": true,
+      "createdAt": "2025-11-20T10:30:00.000Z",
+      "updatedAt": "2025-11-20T10:30:00.000Z",
+      "trainCount": 2,
+      "averageSpeed": 86.25,
+      "stopCount": 3,
+      "stops": [...],
+      "stations": [...]
+    }
+  },
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
+
+- `404` - Route not found
+
+### Get Routes by Station
+
+Retrieve all routes that include a specific station (public access).
+
+**Endpoint:** `GET /routes/station/{stationId}`
+
+**Parameters:**
+
+- `stationId` (path): Station UUID
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "2 route(s) found for station",
+  "data": {
+    "routes": [
+      {
+        "id": "route-uuid-1",
+        "name": "Delhi to Mumbai Express Route",
+        "code": "DEL-MUM",
+        "distance": 1384,
+        "duration": 960,
+        "isActive": true,
+        "createdAt": "2025-11-20T10:30:00.000Z",
+        "updatedAt": "2025-11-20T10:30:00.000Z",
+        "trainCount": 2,
+        "averageSpeed": 86.25,
+        "stopCount": 3,
+        "stops": [...],
+        "stations": [...]
+      },
+      {
+        "id": "route-uuid-2",
+        "name": "Delhi to Kolkata Route",
+        "code": "DEL-KOL",
+        "distance": 1472,
+        "duration": 1020,
+        "isActive": true,
+        "createdAt": "2025-11-20T11:00:00.000Z",
+        "updatedAt": "2025-11-20T11:00:00.000Z",
+        "trainCount": 1,
+        "averageSpeed": 86.34,
+        "stopCount": 4,
+        "stops": [...],
+        "stations": [...]
+      }
+    ]
+  },
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
+
+- `404` - Station not found
+
+### Update Route
+
+Update route information (admin only).
+
+**Endpoint:** `PUT /admin/routes/{routeId}`
+
+**Headers:**
+
+```text
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Parameters:**
+
+- `routeId` (path): Route UUID
+
+**Request Body:**
+
+```json
+{
+  "name": "Updated Delhi to Mumbai Express Route",
+  "distance": 1400,
+  "duration": 980,
+  "isActive": true
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Route updated successfully",
+  "data": {
+    "route": {
+      "id": "route-uuid",
+      "name": "Updated Delhi to Mumbai Express Route",
+      "distance": 1400,
+      "duration": 980,
+      "isActive": true,
+      "createdAt": "2025-11-20T10:30:00.000Z",
+      "updatedAt": "2025-11-20T10:45:00.000Z",
+      "stops": [...],
+      "stations": [...]
+    }
+  },
+  "timestamp": "2025-11-20T10:45:00.000Z"
+}
+```
+
+**Validation Rules:**
+
+- Name: Optional, 1-100 characters if provided
+- Distance: Optional, 0-10000 km if provided
+- Duration: Optional, 1-10000 minutes if provided
+- Is Active: Optional boolean
+
+**Error Responses:**
+
+- `400` - Validation error
+- `403` - Forbidden (admin access required)
+- `404` - Route not found
+
+### Delete Route
+
+Deactivate a route (admin only - soft delete).
+
+**Endpoint:** `DELETE /admin/routes/{routeId}`
+
+**Headers:**
+
+```text
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Parameters:**
+
+- `routeId` (path): Route UUID
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Route deactivated successfully",
+  "timestamp": "2025-11-20T10:45:00.000Z"
+}
+```
+
+**Error Responses:**
+
+- `403` - Forbidden (admin access required)
+- `404` - Route not found
+
+---
+
 ## Future Endpoints
 
 The following endpoints are planned for future releases:
@@ -1357,6 +1861,12 @@ The following endpoints are planned for future releases:
 
 ### Railway Operations
 
+- `GET /routes` - List available routes ✅ **Implemented**
+- `GET /routes/{id}` - Get route details ✅ **Implemented**
+- `GET /routes/station/{stationId}` - Get routes by station ✅ **Implemented**
+- `POST /admin/routes` - Create routes ✅ **Implemented**
+- `PUT /admin/routes/{id}` - Update routes ✅ **Implemented**
+- `DELETE /admin/routes/{id}` - Delete routes ✅ **Implemented**
 - `GET /trains` - List available trains
 - `POST /bookings` - Create train booking
 - `GET /bookings` - List user bookings
@@ -1381,6 +1891,5 @@ For API support or questions:
 
 ---
 
-*Last updated: November 18, 2025*
-*API Version: 1.0.0*</content>
-<parameter name="filePath">/home/mojahid/VS-Code/RailNet/backend/docs/API_DOCUMENTATION.md
+*Last updated: November 20, 2025*
+*API Version: 1.0.0*

@@ -65,10 +65,10 @@ export interface Station {
   name: string;
   code: string;
   city: string;
-  state: string;
+  state: string | null;
   country: string;
-  latitude?: number;
-  longitude?: number;
+  latitude: number | null;
+  longitude: number | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -76,17 +76,91 @@ export interface Station {
 
 export interface CreateStationData {
   name: string;
-  latitude?: number;
-  longitude?: number;
+  code: string;
+  city: string;
+  state?: string | null;
+  country?: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface UpdateStationData {
   name?: string;
-  latitude?: number;
-  longitude?: number;
+  code?: string;
+  city?: string;
+  state?: string | null;
+  country?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  isActive?: boolean;
 }
 
-// Authentication Types
+// Route Types
+export interface RouteStop {
+  id: string;
+  routeId: string;
+  stationId: string;
+  stopOrder: number;
+  arrivalTime: string | null;
+  departureTime: string | null;
+  distance: number;
+  distanceFromStart: number;
+  platform: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  station: Station;
+}
+
+export interface Route {
+  id: string;
+  name: string;
+  code: string;        // Auto-generated unique code
+  distance: number;
+  duration: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  stops: RouteStop[];
+  stations: Station[];
+  trainCount?: number;
+  averageSpeed?: number;  // km/h
+  stopCount?: number;
+}
+
+export interface CreateRouteStopData {
+  stationId: string;
+  arrivalTime?: string | null;
+  departureTime?: string | null;
+  distanceFromStart: number;
+  platform?: string | null;
+}
+
+export interface CreateRouteData {
+  name: string;
+  distance: number;
+  duration: number;
+  stops: CreateRouteStopData[];
+}
+
+export interface UpdateRouteData {
+  name?: string;
+  distance?: number;
+  duration?: number;
+  isActive?: boolean;
+}
+
+export interface RouteFilters {
+  isActive?: boolean;
+  search?: string;
+  stationId?: string;
+  minDistance?: number;
+  maxDistance?: number;
+  minDuration?: number;
+  maxDuration?: number;
+  sortBy?: 'name' | 'distance' | 'duration' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
+}
 export interface JWTPayload {
   userId: string;
   email: string;

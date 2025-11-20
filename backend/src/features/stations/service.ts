@@ -6,26 +6,7 @@
 import { getPrismaClient } from '../../core/database';
 import { appLogger } from '../../core/logger';
 import { NotFoundError } from '../../shared/errors';
-
-export interface CreateStationData {
-  name: string;
-  latitude?: number;
-  longitude?: number;
-}
-
-export interface StationData {
-  id: string;
-  name: string;
-  code: string;
-  city: string;
-  state?: string;
-  country: string;
-  latitude?: number;
-  longitude?: number;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { CreateStationData, UpdateStationData, Station } from '../../types/common';
 
 export class StationService {
   private prisma = getPrismaClient();
@@ -33,62 +14,49 @@ export class StationService {
   /**
    * Create a new station
    */
-  async createStation(data: CreateStationData): Promise<StationData> {
+  async createStation(data: CreateStationData): Promise<Station> {
     const endTimer = appLogger.startTimer('create-station');
 
     try {
-      // Generate a unique station code from the name
-      const baseCode = data.name
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, '')
-        .substring(0, 6);
+      // Generate a unique station code from the name if not provided
+      let code = data.code;
+      if (!code) {
+        const baseCode = data.name
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, '')
+          .substring(0, 6);
 
-      let code = baseCode;
-      let counter = 1;
+        code = baseCode;
+        let counter = 1;
 
-      // Ensure unique code
-      while (await this.prisma.station.findUnique({ where: { code } })) {
-        code = `${baseCode}${counter}`;
-        counter++;
+        // Ensure unique code
+        while (await this.prisma.station.findUnique({ where: { code } })) {
+          code = `${baseCode}${counter}`;
+          counter++;
+        }
       }
 
-      // Create station
       const station = await this.prisma.station.create({
         data: {
           name: data.name,
           code,
-          city: data.name, // For now, use name as city, can be updated later
+          city: data.city,
+          state: data.state,
+          country: data.country || 'India',
           latitude: data.latitude,
           longitude: data.longitude,
           isActive: true,
         },
-        select: {
-          id: true,
-          name: true,
-          code: true,
-          city: true,
-          state: true,
-          country: true,
-          latitude: true,
-          longitude: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
-        },
       });
 
       endTimer();
-      appLogger.info('Station created successfully', {
-        stationId: station.id,
-        stationName: station.name,
-        stationCode: station.code,
-      });
+      appLogger.info('Station created successfully', { stationId: station.id });
 
-      return station as StationData;
+      return station;
 
     } catch (error) {
       endTimer();
-      appLogger.error('Station creation failed', { error, stationName: data.name });
+      appLogger.error('Station creation failed', { error });
       throw error;
     }
   }
@@ -96,7 +64,7 @@ export class StationService {
   /**
    * Get station by ID
    */
-  async getStationById(stationId: string): Promise<StationData> {
+  async getStationById(stationId: string): Promise<Station> {
     const endTimer = appLogger.startTimer('get-station-by-id');
 
     try {
@@ -122,7 +90,7 @@ export class StationService {
       }
 
       endTimer();
-      return station as StationData;
+      return station;
 
     } catch (error) {
       endTimer();
@@ -134,7 +102,7 @@ export class StationService {
   /**
    * Get station by code
    */
-  async getStationByCode(code: string): Promise<StationData> {
+  async getStationByCode(code: string): Promise<Station> {
     const endTimer = appLogger.startTimer('get-station-by-code');
 
     try {
@@ -160,7 +128,7 @@ export class StationService {
       }
 
       endTimer();
-      return station as StationData;
+      return station;
 
     } catch (error) {
       endTimer();
@@ -170,9 +138,9 @@ export class StationService {
   }
 
   /**
-   * Get all active stations
+   * Get all stations
    */
-  async getAllStations(): Promise<StationData[]> {
+  async getAllStations(): Promise<Station[]> {
     const endTimer = appLogger.startTimer('get-all-stations');
 
     try {
@@ -195,7 +163,7 @@ export class StationService {
       });
 
       endTimer();
-      return stations as StationData[];
+      return stations;
 
     } catch (error) {
       endTimer();
@@ -207,32 +175,28 @@ export class StationService {
   /**
    * Update station
    */
-  async updateStation(stationId: string, updates: Partial<CreateStationData>): Promise<StationData> {
+  async updateStation(stationId: string, data: UpdateStationData): Promise<Station> {
     const endTimer = appLogger.startTimer('update-station');
 
     try {
       const station = await this.prisma.station.update({
         where: { id: stationId },
-        data: updates,
-        select: {
-          id: true,
-          name: true,
-          code: true,
-          city: true,
-          state: true,
-          country: true,
-          latitude: true,
-          longitude: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
+        data: {
+          name: data.name,
+          code: data.code,
+          city: data.city,
+          state: data.state,
+          country: data.country,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          isActive: data.isActive,
         },
       });
 
       endTimer();
-      appLogger.info('Station updated successfully', { stationId, updates });
+      appLogger.info('Station updated successfully', { stationId });
 
-      return station as StationData;
+      return station;
 
     } catch (error) {
       endTimer();
@@ -264,9 +228,9 @@ export class StationService {
   }
 
   /**
-   * Search stations by name or code
+   * Search stations
    */
-  async searchStations(query: string): Promise<StationData[]> {
+  async searchStations(query: string): Promise<Station[]> {
     const endTimer = appLogger.startTimer('search-stations');
 
     try {
@@ -297,7 +261,7 @@ export class StationService {
       });
 
       endTimer();
-      return stations as StationData[];
+      return stations;
 
     } catch (error) {
       endTimer();

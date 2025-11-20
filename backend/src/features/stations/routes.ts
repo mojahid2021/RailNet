@@ -7,19 +7,29 @@ import { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { appLogger } from '../../core/logger';
 import { HTTP_STATUS } from '../../shared/constants';
-import { StationService, CreateStationData } from './service';
+import { StationService } from './service';
+import { CreateStationData } from '../../types/common';
 
 // Validation schemas
 const createStationSchema = z.object({
   name: z.string().min(1, 'Station name is required').max(100, 'Station name too long'),
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
+  code: z.string().min(1, 'Station code is required').max(10, 'Station code too long'),
+  city: z.string().min(1, 'City is required').max(100, 'City name too long'),
+  state: z.string().max(100, 'State name too long').nullable().optional(),
+  country: z.string().max(100, 'Country name too long').optional(),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
 });
 
 const updateStationSchema = z.object({
   name: z.string().min(1, 'Station name is required').max(100, 'Station name too long').optional(),
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
+  code: z.string().min(1, 'Station code is required').max(10, 'Station code too long').optional(),
+  city: z.string().min(1, 'City is required').max(100, 'City name too long').optional(),
+  state: z.string().max(100, 'State name too long').nullable().optional(),
+  country: z.string().max(100, 'Country name too long').optional(),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
+  isActive: z.boolean().optional(),
 });
 
 /**
@@ -40,9 +50,10 @@ export const createStationRoutes = (): FastifyPluginAsync => {
         security: [{ bearerAuth: [] }],
         body: {
           type: 'object',
-          required: ['name'],
+          required: ['name', 'code', 'city'],
           properties: {
             name: { type: 'string', minLength: 1, maxLength: 100 },
+            code: { type: 'string', minLength: 1, maxLength: 10 },
             city: { type: 'string', minLength: 1, maxLength: 100 },
             state: { type: 'string', minLength: 1, maxLength: 100 },
             country: { type: 'string', minLength: 1, maxLength: 100 },
@@ -402,8 +413,13 @@ export const createStationRoutes = (): FastifyPluginAsync => {
           type: 'object',
           properties: {
             name: { type: 'string', minLength: 1, maxLength: 100 },
+            code: { type: 'string', minLength: 1, maxLength: 10 },
+            city: { type: 'string', minLength: 1, maxLength: 100 },
+            state: { type: 'string', minLength: 1, maxLength: 100 },
+            country: { type: 'string', minLength: 1, maxLength: 100 },
             latitude: { type: 'number', minimum: -90, maximum: 90 },
             longitude: { type: 'number', minimum: -180, maximum: 180 },
+            isActive: { type: 'boolean' },
           },
         },
         response: {

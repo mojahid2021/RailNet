@@ -68,13 +68,14 @@ model Train {
   name        String
   number      String        @unique
   type        TrainType
+  routeId     String?
   totalSeats  Int
   isActive    Boolean       @default(true)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
   // Relations
-  routes      Route[]
+  route       Route?        @relation(fields: [routeId], references: [id])
   schedules   Schedule[]
 
   @@map("trains")
@@ -83,8 +84,8 @@ model Train {
 // Routes and schedules
 model Route {
   id          String     @id @default(cuid())
-  trainId     String
   name        String
+  code        String     @unique // Auto-generated unique code
   distance    Float
   duration    Int        // in minutes
   isActive    Boolean    @default(true)
@@ -92,7 +93,7 @@ model Route {
   updatedAt   DateTime   @updatedAt
 
   // Relations
-  train       Train      @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  trains      Train[]
   stops       RouteStop[]
   schedules   Schedule[]
 
@@ -100,13 +101,18 @@ model Route {
 }
 
 model RouteStop {
-  id         String  @id @default(cuid())
-  routeId    String
-  stationId  String
-  stopOrder  Int
-  arrivalTime   String? // HH:MM format
-  departureTime String? // HH:MM format
-  distance   Float   @default(0)
+  id               String   @id @default(cuid())
+  routeId          String
+  stationId        String
+  stopOrder        Int
+  arrivalTime      String?  // HH:MM format
+  departureTime    String?  // HH:MM format
+  distance         Float    @default(0) // distance from previous stop in km
+  distanceFromStart Float   @default(0) // distance from route start in km
+  platform         String?  // platform number
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   // Relations
   route    Route   @relation(fields: [routeId], references: [id], onDelete: Cascade)
