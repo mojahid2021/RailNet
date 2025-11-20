@@ -14,6 +14,7 @@ import { createStationRoutes } from '../../features/stations/routes';
 import { createCoachTypeRoutes } from '../../features/coach-types/routes';
 import { createCoachRoutes } from '../../features/coaches/routes';
 import { createRouteRoutes } from '../../features/routes/routes';
+import { createTrainRoutes } from '../../features/trains/routes';
 
 /**
  * Register all application routes
@@ -45,6 +46,9 @@ export async function registerRoutes(server: FastifyInstance): Promise<void> {
 
       // Route routes
       apiServer.register(createRouteRoutes(), { prefix: '/routes' });
+
+      // Train routes
+      apiServer.register(createTrainRoutes(), { prefix: '/trains' });
 
       // Future route modules can be added here
       // apiServer.register(createUserRoutes(), { prefix: '/users' });

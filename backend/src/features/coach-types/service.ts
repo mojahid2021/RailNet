@@ -10,6 +10,7 @@ import { NotFoundError } from '../../shared/errors';
 export interface CreateCoachTypeData {
   name: string;
   description?: string;
+  totalSeats: number;
   ratePerKm: number;
 }
 
@@ -18,6 +19,7 @@ export interface CoachTypeData {
   name: string;
   code: string;
   description?: string;
+  totalSeats: number;
   ratePerKm: number;
   isActive: boolean;
   createdAt: Date;
@@ -55,6 +57,7 @@ export class CoachTypeService {
           name: data.name,
           code,
           description: data.description,
+          totalSeats: data.totalSeats,
           ratePerKm: data.ratePerKm,
           isActive: true,
         },
@@ -63,6 +66,7 @@ export class CoachTypeService {
           name: true,
           code: true,
           description: true,
+          totalSeats: true,
           ratePerKm: true,
           isActive: true,
           createdAt: true,
@@ -100,6 +104,7 @@ export class CoachTypeService {
           name: true,
           code: true,
           description: true,
+          totalSeats: true,
           ratePerKm: true,
           isActive: true,
           createdAt: true,
@@ -135,6 +140,7 @@ export class CoachTypeService {
           name: true,
           code: true,
           description: true,
+          totalSeats: true,
           ratePerKm: true,
           isActive: true,
           createdAt: true,
@@ -170,6 +176,7 @@ export class CoachTypeService {
           name: true,
           code: true,
           description: true,
+          totalSeats: true,
           ratePerKm: true,
           isActive: true,
           createdAt: true,
@@ -265,6 +272,7 @@ export class CoachTypeService {
           name: true,
           code: true,
           description: true,
+          totalSeats: true,
           ratePerKm: true,
           isActive: true,
           createdAt: true,

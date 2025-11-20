@@ -55,12 +55,34 @@ model CoachType {
   name           String  @unique
   code           String  @unique
   description    String?
+  totalSeats     Int     // Total seats per coach of this type
   ratePerKm      Float   // Rate per kilometer in INR
   isActive       Boolean @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  // Relations
+  coaches        Coach[]
+
   @@map("coach_types")
+}
+
+model Coach {
+  id             String     @id @default(cuid())
+  trainId        String
+  coachTypeId    String
+  coachNumber    String     // e.g., A1, B2, S1
+  totalSeats     Int
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  // Relations
+  train          Train      @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  coachType      CoachType  @relation(fields: [coachTypeId], references: [id])
+
+  @@unique([trainId, coachNumber])
+  @@map("coaches")
 }
 
 model Train {
@@ -77,6 +99,7 @@ model Train {
   // Relations
   route       Route?        @relation(fields: [routeId], references: [id])
   schedules   Schedule[]
+  coaches     Coach[]
 
   @@map("trains")
 }

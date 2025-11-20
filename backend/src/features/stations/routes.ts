@@ -43,7 +43,7 @@ export const createStationRoutes = (): FastifyPluginAsync => {
     /**
      * Create a new station (admin only)
      */
-    server.post('/admin/stations', {
+    server.post('/admin', {
       schema: {
         description: 'Create a new railway station (admin only)',
         tags: ['Stations'],
@@ -188,7 +188,7 @@ export const createStationRoutes = (): FastifyPluginAsync => {
     /**
      * Get all stations
      */
-    server.get('/stations', {
+    server.get('/', {
       schema: {
         description: 'Get all active railway stations',
         tags: ['Stations'],
@@ -248,7 +248,7 @@ export const createStationRoutes = (): FastifyPluginAsync => {
     /**
      * Get station by ID
      */
-    server.get('/stations/:id', {
+    server.get('/:id', {
       schema: {
         description: 'Get station by ID',
         tags: ['Stations'],
@@ -329,7 +329,7 @@ export const createStationRoutes = (): FastifyPluginAsync => {
     /**
      * Search stations
      */
-    server.get('/stations/search/:query', {
+    server.get('/search/:query', {
       schema: {
         description: 'Search stations by name, code, or city',
         tags: ['Stations'],
@@ -397,7 +397,7 @@ export const createStationRoutes = (): FastifyPluginAsync => {
     /**
      * Update station (admin only)
      */
-    server.put('/admin/stations/:id', {
+    server.put('/admin/:id', {
       schema: {
         description: 'Update station information (admin only)',
         tags: ['Stations'],
@@ -550,7 +550,7 @@ export const createStationRoutes = (): FastifyPluginAsync => {
     /**
      * Deactivate station (admin only)
      */
-    server.delete('/admin/stations/:id', {
+    server.delete('/admin/:id', {
       schema: {
         description: 'Deactivate a station (admin only)',
         tags: ['Stations'],

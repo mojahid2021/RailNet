@@ -61,7 +61,7 @@ export const createRouteRoutes = (): FastifyPluginAsync => {
     /**
      * Create multiple routes with their stops (admin only)
      */
-    server.post('/admin/routes', {
+    server.post('/admin', {
       schema: {
         description: 'Create multiple routes with their stops (admin only)',
         tags: ['Routes'],
@@ -280,7 +280,7 @@ export const createRouteRoutes = (): FastifyPluginAsync => {
     /**
      * Update route (admin only)
      */
-    server.put('/admin/routes/:routeId', {
+    server.put('/admin/:routeId', {
       schema: {
         description: 'Update route information (admin only)',
         tags: ['Routes'],
@@ -440,7 +440,7 @@ export const createRouteRoutes = (): FastifyPluginAsync => {
     /**
      * Delete route (admin only)
      */
-    server.delete('/admin/routes/:routeId', {
+    server.delete('/admin/:routeId', {
       schema: {
         description: 'Delete route (admin only)',
         tags: ['Routes'],
@@ -518,7 +518,7 @@ export const createRouteRoutes = (): FastifyPluginAsync => {
     /**
      * Get routes with filters
      */
-    server.get('/routes', {
+    server.get('/', {
       schema: {
         description: 'Get routes with optional filters',
         tags: ['Routes'],
@@ -641,7 +641,7 @@ export const createRouteRoutes = (): FastifyPluginAsync => {
     /**
      * Get routes by station ID
      */
-    server.get('/routes/station/:stationId', {
+    server.get('/station/:stationId', {
       schema: {
         description: 'Get routes that include a specific station',
         tags: ['Routes'],
@@ -730,7 +730,7 @@ export const createRouteRoutes = (): FastifyPluginAsync => {
     /**
      * Get route by ID
      */
-    server.get('/routes/:routeId', {
+    server.get('/:routeId', {
       schema: {
         description: 'Get route details by ID',
         tags: ['Routes'],

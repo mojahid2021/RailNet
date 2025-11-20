@@ -1469,6 +1469,371 @@ Authorization: Bearer <admin-jwt-token>
 
 ---
 
+## Train Management Endpoints
+
+RailNet provides comprehensive train management for railway operations. Trains are created with automatic coach assignment and seat calculation based on coach type configurations.
+
+### Train Data Model
+
+```typescript
+interface Train {
+  id: string;              // Unique identifier
+  name: string;            // Train name (e.g., "Rajdhani Express")
+  number: string;          // Train number (e.g., "12951")
+  type: TrainType;         // Train type enum
+  routeId?: string;        // Optional route assignment
+  totalSeats: number;      // Total seats calculated from coaches
+  isActive: boolean;       // Active status
+  createdAt: Date;         // Creation timestamp
+  updatedAt: Date;         // Last update timestamp
+
+  // Relations
+  route?: Route;           // Associated route
+  coaches: Coach[];        // Train coaches
+}
+
+type TrainType = 'EXPRESS' | 'SUPERFAST' | 'MAIL' | 'PASSENGER' | 'SHATABDI' | 'RAJDHANI';
+```
+
+### Coach Configuration
+
+When creating trains, coaches are specified using coach type codes and counts:
+
+```typescript
+interface CoachConfig {
+  coachTypeCode: string;   // Coach type code (e.g., "ACBERT")
+  count: number;           // Number of coaches of this type
+}
+```
+
+### Create Train
+
+Create a new train with automatic coach assignment and seat calculation (admin only).
+
+**Endpoint:** `POST /trains/admin`
+
+**Headers:**
+
+```http
+Authorization: Bearer <admin-jwt-token>
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "name": "Delhi Mumbai Express",
+  "number": "12951",
+  "type": "EXPRESS",
+  "routeId": "route-uuid",
+  "coaches": [
+    {
+      "coachTypeCode": "ACBERT",
+      "count": 2
+    },
+    {
+      "coachTypeCode": "ACSEAT",
+      "count": 3
+    },
+    {
+      "coachTypeCode": "SNIGDH",
+      "count": 4
+    }
+  ]
+}
+```
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "message": "Train created successfully",
+  "data": {
+    "id": "train-uuid",
+    "name": "Delhi Mumbai Express",
+    "number": "12951",
+    "type": "EXPRESS",
+    "routeId": "route-uuid",
+    "totalSeats": 1012,
+    "isActive": true,
+    "createdAt": "2025-11-20T10:00:00.000Z",
+    "updatedAt": "2025-11-20T10:00:00.000Z",
+    "coaches": [
+      {
+        "id": "coach-uuid-1",
+        "coachNumber": "ACBERT01",
+        "totalSeats": 54,
+        "coachType": {
+          "code": "ACBERT",
+          "name": "AC Berth",
+          "totalSeats": 54
+        }
+      },
+      {
+        "id": "coach-uuid-2",
+        "coachNumber": "ACBERT02",
+        "totalSeats": 54,
+        "coachType": {
+          "code": "ACBERT",
+          "name": "AC Berth",
+          "totalSeats": 54
+        }
+      }
+    ]
+  },
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+**Validation Rules:**
+
+- `name`: Required, 1-100 characters
+- `number`: Required, 1-10 characters, unique
+- `type`: Required, must be valid train type
+- `routeId`: Optional, must be valid UUID if provided
+- `coaches`: Required, array of coach configurations
+- `coachTypeCode`: Required, must exist in coach types
+- `count`: Required, 1-50 coaches per type
+
+**Error Responses:**
+
+- `400` - Validation error (invalid data)
+- `401` - Authentication required
+- `403` - Admin access required
+- `404` - Coach type not found
+- `409` - Train number already exists
+
+### Get All Trains
+
+Retrieve all trains with optional filtering (public access).
+
+**Endpoint:** `GET /trains`
+
+**Query Parameters:**
+- `type` (optional): Filter by train type
+- `routeId` (optional): Filter by route
+- `active` (optional): Filter by active status (true/false)
+- `limit` (optional): Limit results (default: 50, max: 100)
+- `offset` (optional): Pagination offset (default: 0)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "train-uuid-1",
+      "name": "Rajdhani Express",
+      "number": "12951",
+      "type": "RAJDHANI",
+      "routeId": "route-uuid",
+      "totalSeats": 1012,
+      "isActive": true,
+      "createdAt": "2025-11-20T10:00:00.000Z",
+      "updatedAt": "2025-11-20T10:00:00.000Z",
+      "route": {
+        "id": "route-uuid",
+        "name": "Delhi to Mumbai Route",
+        "code": "DEL-MUM"
+      },
+      "_count": {
+        "coaches": 15
+      }
+    }
+  ],
+  "pagination": {
+    "total": 25,
+    "limit": 50,
+    "offset": 0,
+    "hasMore": false
+  },
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+### Get Train by ID
+
+Retrieve detailed information about a specific train (public access).
+
+**Endpoint:** `GET /trains/{id}`
+
+**Parameters:**
+- `id` (path): Train UUID
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "train-uuid",
+    "name": "Rajdhani Express",
+    "number": "12951",
+    "type": "RAJDHANI",
+    "routeId": "route-uuid",
+    "totalSeats": 1012,
+    "isActive": true,
+    "createdAt": "2025-11-20T10:00:00.000Z",
+    "updatedAt": "2025-11-20T10:00:00.000Z",
+    "route": {
+      "id": "route-uuid",
+      "name": "Delhi to Mumbai Route",
+      "code": "DEL-MUM",
+      "distance": 1384,
+      "duration": 420
+    },
+    "coaches": [
+      {
+        "id": "coach-uuid-1",
+        "coachNumber": "ACBERT01",
+        "totalSeats": 54,
+        "coachType": {
+          "id": "coach-type-uuid",
+          "name": "AC Berth",
+          "code": "ACBERT",
+          "totalSeats": 54
+        }
+      }
+    ]
+  },
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+**Error Responses:**
+- `404` - Train not found
+
+### Get Train by Number
+
+Retrieve train information by train number (public access).
+
+**Endpoint:** `GET /trains/number/{number}`
+
+**Parameters:**
+- `number` (path): Train number
+
+**Response (200):** Same as Get Train by ID
+
+### Get Trains by Route
+
+Retrieve all trains assigned to a specific route (public access).
+
+**Endpoint:** `GET /trains/route/{routeId}`
+
+**Parameters:**
+- `routeId` (path): Route UUID
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "train-uuid-1",
+      "name": "Rajdhani Express",
+      "number": "12951",
+      "type": "RAJDHANI",
+      "totalSeats": 1012,
+      "isActive": true,
+      "createdAt": "2025-11-20T10:00:00.000Z",
+      "updatedAt": "2025-11-20T10:00:00.000Z"
+    }
+  ],
+  "timestamp": "2025-11-20T10:30:00.000Z"
+}
+```
+
+### Update Train
+
+Update train information (admin only).
+
+**Endpoint:** `PUT /trains/admin/{id}`
+
+**Headers:**
+
+```http
+Authorization: Bearer <admin-jwt-token>
+Content-Type: application/json
+```
+
+**Parameters:**
+
+- `id` (path): Train UUID
+
+**Request Body:**
+
+```json
+{
+  "name": "Updated Train Name",
+  "type": "SUPERFAST",
+  "routeId": "new-route-uuid",
+  "isActive": true
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Train updated successfully",
+  "data": {
+    "id": "train-uuid",
+    "name": "Updated Train Name",
+    "number": "12951",
+    "type": "SUPERFAST",
+    "routeId": "new-route-uuid",
+    "totalSeats": 1012,
+    "isActive": true,
+    "updatedAt": "2025-11-20T11:00:00.000Z"
+  },
+  "timestamp": "2025-11-20T11:00:00.000Z"
+}
+```
+
+**Error Responses:**
+
+- `400` - Validation error
+- `401` - Authentication required
+- `403` - Admin access required
+- `404` - Train not found
+- `409` - Train number conflict
+
+### Delete Train
+
+Deactivate a train (admin only). Note: Trains are soft-deleted by setting isActive to false.
+
+**Endpoint:** `DELETE /trains/admin/{id}`
+
+**Headers:**
+
+```http
+Authorization: Bearer <admin-jwt-token>
+```
+
+**Parameters:**
+
+- `id` (path): Train UUID
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Train deactivated successfully",
+  "timestamp": "2025-11-20T11:00:00.000Z"
+}
+```
+
+**Error Responses:**
+
+- `401` - Authentication required
+- `403` - Admin access required
+- `404` - Train not found
+
+---
+
 ## Error Codes
 
 ### Authentication Errors
@@ -1689,7 +2054,7 @@ npm run typecheck
 
 When running the server, API documentation is available at:
 
-```
+```http
 http://localhost:3000/api/v1/documentation
 ```
 
@@ -2222,7 +2587,7 @@ The following endpoints are planned for future releases:
 - `GET /trains/{trainId}/coaches` - Get coaches by train ✅ **Implemented**
 - `PUT /coaches/admin/{id}` - Update coaches ✅ **Implemented**
 - `DELETE /coaches/admin/{id}` - Delete coaches ✅ **Implemented**
-- `GET /trains` - List available trains
+- `GET /trains` - List available trains ✅ **Implemented**
 - `POST /bookings` - Create train booking
 - `GET /bookings` - List user bookings
 - `DELETE /bookings/{id}` - Cancel booking
@@ -2231,7 +2596,7 @@ The following endpoints are planned for future releases:
 
 - `GET /admin/users` - User management
 - `GET /admin/bookings` - Booking management
-- `POST /admin/trains` - Add new trains
+- `POST /admin/trains` - Add new trains ✅ **Implemented**
 
 ---
 

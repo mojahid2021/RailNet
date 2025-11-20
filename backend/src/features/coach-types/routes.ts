@@ -13,12 +13,14 @@ import { CoachTypeService, CreateCoachTypeData } from './service';
 const createCoachTypeSchema = z.object({
   name: z.string().min(1, 'Coach type name is required').max(100, 'Coach type name too long'),
   description: z.string().max(500, 'Description too long').optional(),
+  totalSeats: z.number().int().min(1, 'Total seats must be at least 1').max(200, 'Total seats too high'),
   ratePerKm: z.number().min(0, 'Rate per km must be positive').max(100, 'Rate per km too high'),
 });
 
 const updateCoachTypeSchema = z.object({
   name: z.string().min(1, 'Coach type name is required').max(100, 'Coach type name too long').optional(),
   description: z.string().max(500, 'Description too long').optional(),
+  totalSeats: z.number().int().min(1, 'Total seats must be at least 1').max(200, 'Total seats too high').optional(),
   ratePerKm: z.number().min(0, 'Rate per km must be positive').max(100, 'Rate per km too high').optional(),
 });
 
@@ -40,10 +42,11 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
         security: [{ bearerAuth: [] }],
         body: {
           type: 'object',
-          required: ['name', 'ratePerKm'],
+          required: ['name', 'totalSeats', 'ratePerKm'],
           properties: {
             name: { type: 'string', minLength: 1, maxLength: 100 },
             description: { type: 'string', maxLength: 500 },
+            totalSeats: { type: 'number', minimum: 1, maximum: 200 },
             ratePerKm: { type: 'number', minimum: 0, maximum: 100 },
           },
         },
@@ -63,6 +66,7 @@ export const createCoachTypeRoutes = (): FastifyPluginAsync => {
                       name: { type: 'string' },
                       code: { type: 'string' },
                       description: { type: 'string' },
+                      totalSeats: { type: 'number' },
                       ratePerKm: { type: 'number' },
                       isActive: { type: 'boolean' },
                       createdAt: { type: 'string', format: 'date-time' },

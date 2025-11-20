@@ -9,6 +9,7 @@ import { appLogger } from '../src/core/logger';
 interface CoachTypeSeed {
   name: string;
   description?: string;
+  totalSeats: number;
   ratePerKm: number;
 }
 
@@ -16,36 +17,43 @@ const coachTypes: CoachTypeSeed[] = [
   {
     name: 'Shovan',
     description: 'Lowest cost general class',
+    totalSeats: 72,
     ratePerKm: 0.5,
   },
   {
     name: 'Shovan Chair',
     description: 'Chair car in Shovan class',
+    totalSeats: 78,
     ratePerKm: 0.75,
   },
   {
     name: 'First Class Seat / Berth',
     description: 'First class accommodation with seats and berths',
+    totalSeats: 24,
     ratePerKm: 2.0,
   },
   {
     name: 'Snigdha',
     description: 'Premium non-AC class',
+    totalSeats: 64,
     ratePerKm: 1.25,
   },
   {
     name: 'AC Seat',
     description: 'Air-conditioned seating',
+    totalSeats: 72,
     ratePerKm: 1.5,
   },
   {
     name: 'AC Berth',
     description: 'Air-conditioned berth accommodation',
+    totalSeats: 54,
     ratePerKm: 2.5,
   },
   {
     name: 'AC Cabin',
     description: 'Highest cost air-conditioned cabin',
+    totalSeats: 18,
     ratePerKm: 3.0,
   },
 ];
@@ -82,6 +90,7 @@ async function seedCoachTypes(): Promise<void> {
             name: coachType.name,
             code,
             description: coachType.description,
+            totalSeats: coachType.totalSeats,
             ratePerKm: coachType.ratePerKm,
           },
         });
