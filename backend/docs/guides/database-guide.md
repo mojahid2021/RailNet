@@ -580,11 +580,12 @@ npx prisma migrate reset
 
 **Solutions**:
 ```bash
-# Development: Push current schema
+# Development only: Push current schema
 npx prisma db push
 
-# Production: Create and apply migration
-npx prisma migrate dev --name fix_schema_drift
+# Production: Create migration first, test on staging, then deploy
+npx prisma migrate dev --create-only --name fix_schema_drift
+# Review and test migration
 npx prisma migrate deploy
 ```
 

@@ -235,7 +235,7 @@ DATABASE_URL="postgresql://user:pass@db.example.com:5432/railnet?schema=public"
 
 5. **Cloud Provider (Heroku)**:
 ```env
-DATABASE_URL="postgresql://user:pass@ec2-xx-xxx-xxx-xxx.compute-1.amazonaws.com:5432/dxxx?ssl=true"
+DATABASE_URL="postgresql://user:pass@ec2-xx-xxx-xxx-xxx.compute-1.amazonaws.com:5432/dxxx?sslmode=require"
 ```
 
 6. **SSL Connection**:

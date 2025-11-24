@@ -160,8 +160,8 @@ LOGIN_RESPONSE=$(curl -s -X POST "$BASE_URL/admin/login" \
   }")
 echo "Login Response: $LOGIN_RESPONSE"
 
-# Extract token
-TOKEN=$(echo $LOGIN_RESPONSE | grep -o '"token":"[^"]*' | sed 's/"token":"//')
+# Extract token using jq
+TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.data.token')
 echo "Token: $TOKEN"
 echo
 
@@ -186,8 +186,8 @@ STATION_RESPONSE=$(curl -s -X POST "$BASE_URL/stations" \
   }')
 echo "Station Response: $STATION_RESPONSE"
 
-# Extract station ID
-STATION_ID=$(echo $STATION_RESPONSE | grep -o '"id":"[^"]*' | sed 's/"id":"//' | head -1)
+# Extract station ID using jq
+STATION_ID=$(echo $STATION_RESPONSE | jq -r '.data.id')
 echo "Station ID: $STATION_ID"
 echo
 
