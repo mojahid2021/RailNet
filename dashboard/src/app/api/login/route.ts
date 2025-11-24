@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { API_CONFIG } from "@/lib/constants";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { email, password } = body;
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    if (!email || !password) {
+      return NextResponse.json(
+        { success: false, error: "Email and password are required" },
+        { status: 400 }
+      );
+    }
 
-    const response = await fetch(`${apiUrl}/api/v1/admin/login`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

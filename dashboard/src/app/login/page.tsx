@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, Train } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -36,7 +36,7 @@ export default function LoginPage() {
       } else {
         setError(data.error || "Login failed");
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);
@@ -44,18 +44,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Admin Login</CardTitle>
-          <CardDescription className="text-center">
-            Enter your credentials to access the dashboard
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted px-4 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
+      <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary/20 opacity-20 blur-[100px]"></div>
+      
+      <Card className="w-full max-w-md animate-fade-in border-border/50 shadow-xl backdrop-blur-sm bg-card/95">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="rounded-full bg-primary/10 p-3 ring-1 ring-primary/20">
+              <Train className="h-8 w-8 text-primary" />
+            </div>
+          </div>
+          <CardTitle className="text-2xl font-bold tracking-tight">Welcome back</CardTitle>
+          <CardDescription>
+            Enter your credentials to access the admin dashboard
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-500">
+              <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive animate-slide-up">
                 <AlertTriangle className="h-4 w-4" />
                 <p>{error}</p>
               </div>
@@ -72,6 +81,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
+                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <div className="space-y-2">
@@ -85,11 +95,12 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
+                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
               />
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" type="submit" disabled={loading}>
+            <Button className="w-full transition-all duration-200 hover:shadow-md" type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
