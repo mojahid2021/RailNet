@@ -19,9 +19,24 @@ const app = fastify({
 
 app.decorate('prisma', prisma)
 
-app.register(helmet)
+app.register(helmet, {
+  contentSecurityPolicy: false // Disable CSP from Helmet since we handle it per route
+})
 app.register(cors, {
-  origin: true // Allow all origins for development; configure for production
+  origin: (origin, callback) => {
+    // Allow requests from localhost:3001 (dashboard) and localhost:3000 (for docs/testing)
+    const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001']
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'), false)
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept', 'Origin', 'X-Requested-With'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 })
 app.setErrorHandler((error, request, reply) => {
   if (error instanceof AppError) {
@@ -77,7 +92,7 @@ app.register(swaggerUi, {
     docExpansion: 'full',
     deepLinking: false
   },
-  staticCSP: true,
+  staticCSP: false, // Disable CSP to allow API calls from Swagger UI
   transformStaticCSP: (header) => header
 })
 
