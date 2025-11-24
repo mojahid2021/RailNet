@@ -4,17 +4,12 @@ import swaggerUi from '@fastify/swagger-ui'
 import helmet from '@fastify/helmet'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
-import { PrismaClient } from '@prisma/client/edge'
-import { PrismaPg } from '@prisma/adapter-pg'
-import { Pool } from 'pg'
+import { PrismaClient } from '@prisma/client'
 import 'dotenv/config'
 import config from './config'
 import { AppError } from './errors'
 
-const connectionString = config.DATABASE_URL
-const pool = new Pool({ connectionString })
-const adapter = new PrismaPg(pool)
-const prisma = new PrismaClient({ adapter })
+const prisma = new PrismaClient()
 
 const app = fastify({ 
   logger: { 
@@ -111,12 +106,35 @@ app.register(async (app) => {
     await adminRoutes(adminApp)
   }, { prefix: '/admin' })
 
+  // Station routes
+  app.register(async (stationApp) => {
+    const { stationRoutes } = await import('./admin/stations')
+    await stationRoutes(stationApp)
+  }, { prefix: '/stations' })
+
+  // Train route routes
+  app.register(async (trainRouteApp) => {
+    const { trainRoutes } = await import('./admin/trainRoutes')
+    await trainRoutes(trainRouteApp)
+  }, { prefix: '/train-routes' })
+
+  // Compartment routes
+  app.register(async (compartmentApp) => {
+    const { compartmentRoutes } = await import('./admin/compartments')
+    await compartmentRoutes(compartmentApp)
+  }, { prefix: '/compartments' })
+
+  // Train routes
+  app.register(async (trainApp) => {
+    const { trainRoutes } = await import('./admin/trains')
+    await trainRoutes(trainApp)
+  }, { prefix: '/trains' })
+
   // Add more routes here
 }, { prefix: config.API_PREFIX })
 
 app.addHook('onClose', async () => {
   await prisma.$disconnect()
-  await pool.end()
 })
 
 const start = async () => {

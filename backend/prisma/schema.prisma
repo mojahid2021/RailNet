@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -30,4 +31,93 @@ model Admin {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Station {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  city      String
+  district  String
+  division  String
+  latitude  Float
+  longitude Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations for train routes
+  startRoutes TrainRoute[] @relation("StartStation")
+  endRoutes   TrainRoute[] @relation("EndStation")
+  routeStations TrainRouteStation[]
+
+  // Opposite relations for train route stations
+  beforeStations TrainRouteStation[] @relation("BeforeStation")
+  nextStations   TrainRouteStation[] @relation("NextStation")
+}
+
+model TrainRoute {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  totalDistance Float
+  startStationId String  @db.Uuid
+  endStationId   String  @db.Uuid
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  startStation Station @relation("StartStation", fields: [startStationId], references: [id])
+  endStation   Station @relation("EndStation", fields: [endStationId], references: [id])
+  stations     TrainRouteStation[]
+  trains       Train[]
+}
+
+model TrainRouteStation {
+  id                String  @id @default(uuid()) @db.Uuid
+  trainRouteId      String  @db.Uuid
+  beforeStationId   String? @db.Uuid
+  currentStationId  String  @db.Uuid
+  nextStationId     String? @db.Uuid
+  distance          Float
+  distanceFromStart Float
+
+  trainRoute      TrainRoute @relation(fields: [trainRouteId], references: [id], onDelete: Cascade)
+  currentStation  Station    @relation(fields: [currentStationId], references: [id])
+  beforeStation   Station?   @relation("BeforeStation", fields: [beforeStationId], references: [id])
+  nextStation     Station?   @relation("NextStation", fields: [nextStationId], references: [id])
+
+  @@unique([trainRouteId, currentStationId])
+}
+
+model TrainCompartment {
+  id            String @id @default(uuid()) @db.Uuid
+  trainId       String @db.Uuid
+  compartmentId String @db.Uuid
+
+  train       Train      @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  compartment Compartment @relation(fields: [compartmentId], references: [id], onDelete: Cascade)
+
+  @@unique([trainId, compartmentId])
+}
+
+model Compartment {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  type      String
+  price     Float
+  totalSeat Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  trainCompartments TrainCompartment[]
+}
+
+model Train {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  number        String   @unique
+  type          String
+  trainRouteId  String?  @db.Uuid
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  trainRoute    TrainRoute?     @relation(fields: [trainRouteId], references: [id])
+  compartments  TrainCompartment[]
 }
