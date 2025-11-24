@@ -57,3 +57,4 @@ Once the server is running, visit `http://localhost:3000/docs` for Swagger UI.
 - `API_PREFIX`: API route prefix (default: /api/v1)
 - `DATABASE_URL`: PostgreSQL connection string
 - `BASE_URL`: Base URL for the API (default: http://localhost:3000)
+- `JWT_SECRET`: Secret key for JWT token signing (required)

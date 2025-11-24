@@ -8,6 +8,7 @@ const envSchema = z.object({
   API_PREFIX: z.string().default('/api/v1'),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   BASE_URL: z.string().default('http://localhost:3000'),
+  JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
 })
 
 const config = envSchema.parse(process.env)

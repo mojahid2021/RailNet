@@ -9,6 +9,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
 import 'dotenv/config'
 import config from './config'
+import { AppError } from './errors'
 
 const connectionString = config.DATABASE_URL
 const pool = new Pool({ connectionString })
@@ -27,9 +28,21 @@ app.register(helmet)
 app.register(cors, {
   origin: true // Allow all origins for development; configure for production
 })
-app.register(rateLimit, {
-  max: 100,
-  timeWindow: '1 minute'
+app.setErrorHandler((error, request, reply) => {
+  if (error instanceof AppError) {
+    return reply.code(error.statusCode).send({
+      success: false,
+      error: error.message,
+    })
+  }
+
+  // Log unexpected errors
+  app.log.error(error)
+
+  return reply.code(500).send({
+    success: false,
+    error: 'Internal server error',
+  })
 })
 
 app.register(swagger, {
@@ -52,7 +65,12 @@ app.register(swagger, {
           type: 'apiKey',
           name: 'apiKey',
           in: 'header'
-        }
+        },
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
       }
     }
   }
@@ -86,6 +104,12 @@ app.register(async (app) => {
   }, async (request, reply) => {
     return { status: 'Server is running...' }
   })
+
+  // Admin routes
+  app.register(async (adminApp) => {
+    const { adminRoutes } = await import('./admin/routes')
+    await adminRoutes(adminApp)
+  }, { prefix: '/admin' })
 
   // Add more routes here
 }, { prefix: config.API_PREFIX })
