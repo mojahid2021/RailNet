@@ -63,6 +63,28 @@ export function useSchedules() {
     }
   };
 
+  const getSchedule = useCallback(async (id: string): Promise<Schedule | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/schedules/${id}`);
+      const data: ApiResponse<Schedule> = await res.json();
+
+      if (data.success && data.data) {
+        return data.data;
+      } else {
+        setError(data.error || "Failed to fetch schedule details");
+        return null;
+      }
+    } catch (err) {
+      setError("Network error occurred while fetching schedule details");
+      console.error(err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Update and Delete are not fully specified in the prompt requirements for UI, 
   // but good to have placeholders or implementation if needed. 
   // For now, I'll stick to what's needed for the checklist (Create/List).
@@ -77,5 +99,6 @@ export function useSchedules() {
     error,
     fetchSchedules,
     createSchedule,
+    getSchedule,
   };
 }

@@ -65,18 +65,19 @@ export default function SchedulesPage() {
                   <TableHead>Departure</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Stops</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading && schedules.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Loading schedules...
                     </TableCell>
                   </TableRow>
                 ) : schedules.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       No schedules found. Add one to get started.
                     </TableCell>
                   </TableRow>
@@ -109,6 +110,11 @@ export default function SchedulesPage() {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">{schedule.stationSchedules?.length || 0} Stations</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="outline" size="sm" onClick={() => window.location.href = `/schedules/${schedule.id}`}>
+                          View
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
