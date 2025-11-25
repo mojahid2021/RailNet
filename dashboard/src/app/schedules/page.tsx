@@ -99,9 +99,7 @@ export default function SchedulesPage() {
                       <TableCell>
                         <div className="flex items-center">
                           <Clock className="mr-2 h-3 w-3 text-muted-foreground" />
-                          {schedule.departureDate && !isNaN(new Date(schedule.departureDate).getTime()) 
-                            ? format(new Date(schedule.departureDate), "PP p") 
-                            : "N/A"}
+                          {schedule.departureTime || "N/A"}
                         </div>
                       </TableCell>
                       <TableCell>

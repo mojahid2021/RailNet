@@ -44,7 +44,8 @@ export function ScheduleForm({
   const [loading, setLoading] = useState(false);
 
   const [selectedTrainId, setSelectedTrainId] = useState<string>("");
-  const [departureDate, setDepartureDate] = useState<string>("");
+  const [departureDate, setDepartureDate] = useState<string>(""); // Keep for calculation
+  const [departureTime, setDepartureTime] = useState<string>(""); // New field for API
   const [selectedRoute, setSelectedRoute] = useState<TrainRoute | null>(null);
   const [stationSchedules, setStationSchedules] = useState<CreateStationScheduleRequest[]>([]);
 
@@ -54,6 +55,7 @@ export function ScheduleForm({
       // Reset form
       setSelectedTrainId("");
       setDepartureDate("");
+      setDepartureTime("");
       setSelectedRoute(null);
       setStationSchedules([]);
     }
@@ -100,8 +102,8 @@ export function ScheduleForm({
     setLoading(true);
 
     // Basic validation
-    if (!selectedTrainId || !departureDate) {
-      alert("Please select a train and departure date.");
+    if (!selectedTrainId || !departureDate || !departureTime) {
+      alert("Please select a train, date, and time.");
       setLoading(false);
       return;
     }
@@ -122,7 +124,7 @@ export function ScheduleForm({
 
     const payload: CreateScheduleRequest = {
       trainId: selectedTrainId,
-      departureDate: new Date(departureDate).toISOString(),
+      departureTime: departureTime,
       stationSchedules: formattedSchedules,
     };
 
@@ -161,12 +163,22 @@ export function ScheduleForm({
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="departureDate">Departure Date</Label>
+                <Label htmlFor="departureDate">Date (for calculation)</Label>
                 <Input
                   id="departureDate"
-                  type="datetime-local"
+                  type="date"
                   value={departureDate}
                   onChange={(e) => setDepartureDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="departureTime">Departure Time</Label>
+                <Input
+                  id="departureTime"
+                  type="time"
+                  value={departureTime}
+                  onChange={(e) => setDepartureTime(e.target.value)}
                   required
                 />
               </div>

@@ -215,7 +215,7 @@ export interface Schedule {
   id: string;
   trainId: string;
   routeId: string;
-  departureDate: string;
+  departureTime: string;
   status: string;
   train?: Train;
   route?: TrainRoute;
@@ -232,6 +232,6 @@ export interface CreateStationScheduleRequest {
 
 export interface CreateScheduleRequest {
   trainId: string;
-  departureDate: string;
+  departureTime: string;
   stationSchedules: CreateStationScheduleRequest[];
 }

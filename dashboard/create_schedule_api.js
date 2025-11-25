@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:3000/api/v1';
+const BASE_URL = 'http://localhost:8000/api/v1';
 const EMAIL = 'aammojahid@gmail.com';
 const PASSWORD = '11223344';
 
@@ -43,7 +43,7 @@ async function main() {
 
     const payload = {
       trainId: train.id,
-      departureDate: departureDate.toISOString(),
+      departureTime: "08:00",
       stationSchedules: route.stations.map((s, index) => ({
         stationId: s.currentStation.id,
         estimatedArrival: new Date(departureDate.getTime() + index * 3600000).toISOString(),
