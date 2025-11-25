@@ -145,6 +145,12 @@ app.register(async (app) => {
     await trainRoutes(trainApp)
   }, { prefix: '/trains' })
 
+  // Schedule routes
+  app.register(async (scheduleApp) => {
+    const { scheduleRoutes } = await import('./schedules/schedules')
+    await scheduleRoutes(scheduleApp)
+  }, { prefix: '/schedules' })
+
   // Add more routes here
 }, { prefix: config.API_PREFIX })
 

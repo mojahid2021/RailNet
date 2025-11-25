@@ -1,0 +1,423 @@
+import { FastifyInstance } from 'fastify'
+import { createScheduleSchema, CreateScheduleInput, scheduleQuerySchema, ScheduleQueryInput } from '../schemas/schedules'
+import { ResponseHandler } from '../utils/response'
+import { ConflictError, NotFoundError } from '../errors'
+import { authenticateAdmin } from '../middleware/auth'
+import { AdminSecurity } from '../utils/adminSecurity'
+import { ScheduleService } from './services/scheduleService'
+
+/**
+ * Schedule Management Routes - ADMIN ONLY
+ *
+ * All schedule operations require admin authentication and authorization.
+ * These routes are protected by JWT authentication with admin token validation.
+ *
+ * Security Features:
+ * - JWT Bearer token authentication required
+ * - Admin token type validation
+ * - Admin ID tracking for audit trails
+ * - Comprehensive logging of admin actions
+ */
+
+export async function scheduleRoutes(app: FastifyInstance) {
+  // Create schedule
+  app.post('/', {
+    preHandler: authenticateAdmin,
+    schema: {
+      description: 'Create a new train schedule with station-by-station timing',
+      tags: ['schedules'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['trainId', 'departureDate', 'stationSchedules'],
+        properties: {
+          trainId: { type: 'string', format: 'uuid' },
+          departureDate: { type: 'string', format: 'date-time' },
+          stationSchedules: {
+            type: 'array',
+            minItems: 1,
+            items: {
+              type: 'object',
+              required: ['stationId', 'estimatedArrival', 'estimatedDeparture'],
+              properties: {
+                stationId: { type: 'string', format: 'uuid' },
+                estimatedArrival: { type: 'string', format: 'date-time' },
+                estimatedDeparture: { type: 'string', format: 'date-time' },
+                platformNumber: { type: 'string' },
+                remarks: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+      response: {
+        201: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            message: { type: 'string' },
+            data: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                trainId: { type: 'string' },
+                routeId: { type: 'string' },
+                departureDate: { type: 'string' },
+                status: { type: 'string' },
+                train: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' },
+                    number: { type: 'string' },
+                    type: { type: 'string' },
+                  },
+                },
+                route: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' },
+                    startStation: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        name: { type: 'string' },
+                      },
+                    },
+                    endStation: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        name: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+                stationSchedules: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string' },
+                      stationId: { type: 'string' },
+                      sequenceOrder: { type: 'integer' },
+                      estimatedArrival: { type: 'string' },
+                      estimatedDeparture: { type: 'string' },
+                      durationFromPrevious: { type: 'integer' },
+                      waitingTime: { type: 'integer' },
+                      status: { type: 'string' },
+                      platformNumber: { type: 'string' },
+                      remarks: { type: 'string' },
+                      station: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          name: { type: 'string' },
+                          city: { type: 'string' },
+                          district: { type: 'string' },
+                        },
+                      },
+                    },
+                  },
+                },
+                createdAt: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      // Validate admin access and log operation
+      const adminInfo = AdminSecurity.validateAdminAccess(request, 'create_schedule')
+
+      // Check specific permissions
+      if (!AdminSecurity.checkPermission(adminInfo.adminId, 'create_schedule')) {
+        return ResponseHandler.error(reply, 'Insufficient permissions to create schedules', 403)
+      }
+
+      const scheduleData: CreateScheduleInput = createScheduleSchema.parse(request.body)
+
+      const schedule = await ScheduleService.createSchedule(scheduleData, adminInfo.adminId)
+
+      // Log successful operation
+      AdminSecurity.logAdminAction(adminInfo.adminId, 'schedule_created', {
+        scheduleId: schedule?.id,
+        trainId: scheduleData.trainId,
+        stationCount: scheduleData.stationSchedules.length,
+      })
+
+      return ResponseHandler.created(reply, schedule, 'Schedule created successfully')
+    } catch (error) {
+      if (error instanceof ConflictError) {
+        return ResponseHandler.error(reply, error.message, 409)
+      }
+      if (error instanceof NotFoundError) {
+        return ResponseHandler.error(reply, error.message, 404)
+      }
+      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+    }
+  })
+
+  // Get all schedules with optional filters
+  app.get('/', {
+    preHandler: authenticateAdmin,
+    schema: {
+      description: 'Get all train schedules with optional filters',
+      tags: ['schedules'],
+      security: [{ bearerAuth: [] }],
+      querystring: {
+        type: 'object',
+        properties: {
+          trainId: { type: 'string', format: 'uuid' },
+          dateFrom: { type: 'string', format: 'date-time' },
+          dateTo: { type: 'string', format: 'date-time' },
+          status: { type: 'string', enum: ['scheduled', 'running', 'completed', 'delayed', 'cancelled'] },
+          limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+          offset: { type: 'integer', minimum: 0, default: 0 },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'object',
+              properties: {
+                schedules: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string' },
+                      trainId: { type: 'string' },
+                      routeId: { type: 'string' },
+                      departureDate: { type: 'string' },
+                      status: { type: 'string' },
+                      train: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          name: { type: 'string' },
+                          number: { type: 'string' },
+                          type: { type: 'string' },
+                        },
+                      },
+                      route: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          name: { type: 'string' },
+                          startStation: {
+                            type: 'object',
+                            properties: {
+                              id: { type: 'string' },
+                              name: { type: 'string' },
+                            },
+                          },
+                          endStation: {
+                            type: 'object',
+                            properties: {
+                              id: { type: 'string' },
+                              name: { type: 'string' },
+                            },
+                          },
+                        },
+                      },
+                      _count: {
+                        type: 'object',
+                        properties: {
+                          stationSchedules: { type: 'integer' },
+                        },
+                      },
+                      createdAt: { type: 'string' },
+                    },
+                  },
+                },
+                pagination: {
+                  type: 'object',
+                  properties: {
+                    total: { type: 'integer' },
+                    limit: { type: 'integer' },
+                    offset: { type: 'integer' },
+                    hasMore: { type: 'boolean' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      // Validate admin access and log operation
+      const adminInfo = AdminSecurity.validateAdminAccess(request, 'list_schedules')
+
+      // Check specific permissions
+      if (!AdminSecurity.checkPermission(adminInfo.adminId, 'list_schedules')) {
+        return ResponseHandler.error(reply, 'Insufficient permissions to view schedules', 403)
+      }
+
+      const queryParams: ScheduleQueryInput = scheduleQuerySchema.parse(request.query)
+
+      const result = await ScheduleService.getSchedules(queryParams, adminInfo.adminId)
+
+      // Log operation
+      AdminSecurity.logAdminAction(adminInfo.adminId, 'schedules_listed', {
+        filters: queryParams,
+        resultCount: result.schedules.length,
+      })
+
+      return ResponseHandler.success(reply, result)
+    } catch (error) {
+      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+    }
+  })
+
+  // Get schedule by ID
+  app.get('/:id', {
+    preHandler: authenticateAdmin,
+    schema: {
+      description: 'Get schedule details by ID',
+      tags: ['schedules'],
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+        },
+        required: ['id'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                trainId: { type: 'string' },
+                routeId: { type: 'string' },
+                departureDate: { type: 'string' },
+                status: { type: 'string' },
+                train: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' },
+                    number: { type: 'string' },
+                    type: { type: 'string' },
+                  },
+                },
+                route: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' },
+                    startStation: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        name: { type: 'string' },
+                      },
+                    },
+                    endStation: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        name: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+                stationSchedules: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string' },
+                      stationId: { type: 'string' },
+                      sequenceOrder: { type: 'integer' },
+                      estimatedArrival: { type: 'string' },
+                      estimatedDeparture: { type: 'string' },
+                      actualArrival: { type: 'string' },
+                      actualDeparture: { type: 'string' },
+                      durationFromPrevious: { type: 'integer' },
+                      waitingTime: { type: 'integer' },
+                      status: { type: 'string' },
+                      platformNumber: { type: 'string' },
+                      remarks: { type: 'string' },
+                      station: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'string' },
+                          name: { type: 'string' },
+                          city: { type: 'string' },
+                          district: { type: 'string' },
+                        },
+                      },
+                      updates: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            id: { type: 'string' },
+                            previousStatus: { type: 'string' },
+                            newStatus: { type: 'string' },
+                            reason: { type: 'string' },
+                            updatedAt: { type: 'string' },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                createdAt: { type: 'string' },
+                updatedAt: { type: 'string' },
+              },
+            },
+          },
+        },
+        404: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            error: { type: 'string' },
+          },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      // Validate admin access and log operation
+      const adminInfo = AdminSecurity.validateAdminAccess(request, 'read_schedule')
+
+      // Check specific permissions
+      if (!AdminSecurity.checkPermission(adminInfo.adminId, 'read_schedule')) {
+        return ResponseHandler.error(reply, 'Insufficient permissions to view schedule details', 403)
+      }
+
+      const { id } = request.params as { id: string }
+
+      const schedule = await ScheduleService.getScheduleById(id, adminInfo.adminId)
+
+      // Log operation
+      AdminSecurity.logAdminAction(adminInfo.adminId, 'schedule_viewed', {
+        scheduleId: id,
+        trainId: schedule.train.id,
+      })
+
+      return ResponseHandler.success(reply, schedule)
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return ResponseHandler.error(reply, error.message, 404)
+      }
+      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+    }
+  })
+}

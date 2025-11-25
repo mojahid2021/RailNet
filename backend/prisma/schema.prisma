@@ -52,6 +52,9 @@ model Station {
   // Opposite relations for train route stations
   beforeStations TrainRouteStation[] @relation("BeforeStation")
   nextStations   TrainRouteStation[] @relation("NextStation")
+
+  // Schedule relations
+  stationSchedules StationSchedule[]
 }
 
 model TrainRoute {
@@ -67,6 +70,7 @@ model TrainRoute {
   endStation   Station @relation("EndStation", fields: [endStationId], references: [id])
   stations     TrainRouteStation[]
   trains       Train[]
+  schedules    TrainSchedule[]
 }
 
 model TrainRouteStation {
@@ -82,6 +86,9 @@ model TrainRouteStation {
   currentStation  Station    @relation(fields: [currentStationId], references: [id])
   beforeStation   Station?   @relation("BeforeStation", fields: [beforeStationId], references: [id])
   nextStation     Station?   @relation("NextStation", fields: [nextStationId], references: [id])
+
+  // Schedule relations
+  stationSchedules StationSchedule[]
 
   @@unique([trainRouteId, currentStationId])
 }
@@ -120,4 +127,58 @@ model Train {
 
   trainRoute    TrainRoute?     @relation(fields: [trainRouteId], references: [id])
   compartments  TrainCompartment[]
+  schedules     TrainSchedule[]
+}
+
+model TrainSchedule {
+  id            String   @id @default(uuid()) @db.Uuid
+  trainId       String   @db.Uuid
+  routeId       String   @db.Uuid
+  departureDate DateTime
+  status        String   @default("scheduled") // scheduled, running, completed, delayed, cancelled
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  train         Train            @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  route         TrainRoute       @relation(fields: [routeId], references: [id])
+  stationSchedules StationSchedule[]
+
+  @@unique([trainId, departureDate])
+}
+
+model StationSchedule {
+  id                String   @id @default(uuid()) @db.Uuid
+  scheduleId        String   @db.Uuid
+  stationId         String   @db.Uuid
+  routeStationId    String   @db.Uuid
+  sequenceOrder     Int
+  estimatedArrival  DateTime
+  estimatedDeparture DateTime
+  actualArrival     DateTime?
+  actualDeparture   DateTime?
+  durationFromPrevious Int    // minutes
+  waitingTime       Int      // minutes
+  status            String   @default("pending") // pending, arrived, departed, skipped, delayed
+  platformNumber    String?
+  remarks           String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  schedule          TrainSchedule   @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  station           Station         @relation(fields: [stationId], references: [id])
+  routeStation      TrainRouteStation @relation(fields: [routeStationId], references: [id])
+  updates           ScheduleUpdate[]
+
+  @@unique([scheduleId, stationId])
+}
+
+model ScheduleUpdate {
+  id                String   @id @default(uuid()) @db.Uuid
+  stationScheduleId String   @db.Uuid
+  previousStatus    String
+  newStatus         String
+  reason            String?
+  updatedAt         DateTime @default(now())
+
+  stationSchedule   StationSchedule @relation(fields: [stationScheduleId], references: [id], onDelete: Cascade)
 }
