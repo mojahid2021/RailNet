@@ -1,40 +1,47 @@
 # Train Schedule API Documentation
 
 ## Overview
-The Train Schedule API allows **ADMIN ONLY** creation and management of train schedules with station-by-station arrival and departure times. This API is designed for professional railway operations with low-latency requirements and comprehensive security measures.
 
-## Security & Access Control
+The Train Schedule API provides **admin-only** endpoints for creating and managing train schedules with detailed station-by-station timing. Designed for professional railway operations, this API ensures secure, validated, and auditable schedule management.
 
-### Admin-Only Access
-- **JWT Authentication Required**: All endpoints require valid admin JWT tokens
-- **Token Type Validation**: Only tokens with `type: 'admin'` are accepted
-- **Permission Checks**: Explicit permission validation for each operation
-- **Audit Logging**: All admin actions are logged for compliance and security
+### Key Features
 
-### Authentication Headers
-```bash
+- **Time-Based Schedules**: Uses HH:MM format for regular/repeating train operations
+- **Station-by-Station Timing**: Detailed arrival/departure times for each station
+- **Admin Security**: JWT-based authentication with comprehensive audit logging
+- **Route Validation**: Ensures schedules align with assigned train routes
+- **Real-Time Updates**: Support for status changes and delay tracking
+
+## Authentication
+
+All endpoints require **admin JWT authentication** with the following header:
+
+```
 Authorization: Bearer <admin-jwt-token>
 ```
 
 ### Security Features
-- ✅ **Multi-layer Authentication**: JWT + admin type validation
-- ✅ **Permission-based Access**: Granular permission checks
-- ✅ **Comprehensive Logging**: All operations logged with admin ID
-- ✅ **Audit Trail**: Complete record of admin actions
-- ✅ **Request Validation**: Strict input validation and sanitization
+
+- ✅ JWT token validation with admin type checking
+- ✅ Granular permission-based access control
+- ✅ Comprehensive audit logging for all operations
+- ✅ Request validation and sanitization
+- ✅ Rate limiting and security headers
 
 ## API Endpoints
 
-### 1. Create Schedule
+### Create Schedule
+
 **POST** `/api/v1/schedules`
 
 Creates a new train schedule with detailed station-by-station timing.
 
 #### Request Body
+
 ```json
 {
   "trainId": "uuid-of-train",
-  "departureDate": "2025-11-25T08:00:00.000Z",
+  "departureTime": "08:00",
   "stationSchedules": [
     {
       "stationId": "uuid-of-station-1",
@@ -54,14 +61,28 @@ Creates a new train schedule with detailed station-by-station timing.
 }
 ```
 
+#### Field Descriptions
+
+- `trainId`: UUID of the train (must be assigned to a route)
+- `departureTime`: Schedule departure time in HH:MM format (24-hour)
+- `stationSchedules[]`: Array of station timing details
+  - `stationId`: UUID of the station
+  - `estimatedArrival`: Full ISO datetime string for arrival
+  - `estimatedDeparture`: Full ISO datetime string for departure
+  - `platformNumber`: Platform assignment (optional)
+  - `remarks`: Additional notes (optional)
+
 #### Validation Rules
+
 - Train must exist and be assigned to a route
 - All stations must be part of the train's route
 - Station sequence must match the route order
-- Arrival times must be before departure times
-- No duplicate schedules for same train on same date
+- Arrival times must be before departure times at each station
+- No duplicate schedules for same train at same departure time
+- Time format must be HH:MM (24-hour format)
 
-#### Response
+#### Response (201 Created)
+
 ```json
 {
   "success": true,
@@ -70,7 +91,7 @@ Creates a new train schedule with detailed station-by-station timing.
     "id": "schedule-uuid",
     "trainId": "train-uuid",
     "routeId": "route-uuid",
-    "departureDate": "2025-11-25T08:00:00.000Z",
+    "departureTime": "08:00",
     "status": "scheduled",
     "train": {
       "id": "train-uuid",
@@ -103,93 +124,300 @@ Creates a new train schedule with detailed station-by-station timing.
           "district": "Dhaka"
         }
       }
-    ]
+    ],
+    "createdAt": "2025-11-25T07:00:00.000Z"
   }
 }
 ```
 
-### 2. Get All Schedules
+### Get All Schedules
+
 **GET** `/api/v1/schedules`
 
 Retrieves schedules with optional filtering and pagination.
 
 #### Query Parameters
-- `trainId` (optional): Filter by specific train
-- `dateFrom` (optional): Filter schedules from this date
-- `dateTo` (optional): Filter schedules until this date
-- `status` (optional): Filter by schedule status
-- `limit` (optional): Number of results (default: 20, max: 100)
-- `offset` (optional): Pagination offset (default: 0)
+
+- `trainId` *(optional)*: Filter by specific train UUID
+- `departureTime` *(optional)*: Filter by departure time (HH:MM format)
+- `status` *(optional)*: Filter by schedule status (`scheduled`, `running`, `completed`, `delayed`, `cancelled`)
+- `limit` *(optional)*: Number of results per page (default: 20, max: 100)
+- `offset` *(optional)*: Pagination offset (default: 0)
 
 #### Example Request
-```
+
+```http
 GET /api/v1/schedules?trainId=123e4567-e89b-12d3-a456-426614174000&status=scheduled&limit=10
 ```
 
-### 3. Get Schedule by ID
+#### Response (200 OK)
+
+```json
+{
+  "success": true,
+  "data": {
+    "schedules": [
+      {
+        "id": "schedule-uuid",
+        "trainId": "train-uuid",
+        "routeId": "route-uuid",
+        "departureTime": "08:00",
+        "status": "scheduled",
+        "train": {
+          "id": "train-uuid",
+          "name": "Express Train",
+          "number": "12345",
+          "type": "Express"
+        },
+        "route": {
+          "id": "route-uuid",
+          "name": "Dhaka to Chittagong",
+          "startStation": { "id": "start-uuid", "name": "Dhaka" },
+          "endStation": { "id": "end-uuid", "name": "Chittagong" }
+        },
+        "_count": {
+          "stationSchedules": 5
+        },
+        "createdAt": "2025-11-25T07:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "total": 25,
+      "limit": 10,
+      "offset": 0,
+      "hasMore": true
+    }
+  }
+}
+```
+
+### Get Schedule by ID
+
 **GET** `/api/v1/schedules/:id`
 
 Retrieves detailed information about a specific schedule including all station schedules and recent updates.
 
-## Data Flow
+#### Path Parameters
 
-1. **Train Assignment**: Train must be assigned to a route before creating schedules
-2. **Route Validation**: All stations in schedule must exist in the train's route
-3. **Sequence Validation**: Station order must match the route definition
-4. **Time Calculations**: Automatic calculation of travel duration and waiting times
-5. **Audit Trail**: All status changes are tracked for compliance
+- `id`: Schedule UUID
 
-## Performance Optimizations
+#### Response (200 OK)
 
-- **Indexed Queries**: Optimized database indexes for fast lookups
-- **Selective Fields**: API supports field selection for reduced payload
-- **Pagination**: Efficient handling of large result sets
-- **Transaction Safety**: All operations use database transactions
+```json
+{
+  "success": true,
+  "data": {
+    "id": "schedule-uuid",
+    "trainId": "train-uuid",
+    "routeId": "route-uuid",
+    "departureTime": "08:00",
+    "status": "scheduled",
+    "train": {
+      "id": "train-uuid",
+      "name": "Express Train",
+      "number": "12345",
+      "type": "Express"
+    },
+    "route": {
+      "id": "route-uuid",
+      "name": "Dhaka to Chittagong",
+      "startStation": { "id": "start-uuid", "name": "Dhaka" },
+      "endStation": { "id": "end-uuid", "name": "Chittagong" }
+    },
+    "stationSchedules": [
+      {
+        "id": "station-schedule-uuid",
+        "stationId": "station-uuid",
+        "sequenceOrder": 1,
+        "estimatedArrival": "2025-11-25T08:00:00.000Z",
+        "estimatedDeparture": "2025-11-25T08:15:00.000Z",
+        "actualArrival": null,
+        "actualDeparture": null,
+        "durationFromPrevious": 0,
+        "waitingTime": 15,
+        "status": "pending",
+        "platformNumber": "1",
+        "remarks": "First station",
+        "station": {
+          "id": "station-uuid",
+          "name": "Dhaka Station",
+          "city": "Dhaka",
+          "district": "Dhaka"
+        },
+        "updates": []
+      }
+    ],
+    "createdAt": "2025-11-25T07:00:00.000Z",
+    "updatedAt": "2025-11-25T07:00:00.000Z"
+  }
+}
+```
 
 ## Error Handling
 
-### Common Error Codes
-- `400`: Invalid request data
-- `404`: Train/route/station not found
-- `409`: Schedule conflict (duplicate date/train)
-- `500`: Internal server error
+### HTTP Status Codes
 
-### Validation Errors
-- Station sequence mismatch
-- Invalid time formats
-- Missing required fields
-- Train not assigned to route
+- `200`: Success
+- `201`: Created successfully
+- `400`: Bad Request - Invalid input data
+- `401`: Unauthorized - Missing or invalid JWT token
+- `403`: Forbidden - Insufficient admin permissions
+- `404`: Not Found - Schedule, train, or station not found
+- `409`: Conflict - Schedule already exists for train at specified time
+- `422`: Unprocessable Entity - Validation failed
+- `500`: Internal Server Error
+
+### Common Error Responses
+
+#### Validation Errors (400/422)
+
+```json
+{
+  "success": false,
+  "error": "Validation failed",
+  "details": [
+    {
+      "field": "departureTime",
+      "message": "Invalid time format. Use HH:MM (24-hour format)"
+    },
+    {
+      "field": "stationSchedules.0.stationId",
+      "message": "Invalid station ID"
+    }
+  ]
+}
+```
+
+#### Authentication Error (401)
+
+```json
+{
+  "success": false,
+  "error": "Authentication required"
+}
+```
+
+#### Permission Error (403)
+
+```json
+{
+  "success": false,
+  "error": "Insufficient permissions to create schedules"
+}
+```
+
+#### Not Found Error (404)
+
+```json
+{
+  "success": false,
+  "error": "Schedule not found"
+}
+```
+
+#### Conflict Error (409)
+
+```json
+{
+  "success": false,
+  "error": "Schedule already exists for this train at the specified time"
+}
+```
 
 ## Integration Examples
 
 ### Creating a Schedule with cURL
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/schedules \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN" \
   -d '{
-    "trainId": "train-uuid",
-    "departureDate": "2025-11-25T08:00:00.000Z",
+    "trainId": "550e8400-e29b-41d4-a716-446655440000",
+    "departureTime": "08:00",
     "stationSchedules": [
       {
-        "stationId": "station-1-uuid",
+        "stationId": "550e8400-e29b-41d4-a716-446655440001",
         "estimatedArrival": "2025-11-25T08:00:00.000Z",
-        "estimatedDeparture": "2025-11-25T08:15:00.000Z"
+        "estimatedDeparture": "2025-11-25T08:15:00.000Z",
+        "platformNumber": "1",
+        "remarks": "Departure station"
       },
       {
-        "stationId": "station-2-uuid",
+        "stationId": "550e8400-e29b-41d4-a716-446655440002",
         "estimatedArrival": "2025-11-25T09:30:00.000Z",
-        "estimatedDeparture": "2025-11-25T09:45:00.000Z"
+        "estimatedDeparture": "2025-11-25T09:45:00.000Z",
+        "platformNumber": "2",
+        "remarks": "Intermediate stop"
+      },
+      {
+        "stationId": "550e8400-e29b-41d4-a716-446655440003",
+        "estimatedArrival": "2025-11-25T11:00:00.000Z",
+        "estimatedDeparture": "2025-11-25T11:00:00.000Z",
+        "platformNumber": "1",
+        "remarks": "Final destination"
       }
     ]
   }'
 ```
 
-## Next Steps
+### Getting Schedules with Filtering
 
-Future enhancements will include:
-- Real-time schedule updates via WebSocket
-- Station status updates (arrived/departed)
-- Delay notifications
-- Schedule optimization algorithms
-- Historical performance analytics
+```bash
+# Get schedules for a specific train
+curl -X GET "http://localhost:3000/api/v1/schedules?trainId=550e8400-e29b-41d4-a716-446655440000" \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
+
+# Get schedules with pagination
+curl -X GET "http://localhost:3000/api/v1/schedules?limit=5&offset=10" \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
+
+# Get schedules by status
+curl -X GET "http://localhost:3000/api/v1/schedules?status=scheduled" \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
+```
+
+### Getting Schedule Details
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/schedules/550e8400-e29b-41d4-a716-446655440004" \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
+```
+
+## Business Logic
+
+### Schedule Creation Flow
+
+1. **Authentication**: Validate admin JWT token and permissions
+2. **Train Validation**: Ensure train exists and is assigned to a route
+3. **Route Validation**: Verify all stations belong to the train's route
+4. **Sequence Validation**: Confirm station order matches route definition
+5. **Time Validation**: Check arrival/departure time logic
+6. **Conflict Check**: Prevent duplicate schedules for same train/time
+7. **Calculation**: Auto-calculate travel durations and waiting times
+8. **Creation**: Create schedule and station schedules in transaction
+9. **Audit**: Log admin action for compliance
+
+### Time Calculations
+
+- **Duration from Previous**: Time between departure from previous station and arrival at current station
+- **Waiting Time**: Time between arrival and departure at the same station
+- **Total Journey Time**: Sum of all travel durations and waiting times
+
+## Performance Considerations
+
+- Database indexes on frequently queried fields (`trainId`, `departureTime`, `status`)
+- Pagination for large result sets (default 20, max 100 items)
+- Transaction safety for all write operations
+- Optimized queries with selective field loading
+- Connection pooling for database operations
+
+## Future Enhancements
+
+- **Real-time Updates**: WebSocket integration for live schedule updates
+- **Status Management**: API endpoints for updating schedule and station statuses
+- **Delay Tracking**: Automatic delay calculation and notification system
+- **Schedule Optimization**: AI-powered schedule optimization algorithms
+- **Historical Analytics**: Performance metrics and delay analysis
+- **Mobile App Integration**: RESTful APIs for mobile applications
+- **Third-party Integrations**: APIs for external railway systems

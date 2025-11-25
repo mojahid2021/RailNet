@@ -10,7 +10,9 @@
     "db:generate": "prisma generate",
     "db:push": "node -e \"require('dotenv').config(); require('child_process').execSync('prisma db push', { stdio: 'inherit' })\"",
     "db:studio": "node -e \"require('dotenv').config(); require('child_process').execSync('prisma studio', { stdio: 'inherit' })\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo 'No tests specified yet. Run npm run test:setup to configure testing.'",
+    "test:setup": "npm install --save-dev jest @types/jest ts-jest && npx ts-jest config:init",
+    "test:run": "jest"
   },
   "keywords": [],
   "author": "",

@@ -134,7 +134,7 @@ model TrainSchedule {
   id            String   @id @default(uuid()) @db.Uuid
   trainId       String   @db.Uuid
   routeId       String   @db.Uuid
-  departureDate DateTime
+  departureTime String   // HH:MM format (e.g., "08:30")
   status        String   @default("scheduled") // scheduled, running, completed, delayed, cancelled
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -143,7 +143,7 @@ model TrainSchedule {
   route         TrainRoute       @relation(fields: [routeId], references: [id])
   stationSchedules StationSchedule[]
 
-  @@unique([trainId, departureDate])
+  @@unique([trainId, departureTime])
 }
 
 model StationSchedule {

@@ -10,10 +10,10 @@ export class ScheduleService {
    * ADMIN ONLY: This operation requires admin privileges
    */
   static async createSchedule(input: CreateScheduleInput, adminId?: string) {
-    const { trainId, departureDate, stationSchedules } = input
+    const { trainId, departureTime, stationSchedules } = input
 
     // Log admin action for audit trail
-    console.log(`Admin ${adminId || 'unknown'} attempting to create schedule for train ${trainId} on ${departureDate}`)
+    console.log(`Admin ${adminId || 'unknown'} attempting to create schedule for train ${trainId} at ${departureTime}`)
 
     // Validate train exists and has a route
     const train = await prisma.train.findUnique({
@@ -42,16 +42,16 @@ export class ScheduleService {
       throw new ConflictError('Train must be assigned to a route before creating a schedule')
     }
 
-    // Check if schedule already exists for this train on this date
+    // Check if schedule already exists for this train at this time
     const existingSchedule = await prisma.trainSchedule.findFirst({
       where: {
         trainId,
-        departureDate: new Date(departureDate),
+        departureTime,
       },
     })
 
     if (existingSchedule) {
-      throw new ConflictError('Schedule already exists for this train on the specified date')
+      throw new ConflictError('Schedule already exists for this train at the specified time')
     }
 
     // Validate that all provided stations are in the train's route
@@ -109,7 +109,7 @@ export class ScheduleService {
         data: {
           trainId,
           routeId: train.trainRoute!.id,
-          departureDate: new Date(departureDate),
+          departureTime,
           status: 'scheduled',
         },
       })
@@ -179,8 +179,7 @@ export class ScheduleService {
    */
   static async getSchedules(filters: {
     trainId?: string
-    dateFrom?: string
-    dateTo?: string
+    departureTime?: string
     status?: string
     limit?: number
     offset?: number
@@ -194,18 +193,12 @@ export class ScheduleService {
       where.trainId = filters.trainId
     }
 
-    if (filters.status) {
-      where.status = filters.status
+    if (filters.departureTime) {
+      where.departureTime = filters.departureTime
     }
 
-    if (filters.dateFrom || filters.dateTo) {
-      where.departureDate = {}
-      if (filters.dateFrom) {
-        where.departureDate.gte = new Date(filters.dateFrom)
-      }
-      if (filters.dateTo) {
-        where.departureDate.lte = new Date(filters.dateTo)
-      }
+    if (filters.status) {
+      where.status = filters.status
     }
 
     const schedules = await prisma.trainSchedule.findMany({
@@ -231,7 +224,7 @@ export class ScheduleService {
           select: { stationSchedules: true },
         },
       },
-      orderBy: { departureDate: 'desc' },
+      orderBy: { departureTime: 'desc' },
       take: filters.limit || 20,
       skip: filters.offset || 0,
     })

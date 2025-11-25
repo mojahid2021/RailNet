@@ -12,7 +12,7 @@ export const stationScheduleInputSchema = z.object({
 // Create schedule input schema
 export const createScheduleSchema = z.object({
   trainId: z.string().uuid('Invalid train ID'),
-  departureDate: z.string().datetime('Invalid departure date format'),
+  departureTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format. Use HH:MM (24-hour format)'),
   stationSchedules: z.array(stationScheduleInputSchema).min(1, 'At least one station schedule is required'),
 })
 
@@ -28,14 +28,13 @@ export const updateStationScheduleSchema = z.object({
 // Update schedule metadata
 export const updateScheduleSchema = z.object({
   status: z.enum(['scheduled', 'running', 'completed', 'delayed', 'cancelled']).optional(),
-  departureDate: z.string().datetime('Invalid departure date format').optional(),
+  departureTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format. Use HH:MM (24-hour format)').optional(),
 })
 
 // Query parameters for schedule listing
 export const scheduleQuerySchema = z.object({
   trainId: z.string().uuid().optional(),
-  dateFrom: z.string().datetime().optional(),
-  dateTo: z.string().datetime().optional(),
+  departureTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).optional(),
   status: z.enum(['scheduled', 'running', 'completed', 'delayed', 'cancelled']).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),

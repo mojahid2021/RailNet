@@ -23,13 +23,35 @@ A production-ready Fastify API server with TypeScript, Zod validation, Swagger d
 - `POST /api/v1/admin/login` - Login admin and get JWT token
 - `GET /api/v1/admin/profile` - Get admin profile (requires authentication)
 
-### Station Management
+### Train Route Management
 
-- `POST /api/v1/stations` - Create a new station (requires authentication)
-- `GET /api/v1/stations` - Get all stations (requires authentication)
-- `GET /api/v1/stations/:id` - Get station by ID (requires authentication)
-- `PUT /api/v1/stations/:id` - Update station (requires authentication)
-- `DELETE /api/v1/stations/:id` - Delete station (requires authentication)
+- `POST /api/v1/train-routes` - Create a new train route (requires authentication)
+- `GET /api/v1/train-routes` - Get all train routes (requires authentication)
+- `GET /api/v1/train-routes/:id` - Get train route by ID (requires authentication)
+- `PUT /api/v1/train-routes/:id` - Update train route (requires authentication)
+- `DELETE /api/v1/train-routes/:id` - Delete train route (requires authentication)
+
+### Train Management
+
+- `POST /api/v1/trains` - Create a new train (requires authentication)
+- `GET /api/v1/trains` - Get all trains (requires authentication)
+- `GET /api/v1/trains/:id` - Get train by ID (requires authentication)
+- `PUT /api/v1/trains/:id` - Update train (requires authentication)
+- `DELETE /api/v1/trains/:id` - Delete train (requires authentication)
+
+### Compartment Management
+
+- `POST /api/v1/compartments` - Create a new compartment (requires authentication)
+- `GET /api/v1/compartments` - Get all compartments (requires authentication)
+- `GET /api/v1/compartments/:id` - Get compartment by ID (requires authentication)
+- `PUT /api/v1/compartments/:id` - Update compartment (requires authentication)
+- `DELETE /api/v1/compartments/:id` - Delete compartment (requires authentication)
+
+### Schedule Management (Admin Only)
+
+- `POST /api/v1/schedules` - Create a new train schedule (admin only)
+- `GET /api/v1/schedules` - Get all schedules with filters (admin only)
+- `GET /api/v1/schedules/:id` - Get schedule details by ID (admin only)
 
 ## Setup
 
@@ -72,6 +94,26 @@ A production-ready Fastify API server with TypeScript, Zod validation, Swagger d
    npm run build
    npm start
    ```
+
+## Testing
+
+The project includes a Jest-based testing setup for unit and integration tests.
+
+### Run Tests
+
+```bash
+# Run all tests
+npm run test:run
+
+# Setup testing environment (installs Jest and configures TypeScript)
+npm run test:setup
+```
+
+### Test Structure
+
+- Tests are located in the `tests/` directory
+- Use `.test.ts` or `.spec.ts` extensions
+- Jest is configured with TypeScript support
 
 ## API Documentation
 

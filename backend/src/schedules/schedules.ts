@@ -29,10 +29,10 @@ export async function scheduleRoutes(app: FastifyInstance) {
       security: [{ bearerAuth: [] }],
       body: {
         type: 'object',
-        required: ['trainId', 'departureDate', 'stationSchedules'],
+        required: ['trainId', 'departureTime', 'stationSchedules'],
         properties: {
           trainId: { type: 'string', format: 'uuid' },
-          departureDate: { type: 'string', format: 'date-time' },
+          departureTime: { type: 'string', pattern: '^([01]?[0-9]|2[0-3]):[0-5][0-9]$', description: 'Departure time in HH:MM format (24-hour)' },
           stationSchedules: {
             type: 'array',
             minItems: 1,
@@ -62,7 +62,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
                 id: { type: 'string' },
                 trainId: { type: 'string' },
                 routeId: { type: 'string' },
-                departureDate: { type: 'string' },
+                departureTime: { type: 'string' },
                 status: { type: 'string' },
                 train: {
                   type: 'object',
@@ -195,7 +195,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
                       id: { type: 'string' },
                       trainId: { type: 'string' },
                       routeId: { type: 'string' },
-                      departureDate: { type: 'string' },
+                      departureTime: { type: 'string' },
                       status: { type: 'string' },
                       train: {
                         type: 'object',
@@ -303,7 +303,7 @@ export async function scheduleRoutes(app: FastifyInstance) {
                 id: { type: 'string' },
                 trainId: { type: 'string' },
                 routeId: { type: 'string' },
-                departureDate: { type: 'string' },
+                departureTime: { type: 'string' },
                 status: { type: 'string' },
                 train: {
                   type: 'object',
