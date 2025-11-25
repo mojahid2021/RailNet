@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Plus, Train as TrainIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useTrains } from "@/hooks/use-trains";
+import { useTrains, useCreateTrain, useUpdateTrain, useDeleteTrain } from "@/hooks/use-trains";
 import { TrainForm } from "@/components/trains/train-form";
 import { Train, CreateTrainRequest, UpdateTrainRequest } from "@/types";
 import {
@@ -29,14 +29,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export default function TrainsPage() {
-  const { trains, loading, error, fetchTrains, createTrain, updateTrain, deleteTrain } = useTrains();
+  const { data: trains = [], isLoading, error } = useTrains();
+  const createTrainMutation = useCreateTrain();
+  const updateTrainMutation = useUpdateTrain();
+  const deleteTrainMutation = useDeleteTrain();
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTrain, setEditingTrain] = useState<Train | null>(null);
   const [deletingTrainId, setDeletingTrainId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchTrains();
-  }, [fetchTrains]);
 
   const handleCreate = () => {
     setEditingTrain(null);
@@ -54,16 +54,23 @@ export default function TrainsPage() {
 
   const handleConfirmDelete = async () => {
     if (deletingTrainId) {
-      await deleteTrain(deletingTrainId);
+      await deleteTrainMutation.mutateAsync(deletingTrainId);
       setDeletingTrainId(null);
     }
   };
 
   const handleFormSubmit = async (data: CreateTrainRequest | UpdateTrainRequest) => {
-    if (editingTrain) {
-      return await updateTrain(editingTrain.id, data);
-    } else {
-      return await createTrain(data as CreateTrainRequest);
+    try {
+      if (editingTrain) {
+        await updateTrainMutation.mutateAsync({ id: editingTrain.id, data: data as UpdateTrainRequest });
+        return true;
+      } else {
+        await createTrainMutation.mutateAsync(data as CreateTrainRequest);
+        return true;
+      }
+    } catch (error) {
+      console.error(error);
+      return false;
     }
   };
 
@@ -80,7 +87,7 @@ export default function TrainsPage() {
 
         {error && (
           <div className="bg-destructive/15 text-destructive px-4 py-2 rounded-md">
-            {error}
+            {error.message}
           </div>
         )}
 
@@ -101,7 +108,7 @@ export default function TrainsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading && trains.length === 0 ? (
+                {isLoading && trains.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Loading trains...

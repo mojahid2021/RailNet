@@ -2,22 +2,23 @@
 
 import { AdminLayout } from "@/components/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  Legend,
-} from "recharts";
 import { TRAFFIC_DATA, REVENUE_DATA, PUNCTUALITY_DATA, CHART_COLORS } from "@/lib/constants";
+import dynamic from "next/dynamic";
+
+// Dynamically import charts to avoid SSR issues
+const LineChart = dynamic(() => import("recharts").then(mod => ({ default: mod.LineChart })), { ssr: false });
+const Line = dynamic(() => import("recharts").then(mod => ({ default: mod.Line })), { ssr: false });
+const XAxis = dynamic(() => import("recharts").then(mod => ({ default: mod.XAxis })), { ssr: false });
+const YAxis = dynamic(() => import("recharts").then(mod => ({ default: mod.YAxis })), { ssr: false });
+const CartesianGrid = dynamic(() => import("recharts").then(mod => ({ default: mod.CartesianGrid })), { ssr: false });
+const Tooltip = dynamic(() => import("recharts").then(mod => ({ default: mod.Tooltip })), { ssr: false });
+const ResponsiveContainer = dynamic(() => import("recharts").then(mod => ({ default: mod.ResponsiveContainer })), { ssr: false });
+const PieChart = dynamic(() => import("recharts").then(mod => ({ default: mod.PieChart })), { ssr: false });
+const Pie = dynamic(() => import("recharts").then(mod => ({ default: mod.Pie })), { ssr: false });
+const Cell = dynamic(() => import("recharts").then(mod => ({ default: mod.Cell })), { ssr: false });
+const BarChart = dynamic(() => import("recharts").then(mod => ({ default: mod.BarChart })), { ssr: false });
+const Bar = dynamic(() => import("recharts").then(mod => ({ default: mod.Bar })), { ssr: false });
+const Legend = dynamic(() => import("recharts").then(mod => ({ default: mod.Legend })), { ssr: false });
 
 // Convert CHART_COLORS object to array for Pie Chart cells
 const COLORS = Object.values(CHART_COLORS);

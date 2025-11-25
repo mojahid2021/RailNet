@@ -47,15 +47,9 @@ export function TrainForm({
   initialData,
   mode,
 }: TrainFormProps) {
-  const { trainRoutes: availableRoutes, fetchTrainRoutes: fetchRoutes } = useTrainRoutes();
-  const { compartments: availableCompartments, fetchCompartments } = useCompartments();
+  const { data: availableRoutes = [] } = useTrainRoutes();
+  const { data: availableCompartments = [] } = useCompartments();
   const [loading, setLoading] = useState(false);
-
-  // Fetch dependencies on mount
-  useEffect(() => {
-    fetchRoutes();
-    fetchCompartments();
-  }, [fetchRoutes, fetchCompartments]);
 
   const [formData, setFormData] = useState<CreateTrainRequest>({
     name: "",

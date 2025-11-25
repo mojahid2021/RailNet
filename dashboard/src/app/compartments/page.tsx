@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Plus, Armchair } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCompartments } from "@/hooks/use-compartments";
+import { useCompartments, useCreateCompartment, useUpdateCompartment, useDeleteCompartment } from "@/hooks/use-compartments";
 import { CompartmentForm } from "@/components/compartments/compartment-form";
 import { Compartment, CreateCompartmentRequest, UpdateCompartmentRequest } from "@/types";
 import {
@@ -29,14 +29,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export default function CompartmentsPage() {
-  const { compartments, loading, error, fetchCompartments, createCompartment, updateCompartment, deleteCompartment } = useCompartments();
+  const { data: compartments = [], isLoading, error } = useCompartments();
+  const createCompartmentMutation = useCreateCompartment();
+  const updateCompartmentMutation = useUpdateCompartment();
+  const deleteCompartmentMutation = useDeleteCompartment();
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCompartment, setEditingCompartment] = useState<Compartment | null>(null);
   const [deletingCompartmentId, setDeletingCompartmentId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchCompartments();
-  }, [fetchCompartments]);
 
   const handleCreate = () => {
     setEditingCompartment(null);
@@ -54,16 +54,23 @@ export default function CompartmentsPage() {
 
   const handleConfirmDelete = async () => {
     if (deletingCompartmentId) {
-      await deleteCompartment(deletingCompartmentId);
+      await deleteCompartmentMutation.mutateAsync(deletingCompartmentId);
       setDeletingCompartmentId(null);
     }
   };
 
   const handleFormSubmit = async (data: CreateCompartmentRequest | UpdateCompartmentRequest) => {
-    if (editingCompartment) {
-      return await updateCompartment(editingCompartment.id, data);
-    } else {
-      return await createCompartment(data as CreateCompartmentRequest);
+    try {
+      if (editingCompartment) {
+        await updateCompartmentMutation.mutateAsync({ id: editingCompartment.id, data: data as UpdateCompartmentRequest });
+        return true;
+      } else {
+        await createCompartmentMutation.mutateAsync(data as CreateCompartmentRequest);
+        return true;
+      }
+    } catch (error) {
+      console.error(error);
+      return false;
     }
   };
 
@@ -80,7 +87,7 @@ export default function CompartmentsPage() {
 
         {error && (
           <div className="bg-destructive/15 text-destructive px-4 py-2 rounded-md">
-            {error}
+            {error.message}
           </div>
         )}
 
@@ -100,7 +107,7 @@ export default function CompartmentsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading && compartments.length === 0 ? (
+                {isLoading && compartments.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       Loading compartments...

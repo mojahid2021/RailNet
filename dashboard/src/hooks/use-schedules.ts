@@ -1,104 +1,58 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import { Schedule, CreateScheduleRequest, ApiResponse } from "@/types";
+import { toast } from "sonner";
 
 export function useSchedules() {
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchSchedules = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/schedules");
-      const data: ApiResponse<Schedule[]> = await res.json();
-
-      if (data.success && data.data) {
-        // Handle paginated response
-        if ('schedules' in data.data && Array.isArray((data.data as any).schedules)) {
-            setSchedules((data.data as any).schedules);
-        } else if (Array.isArray(data.data)) {
-            setSchedules(data.data);
-        } else {
-            setSchedules([]);
-            console.error("Unexpected response format:", data.data);
-        }
-      } else {
-        setError(data.error || "Failed to fetch schedules");
+  return useQuery({
+    queryKey: ["schedules"],
+    queryFn: async () => {
+      const { data } = await api.get<ApiResponse<Schedule[]>>("/schedules");
+      if (!data.success) {
+        throw new Error(data.error || "Failed to fetch schedules");
       }
-    } catch (err) {
-      setError("Network error occurred while fetching schedules");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const createSchedule = async (data: CreateScheduleRequest): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/schedules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const responseData: ApiResponse<Schedule> = await res.json();
-
-      if (responseData.success && responseData.data) {
-        setSchedules((prev) => [responseData.data!, ...prev]);
-        return true;
-      } else {
-        setError(responseData.error || "Failed to create schedule");
-        return false;
+      // Handle potential pagination wrapper
+      if (data.data && "schedules" in data.data && Array.isArray((data.data as any).schedules)) {
+        return (data.data as any).schedules as Schedule[];
       }
-    } catch (err) {
-      setError("Network error occurred while creating schedule");
-      console.error(err);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
+      return (data.data as Schedule[]) || [];
+    },
+  });
+}
 
-  const getSchedule = useCallback(async (id: string): Promise<Schedule | null> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/schedules/${id}`);
-      const data: ApiResponse<Schedule> = await res.json();
-
-      if (data.success && data.data) {
-        return data.data;
-      } else {
-        setError(data.error || "Failed to fetch schedule details");
-        return null;
+export function useSchedule(id: string) {
+  return useQuery({
+    queryKey: ["schedule", id],
+    queryFn: async () => {
+      const { data } = await api.get<ApiResponse<Schedule>>(`/schedules/${id}`);
+      if (!data.success) {
+        throw new Error(data.error || "Failed to fetch schedule");
       }
-    } catch (err) {
-      setError("Network error occurred while fetching schedule details");
-      console.error(err);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return data.data;
+    },
+    enabled: !!id,
+  });
+}
 
-  // Update and Delete are not fully specified in the prompt requirements for UI, 
-  // but good to have placeholders or implementation if needed. 
-  // For now, I'll stick to what's needed for the checklist (Create/List).
+export function useCreateSchedule() {
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchSchedules();
-  }, [fetchSchedules]);
-
-  return {
-    schedules,
-    loading,
-    error,
-    fetchSchedules,
-    createSchedule,
-    getSchedule,
-  };
+  return useMutation({
+    mutationFn: async (newSchedule: CreateScheduleRequest) => {
+      const { data } = await api.post<ApiResponse<Schedule>>("/schedules", newSchedule);
+      if (!data.success) {
+        throw new Error(data.error || "Failed to create schedule");
+      }
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      toast.success("Schedule created successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 }

@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Plus, Route as RouteIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useTrainRoutes } from "@/hooks/use-train-routes";
+import { useTrainRoutes, useCreateTrainRoute, useUpdateTrainRoute, useDeleteTrainRoute } from "@/hooks/use-train-routes";
 import { TrainRouteForm } from "@/components/train-routes/train-route-form";
 import { TrainRoute, CreateTrainRouteRequest, UpdateTrainRouteRequest } from "@/types";
 import {
@@ -29,14 +29,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export default function TrainRoutesPage() {
-  const { trainRoutes, loading, error, fetchTrainRoutes, createTrainRoute, updateTrainRoute, deleteTrainRoute } = useTrainRoutes();
+  const { data: trainRoutes = [], isLoading, error } = useTrainRoutes();
+  const createTrainRouteMutation = useCreateTrainRoute();
+  const updateTrainRouteMutation = useUpdateTrainRoute();
+  const deleteTrainRouteMutation = useDeleteTrainRoute();
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRoute, setEditingRoute] = useState<TrainRoute | null>(null);
   const [deletingRouteId, setDeletingRouteId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchTrainRoutes();
-  }, [fetchTrainRoutes]);
 
   const handleCreate = () => {
     setEditingRoute(null);
@@ -54,16 +54,23 @@ export default function TrainRoutesPage() {
 
   const handleConfirmDelete = async () => {
     if (deletingRouteId) {
-      await deleteTrainRoute(deletingRouteId);
+      await deleteTrainRouteMutation.mutateAsync(deletingRouteId);
       setDeletingRouteId(null);
     }
   };
 
   const handleFormSubmit = async (data: CreateTrainRouteRequest | UpdateTrainRouteRequest) => {
-    if (editingRoute) {
-      return await updateTrainRoute(editingRoute.id, data);
-    } else {
-      return await createTrainRoute(data as CreateTrainRouteRequest);
+    try {
+      if (editingRoute) {
+        await updateTrainRouteMutation.mutateAsync({ id: editingRoute.id, data: data as UpdateTrainRouteRequest });
+        return true;
+      } else {
+        await createTrainRouteMutation.mutateAsync(data as CreateTrainRouteRequest);
+        return true;
+      }
+    } catch (error) {
+      console.error(error);
+      return false;
     }
   };
 
@@ -80,7 +87,7 @@ export default function TrainRoutesPage() {
 
         {error && (
           <div className="bg-destructive/15 text-destructive px-4 py-2 rounded-md">
-            {error}
+            {error.message}
           </div>
         )}
 
@@ -101,7 +108,7 @@ export default function TrainRoutesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading && trainRoutes.length === 0 ? (
+                {isLoading && trainRoutes.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Loading routes...

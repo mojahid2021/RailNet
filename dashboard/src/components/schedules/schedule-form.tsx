@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { CreateScheduleRequest, CreateStationScheduleRequest, Train, TrainRoute } from "@/types";
 import { useTrains } from "@/hooks/use-trains";
-import { useTrainRoutes } from "@/hooks/use-train-routes";
+import { fetchTrainRoute } from "@/hooks/use-train-routes";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowDown, Clock } from "lucide-react";
@@ -39,8 +39,7 @@ export function ScheduleForm({
   onSubmit,
   mode,
 }: ScheduleFormProps) {
-  const { trains, fetchTrains } = useTrains();
-  const { getTrainRoute } = useTrainRoutes();
+  const { data: trains = [] } = useTrains();
   const [loading, setLoading] = useState(false);
 
   const [selectedTrainId, setSelectedTrainId] = useState<string>("");
@@ -50,20 +49,19 @@ export function ScheduleForm({
 
   useEffect(() => {
     if (open) {
-      fetchTrains();
       // Reset form
       setSelectedTrainId("");
       setDepartureTime("");
       setSelectedRoute(null);
       setStationSchedules([]);
     }
-  }, [open, fetchTrains]);
+  }, [open]);
 
   const handleTrainChange = async (trainId: string) => {
     setSelectedTrainId(trainId);
     const train = trains.find((t) => t.id === trainId);
     if (train && train.trainRouteId) {
-      const route = await getTrainRoute(train.trainRouteId);
+      const route = await fetchTrainRoute(train.trainRouteId);
       if (route) {
         setSelectedRoute(route);
         // Initialize station schedules based on route stations

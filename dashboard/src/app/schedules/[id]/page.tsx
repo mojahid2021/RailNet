@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { use } from "react";
 import { useRouter } from "next/navigation";
-import { useSchedules } from "@/hooks/use-schedules";
+import { useSchedule } from "@/hooks/use-schedules";
 import { Schedule } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,20 +21,9 @@ import { AdminLayout } from "@/components/admin-layout";
 export default function ScheduleDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { getSchedule, loading, error } = useSchedules();
-  const [schedule, setSchedule] = useState<Schedule | null>(null);
+  const { data: schedule, isLoading, error } = useSchedule(id);
 
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      const data = await getSchedule(id);
-      if (data) {
-        setSchedule(data);
-      }
-    };
-    fetchSchedule();
-  }, [id, getSchedule]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -45,7 +34,7 @@ export default function ScheduleDetailsPage({ params }: { params: Promise<{ id: 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
-        <p className="text-destructive">{error}</p>
+        <p className="text-destructive">{error.message}</p>
         <Button variant="outline" onClick={() => router.back()}>
           Go Back
         </Button>

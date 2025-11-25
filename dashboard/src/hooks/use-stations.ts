@@ -1,126 +1,82 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import { Station, CreateStationRequest, UpdateStationRequest, ApiResponse } from "@/types";
-import { API_CONFIG } from "@/lib/constants";
+import { toast } from "sonner";
 
 export function useStations() {
-  const [stations, setStations] = useState<Station[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchStations = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/stations");
-      const data: ApiResponse<Station[]> = await res.json();
-
-      if (data.success && data.data) {
-        setStations(data.data);
-      } else {
-        setError(data.error || "Failed to fetch stations");
+  return useQuery({
+    queryKey: ["stations"],
+    queryFn: async () => {
+      const { data } = await api.get<ApiResponse<Station[]>>("/stations");
+      if (!data.success) {
+        throw new Error(data.error || "Failed to fetch stations");
       }
-    } catch (err) {
-      setError("Network error occurred while fetching stations");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return data.data || [];
+    },
+  });
+}
 
-  const createStation = async (stationData: CreateStationRequest): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/stations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(stationData),
-      });
-      const data: ApiResponse<Station> = await res.json();
+export function useCreateStation() {
+  const queryClient = useQueryClient();
 
-      if (data.success && data.data) {
-        setStations((prev) => [data.data!, ...prev]);
-        return true;
-      } else {
-        setError(data.error || "Failed to create station");
-        return false;
+  return useMutation({
+    mutationFn: async (stationData: CreateStationRequest) => {
+      const { data } = await api.post<ApiResponse<Station>>("/stations", stationData);
+      if (!data.success) {
+        throw new Error(data.error || "Failed to create station");
       }
-    } catch (err) {
-      setError("Network error occurred while creating station");
-      console.error(err);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stations"] });
+      toast.success("Station created successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
 
-  const updateStation = async (id: string, stationData: UpdateStationRequest): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/stations/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(stationData),
-      });
-      const data: ApiResponse<Station> = await res.json();
+export function useUpdateStation() {
+  const queryClient = useQueryClient();
 
-      if (data.success && data.data) {
-        setStations((prev) =>
-          prev.map((station) => (station.id === id ? data.data! : station))
-        );
-        return true;
-      } else {
-        setError(data.error || "Failed to update station");
-        return false;
+  return useMutation({
+    mutationFn: async ({ id, data: stationData }: { id: string; data: UpdateStationRequest }) => {
+      const { data } = await api.put<ApiResponse<Station>>(`/stations/${id}`, stationData);
+      if (!data.success) {
+        throw new Error(data.error || "Failed to update station");
       }
-    } catch (err) {
-      setError("Network error occurred while updating station");
-      console.error(err);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stations"] });
+      toast.success("Station updated successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
 
-  const deleteStation = async (id: string): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/stations/${id}`, {
-        method: "DELETE",
-      });
-      const data: ApiResponse<null> = await res.json();
+export function useDeleteStation() {
+  const queryClient = useQueryClient();
 
-      if (data.success) {
-        setStations((prev) => prev.filter((station) => station.id !== id));
-        return true;
-      } else {
-        setError(data.error || "Failed to delete station");
-        return false;
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.delete<ApiResponse<null>>(`/stations/${id}`);
+      if (!data.success) {
+        throw new Error(data.error || "Failed to delete station");
       }
-    } catch (err) {
-      setError("Network error occurred while deleting station");
-      console.error(err);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return {
-    stations,
-    loading,
-    error,
-    fetchStations,
-    createStation,
-    updateStation,
-    deleteStation,
-  };
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stations"] });
+      toast.success("Station deleted successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 }

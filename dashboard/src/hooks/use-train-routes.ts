@@ -1,141 +1,110 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import { TrainRoute, CreateTrainRouteRequest, UpdateTrainRouteRequest, ApiResponse } from "@/types";
+import { toast } from "sonner";
 
 export function useTrainRoutes() {
-  const [trainRoutes, setTrainRoutes] = useState<TrainRoute[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchTrainRoutes = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/train-routes");
-      const data: ApiResponse<TrainRoute[]> = await res.json();
-
-      if (data.success && data.data) {
-        setTrainRoutes(data.data);
-      } else {
-        setError(data.error || "Failed to fetch train routes");
+  return useQuery({
+    queryKey: ["trainRoutes"],
+    queryFn: async () => {
+      const { data } = await api.get<ApiResponse<TrainRoute[]>>("/train-routes");
+      if (!data.success) {
+        throw new Error(data.error || "Failed to fetch train routes");
       }
-    } catch (err) {
-      setError("Network error occurred while fetching train routes");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const createTrainRoute = async (routeData: CreateTrainRouteRequest): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/train-routes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(routeData),
-      });
-      const data: ApiResponse<TrainRoute> = await res.json();
-
-      if (data.success && data.data) {
-        setTrainRoutes((prev) => [data.data!, ...prev]);
-        return true;
-      } else {
-        setError(data.error || "Failed to create train route");
-        return false;
-      }
-    } catch (err) {
-      setError("Network error occurred while creating train route");
-      console.error(err);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateTrainRoute = async (id: string, routeData: UpdateTrainRouteRequest): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/train-routes/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(routeData),
-      });
-      const data: ApiResponse<TrainRoute> = await res.json();
-
-      if (data.success && data.data) {
-        setTrainRoutes((prev) =>
-          prev.map((route) => (route.id === id ? data.data! : route))
-        );
-        return true;
-      } else {
-        setError(data.error || "Failed to update train route");
-        return false;
-      }
-    } catch (err) {
-      setError("Network error occurred while updating train route");
-      console.error(err);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteTrainRoute = async (id: string): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/train-routes/${id}`, {
-        method: "DELETE",
-      });
-      const data: ApiResponse<null> = await res.json();
-
-      if (data.success) {
-        setTrainRoutes((prev) => prev.filter((route) => route.id !== id));
-        return true;
-      } else {
-        setError(data.error || "Failed to delete train route");
-        return false;
-      }
-    } catch (err) {
-      setError("Network error occurred while deleting train route");
-      console.error(err);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return {
-    trainRoutes,
-    loading,
-    error,
-    fetchTrainRoutes,
-    createTrainRoute,
-    updateTrainRoute,
-    deleteTrainRoute,
-    getTrainRoute: async (id: string): Promise<TrainRoute | null> => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/train-routes/${id}`);
-        const data: ApiResponse<TrainRoute> = await res.json();
-        if (data.success && data.data) {
-          return data.data;
-        }
-        return null;
-      } catch (err) {
-        console.error(err);
-        return null;
-      } finally {
-        setLoading(false);
-      }
+      return data.data || [];
     },
-  };
+  });
+}
+
+export function useTrainRoute(id: string) {
+  return useQuery({
+    queryKey: ["trainRoute", id],
+    queryFn: async () => {
+      const { data } = await api.get<ApiResponse<TrainRoute>>(`/train-routes/${id}`);
+      if (!data.success) {
+        throw new Error(data.error || "Failed to fetch train route");
+      }
+      return data.data;
+    },
+    enabled: !!id,
+  });
+}
+
+// Helper for imperative fetching (e.g. in event handlers)
+export async function fetchTrainRoute(id: string): Promise<TrainRoute | null> {
+  try {
+    const { data } = await api.get<ApiResponse<TrainRoute>>(`/train-routes/${id}`);
+    if (data.success && data.data) {
+      return data.data;
+    }
+    return null;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export function useCreateTrainRoute() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (routeData: CreateTrainRouteRequest) => {
+      const { data } = await api.post<ApiResponse<TrainRoute>>("/train-routes", routeData);
+      if (!data.success) {
+        throw new Error(data.error || "Failed to create train route");
+      }
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trainRoutes"] });
+      toast.success("Train route created successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
+export function useUpdateTrainRoute() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data: routeData }: { id: string; data: UpdateTrainRouteRequest }) => {
+      const { data } = await api.put<ApiResponse<TrainRoute>>(`/train-routes/${id}`, routeData);
+      if (!data.success) {
+        throw new Error(data.error || "Failed to update train route");
+      }
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trainRoutes"] });
+      toast.success("Train route updated successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
+export function useDeleteTrainRoute() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.delete<ApiResponse<null>>(`/train-routes/${id}`);
+      if (!data.success) {
+        throw new Error(data.error || "Failed to delete train route");
+      }
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trainRoutes"] });
+      toast.success("Train route deleted successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 }

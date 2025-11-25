@@ -13,26 +13,29 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, Clock, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSchedules } from "@/hooks/use-schedules";
+import { useSchedules, useCreateSchedule } from "@/hooks/use-schedules";
 import { ScheduleForm } from "@/components/schedules/schedule-form";
 import { CreateScheduleRequest } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
 export default function SchedulesPage() {
-  const { schedules, loading, error, fetchSchedules, createSchedule } = useSchedules();
+  const { data: schedules = [], isLoading, error } = useSchedules();
+  const createScheduleMutation = useCreateSchedule();
   const [isFormOpen, setIsFormOpen] = useState(false);
-
-  useEffect(() => {
-    fetchSchedules();
-  }, [fetchSchedules]);
 
   const handleCreate = () => {
     setIsFormOpen(true);
   };
 
   const handleFormSubmit = async (data: CreateScheduleRequest) => {
-    return await createSchedule(data);
+    try {
+      await createScheduleMutation.mutateAsync(data);
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   };
 
   return (
@@ -48,7 +51,7 @@ export default function SchedulesPage() {
 
         {error && (
           <div className="bg-destructive/15 text-destructive px-4 py-2 rounded-md">
-            {error}
+            {error.message}
           </div>
         )}
 
@@ -69,7 +72,7 @@ export default function SchedulesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading && schedules.length === 0 ? (
+                {isLoading && schedules.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Loading schedules...

@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Plus, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useStations } from "@/hooks/use-stations";
+import { useStations, useCreateStation, useUpdateStation, useDeleteStation } from "@/hooks/use-stations";
 import { StationForm } from "@/components/stations/station-form";
 import { Station, CreateStationRequest, UpdateStationRequest } from "@/types";
 import {
@@ -28,14 +28,14 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function StationsPage() {
-  const { stations, loading, error, fetchStations, createStation, updateStation, deleteStation } = useStations();
+  const { data: stations = [], isLoading, error } = useStations();
+  const createStationMutation = useCreateStation();
+  const updateStationMutation = useUpdateStation();
+  const deleteStationMutation = useDeleteStation();
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStation, setEditingStation] = useState<Station | null>(null);
   const [deletingStationId, setDeletingStationId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchStations();
-  }, [fetchStations]);
 
   const handleCreate = () => {
     setEditingStation(null);
@@ -53,16 +53,23 @@ export default function StationsPage() {
 
   const handleConfirmDelete = async () => {
     if (deletingStationId) {
-      await deleteStation(deletingStationId);
+      await deleteStationMutation.mutateAsync(deletingStationId);
       setDeletingStationId(null);
     }
   };
 
   const handleFormSubmit = async (data: CreateStationRequest | UpdateStationRequest) => {
-    if (editingStation) {
-      return await updateStation(editingStation.id, data);
-    } else {
-      return await createStation(data as CreateStationRequest);
+    try {
+      if (editingStation) {
+        await updateStationMutation.mutateAsync({ id: editingStation.id, data: data as UpdateStationRequest });
+        return true;
+      } else {
+        await createStationMutation.mutateAsync(data as CreateStationRequest);
+        return true;
+      }
+    } catch (error) {
+      console.error(error);
+      return false;
     }
   };
 
@@ -79,7 +86,7 @@ export default function StationsPage() {
 
         {error && (
           <div className="bg-destructive/15 text-destructive px-4 py-2 rounded-md">
-            {error}
+            {error.message}
           </div>
         )}
 
@@ -98,7 +105,7 @@ export default function StationsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading && stations.length === 0 ? (
+                {isLoading && stations.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                       Loading stations...

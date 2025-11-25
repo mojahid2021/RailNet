@@ -46,13 +46,9 @@ export function TrainRouteForm({
   initialData,
   mode,
 }: TrainRouteFormProps) {
-  const { stations: availableStations, fetchStations } = useStations();
-  const { compartments: availableCompartments } = useCompartments();
+  const { data: availableStations = [] } = useStations();
+  const { data: availableCompartments = [] } = useCompartments();
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    fetchStations();
-  }, [fetchStations]);
 
   const [name, setName] = useState("");
   const [selectedCompartments, setSelectedCompartments] = useState<string[]>([]);
