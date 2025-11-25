@@ -184,8 +184,16 @@ export class ScheduleService {
     limit?: number
     offset?: number
   }, adminId?: string) {
-    // Log admin action
-    console.log(`Admin ${adminId || 'unknown'} accessing schedule list with filters:`, filters)
+    // Apply defaults and log admin action
+    const appliedFilters = {
+      trainId: filters.trainId,
+      departureTime: filters.departureTime,
+      status: filters.status,
+      limit: filters.limit || 20,
+      offset: filters.offset || 0,
+    }
+
+    console.log(`User/Admin ${adminId || 'anonymous'} accessing schedule list with filters:`, appliedFilters)
 
     const where: any = {}
 
@@ -248,7 +256,7 @@ export class ScheduleService {
    */
   static async getScheduleById(scheduleId: string, adminId?: string) {
     // Log admin action
-    console.log(`Admin ${adminId || 'unknown'} accessing schedule ${scheduleId}`)
+    console.log(`User/Admin ${adminId || 'anonymous'} accessing schedule ${scheduleId}`)
 
     const schedule = await prisma.trainSchedule.findUnique({
       where: { id: scheduleId },

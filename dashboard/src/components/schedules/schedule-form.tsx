@@ -44,7 +44,6 @@ export function ScheduleForm({
   const [loading, setLoading] = useState(false);
 
   const [selectedTrainId, setSelectedTrainId] = useState<string>("");
-  const [departureDate, setDepartureDate] = useState<string>(""); // Keep for calculation
   const [departureTime, setDepartureTime] = useState<string>(""); // New field for API
   const [selectedRoute, setSelectedRoute] = useState<TrainRoute | null>(null);
   const [stationSchedules, setStationSchedules] = useState<CreateStationScheduleRequest[]>([]);
@@ -54,7 +53,6 @@ export function ScheduleForm({
       fetchTrains();
       // Reset form
       setSelectedTrainId("");
-      setDepartureDate("");
       setDepartureTime("");
       setSelectedRoute(null);
       setStationSchedules([]);
@@ -102,8 +100,8 @@ export function ScheduleForm({
     setLoading(true);
 
     // Basic validation
-    if (!selectedTrainId || !departureDate || !departureTime) {
-      alert("Please select a train, date, and time.");
+    if (!selectedTrainId || !departureTime) {
+      alert("Please select a train and time.");
       setLoading(false);
       return;
     }
@@ -116,10 +114,12 @@ export function ScheduleForm({
     // We can append ":00.000Z" or convert to ISO string.
     // Let's assume the user picks a valid date/time.
 
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
     const formattedSchedules = stationSchedules.map(s => ({
       ...s,
-      estimatedArrival: s.estimatedArrival ? new Date(s.estimatedArrival).toISOString() : new Date(departureDate).toISOString(), // Fallback or validation needed
-      estimatedDeparture: s.estimatedDeparture ? new Date(s.estimatedDeparture).toISOString() : new Date(departureDate).toISOString(),
+      estimatedArrival: s.estimatedArrival ? new Date(`${today}T${s.estimatedArrival}`).toISOString() : new Date(`${today}T${departureTime}`).toISOString(),
+      estimatedDeparture: s.estimatedDeparture ? new Date(`${today}T${s.estimatedDeparture}`).toISOString() : new Date(`${today}T${departureTime}`).toISOString(),
     }));
 
     const payload: CreateScheduleRequest = {
@@ -163,16 +163,6 @@ export function ScheduleForm({
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="departureDate">Date (for calculation)</Label>
-                <Input
-                  id="departureDate"
-                  type="date"
-                  value={departureDate}
-                  onChange={(e) => setDepartureDate(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
                 <Label htmlFor="departureTime">Departure Time</Label>
                 <Input
                   id="departureTime"
@@ -213,7 +203,7 @@ export function ScheduleForm({
                             <div className="grid gap-1.5">
                               <Label className="text-xs text-muted-foreground">Arrival</Label>
                               <Input
-                                type="datetime-local"
+                                type="time"
                                 className="h-8 text-xs"
                                 value={stationSchedules[index]?.estimatedArrival || ""}
                                 onChange={(e) => handleStationScheduleChange(index, "estimatedArrival", e.target.value)}
@@ -223,7 +213,7 @@ export function ScheduleForm({
                             <div className="grid gap-1.5">
                               <Label className="text-xs text-muted-foreground">Departure</Label>
                               <Input
-                                type="datetime-local"
+                                type="time"
                                 className="h-8 text-xs"
                                 value={stationSchedules[index]?.estimatedDeparture || ""}
                                 onChange={(e) => handleStationScheduleChange(index, "estimatedDeparture", e.target.value)}

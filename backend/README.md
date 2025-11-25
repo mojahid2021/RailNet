@@ -47,11 +47,11 @@ A production-ready Fastify API server with TypeScript, Zod validation, Swagger d
 - `PUT /api/v1/compartments/:id` - Update compartment (requires authentication)
 - `DELETE /api/v1/compartments/:id` - Delete compartment (requires authentication)
 
-### Schedule Management (Admin Only)
+### Schedule Management (Admin Only for Creation)
 
 - `POST /api/v1/schedules` - Create a new train schedule (admin only)
-- `GET /api/v1/schedules` - Get all schedules with filters (admin only)
-- `GET /api/v1/schedules/:id` - Get schedule details by ID (admin only)
+- `GET /api/v1/schedules` - Get all schedules with filters (public access)
+- `GET /api/v1/schedules/:id` - Get schedule details by ID (public access)
 
 ## Setup
 

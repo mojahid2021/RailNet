@@ -14,17 +14,19 @@ The Train Schedule API provides **admin-only** endpoints for creating and managi
 
 ## Authentication
 
-All endpoints require **admin JWT authentication** with the following header:
+**POST** `/api/v1/schedules` (Create Schedule) requires **admin JWT authentication** with the following header:
 
 ```
 Authorization: Bearer <admin-jwt-token>
 ```
 
+**GET** endpoints (`/api/v1/schedules` and `/api/v1/schedules/:id`) are **public** and do not require authentication.
+
 ### Security Features
 
-- ✅ JWT token validation with admin type checking
-- ✅ Granular permission-based access control
-- ✅ Comprehensive audit logging for all operations
+- ✅ JWT token validation with admin type checking for create operations
+- ✅ Granular permission-based access control for admin operations
+- ✅ Comprehensive audit logging for all admin actions
 - ✅ Request validation and sanitization
 - ✅ Rate limiting and security headers
 
@@ -201,7 +203,7 @@ Retrieves detailed information about a specific schedule including all station s
 
 - `id`: Schedule UUID
 
-#### Response (200 OK)
+#### Schedule Details Response (200 OK)
 
 ```json
 {
@@ -365,24 +367,19 @@ curl -X POST http://localhost:3000/api/v1/schedules \
 
 ```bash
 # Get schedules for a specific train
-curl -X GET "http://localhost:3000/api/v1/schedules?trainId=550e8400-e29b-41d4-a716-446655440000" \
-  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
+curl -X GET "http://localhost:3000/api/v1/schedules?trainId=550e8400-e29b-41d4-a716-446655440000"
 
 # Get schedules with pagination
-curl -X GET "http://localhost:3000/api/v1/schedules?limit=5&offset=10" \
-  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
+curl -X GET "http://localhost:3000/api/v1/schedules?limit=5&offset=10"
 
 # Get schedules by status
-curl -X GET "http://localhost:3000/api/v1/schedules?status=scheduled" \
-  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
+curl -X GET "http://localhost:3000/api/v1/schedules?status=scheduled"
 ```
 
 ### Getting Schedule Details
 
 ```bash
-curl -X GET "http://localhost:3000/api/v1/schedules/550e8400-e29b-41d4-a716-446655440004" \
-  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
-```
+curl -X GET "http://localhost:3000/api/v1/schedules/550e8400-e29b-41d4-a716-446655440004"
 
 ## Business Logic
 

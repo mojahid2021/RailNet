@@ -163,17 +163,14 @@ export async function scheduleRoutes(app: FastifyInstance) {
 
   // Get all schedules with optional filters
   app.get('/', {
-    preHandler: authenticateAdmin,
     schema: {
-      description: 'Get all train schedules with optional filters',
+      description: 'Get all train schedules with optional filters (public access)',
       tags: ['schedules'],
-      security: [{ bearerAuth: [] }],
       querystring: {
         type: 'object',
         properties: {
           trainId: { type: 'string', format: 'uuid' },
-          dateFrom: { type: 'string', format: 'date-time' },
-          dateTo: { type: 'string', format: 'date-time' },
+          departureTime: { type: 'string', pattern: '^([01]?[0-9]|2[0-3]):[0-5][0-9]$', description: 'Departure time in HH:MM format' },
           status: { type: 'string', enum: ['scheduled', 'running', 'completed', 'delayed', 'cancelled'] },
           limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
           offset: { type: 'integer', minimum: 0, default: 0 },
@@ -254,23 +251,9 @@ export async function scheduleRoutes(app: FastifyInstance) {
     },
   }, async (request, reply) => {
     try {
-      // Validate admin access and log operation
-      const adminInfo = AdminSecurity.validateAdminAccess(request, 'list_schedules')
-
-      // Check specific permissions
-      if (!AdminSecurity.checkPermission(adminInfo.adminId, 'list_schedules')) {
-        return ResponseHandler.error(reply, 'Insufficient permissions to view schedules', 403)
-      }
-
       const queryParams: ScheduleQueryInput = scheduleQuerySchema.parse(request.query)
 
-      const result = await ScheduleService.getSchedules(queryParams, adminInfo.adminId)
-
-      // Log operation
-      AdminSecurity.logAdminAction(adminInfo.adminId, 'schedules_listed', {
-        filters: queryParams,
-        resultCount: result.schedules.length,
-      })
+      const result = await ScheduleService.getSchedules(queryParams)
 
       return ResponseHandler.success(reply, result)
     } catch (error) {
@@ -280,11 +263,9 @@ export async function scheduleRoutes(app: FastifyInstance) {
 
   // Get schedule by ID
   app.get('/:id', {
-    preHandler: authenticateAdmin,
     schema: {
-      description: 'Get schedule details by ID',
+      description: 'Get schedule details by ID (public access)',
       tags: ['schedules'],
-      security: [{ bearerAuth: [] }],
       params: {
         type: 'object',
         properties: {
@@ -394,23 +375,9 @@ export async function scheduleRoutes(app: FastifyInstance) {
     },
   }, async (request, reply) => {
     try {
-      // Validate admin access and log operation
-      const adminInfo = AdminSecurity.validateAdminAccess(request, 'read_schedule')
-
-      // Check specific permissions
-      if (!AdminSecurity.checkPermission(adminInfo.adminId, 'read_schedule')) {
-        return ResponseHandler.error(reply, 'Insufficient permissions to view schedule details', 403)
-      }
-
       const { id } = request.params as { id: string }
 
-      const schedule = await ScheduleService.getScheduleById(id, adminInfo.adminId)
-
-      // Log operation
-      AdminSecurity.logAdminAction(adminInfo.adminId, 'schedule_viewed', {
-        scheduleId: id,
-        trainId: schedule.train.id,
-      })
+      const schedule = await ScheduleService.getScheduleById(id)
 
       return ResponseHandler.success(reply, schedule)
     } catch (error) {
