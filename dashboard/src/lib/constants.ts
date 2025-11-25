@@ -4,6 +4,9 @@ export const API_CONFIG = {
   ENDPOINTS: {
     LOGIN: "/api/v1/admin/login",
     PROFILE: "/api/v1/admin/profile",
+    STATIONS: "/api/v1/stations",
+    TRAIN_ROUTES: "/api/v1/train-routes",
+    COMPARTMENTS: "/api/v1/compartments",
   },
 } as const;
 

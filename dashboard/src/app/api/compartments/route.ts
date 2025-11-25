@@ -13,9 +13,9 @@ export async function GET() {
         { status: 401 }
       );
     }
-    
+
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PROFILE}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.COMPARTMENTS}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -23,30 +23,18 @@ export async function GET() {
         },
       });
 
-      // Check if response is JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        console.error("Backend API returned non-JSON response. Is the backend server running?");
-        return NextResponse.json(
-          { error: "Backend API unavailable" },
-          { status: 503 }
-        );
-      }
-
       const data = await response.json();
 
       if (!response.ok) {
         return NextResponse.json(
-          { error: data.message || "Failed to fetch profile" },
+          { error: data.message || "Failed to fetch compartments" },
           { status: response.status }
         );
       }
 
-      // The backend returns { success: true, data: { ...profile } }
-      // We want to return { success: true, user: { ...profile } } to the frontend
-      return NextResponse.json({ success: true, user: data.data });
+      return NextResponse.json(data);
     } catch (error) {
-      console.error("Profile fetch error:", error);
+      console.error("Compartments fetch error:", error);
       return NextResponse.json(
         { error: "Backend API unavailable or network error" },
         { status: 503 }

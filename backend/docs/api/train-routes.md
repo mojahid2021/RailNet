@@ -52,10 +52,6 @@ Create a new train route with station sequence, distances, and compartment assig
       "distance": 144.0,
       "distanceFromStart": 264.5
     }
-  ],
-  "compartmentIds": [
-    "compartment-uuid-1",
-    "compartment-uuid-2"
   ]
 }
 ```
@@ -68,7 +64,6 @@ Create a new train route with station sequence, distances, and compartment assig
 | startStationId | string (UUID) | Yes | Starting station ID |
 | endStationId | string (UUID) | Yes | Ending station ID |
 | stations | array | Yes | Ordered list of stations in route |
-| compartmentIds | array | Yes | List of compartment IDs for this route |
 
 **Station Object Schema:**
 | Field | Type | Required | Description |
@@ -109,16 +104,6 @@ Create a new train route with station sequence, distances, and compartment assig
         "distanceFromStart": 0
       }
       // ... more stations
-    ],
-    "compartments": [
-      {
-        "id": "compartment-uuid-1",
-        "name": "AC Sleeper",
-        "type": "AC_SLEEPER",
-        "price": 1200.50,
-        "totalSeat": 60
-      }
-      // ... more compartments
     ],
     "createdAt": "2025-11-24T19:49:27.848Z"
   }
@@ -232,22 +217,6 @@ Retrieve detailed information about a specific train route, including all statio
         "distanceFromStart": 264.5
       }
     ],
-    "compartments": [
-      {
-        "id": "compartment-uuid-1",
-        "name": "AC Sleeper",
-        "type": "AC_SLEEPER",
-        "price": 1200.50,
-        "totalSeat": 60
-      },
-      {
-        "id": "compartment-uuid-2",
-        "name": "AC Chair",
-        "type": "AC_CHAIR",
-        "price": 800.00,
-        "totalSeat": 80
-      }
-    ],
     "createdAt": "2025-11-24T19:49:27.848Z",
     "updatedAt": "2025-11-24T19:49:27.848Z"
   }
@@ -292,17 +261,6 @@ All fields are optional; only include fields you want to update.
 ```
 
 **Note:** Updating `stations` array requires more complex logic and is typically not recommended. Consider creating a new route instead.
-
-**Success Response:** `200 OK`
-```json
-{
-  "success": true,
-  "message": "Train route updated successfully",
-  "data": {
-    // Updated route object
-  }
-}
-```
 
 **Error Responses:**
 
@@ -355,7 +313,6 @@ Delete a train route from the system.
   startStation: Station;      // Populated station object
   endStation: Station;        // Populated station object
   stations: RouteStation[];   // Ordered list of stations
-  compartments: Compartment[];// Available compartment types
   createdAt: string;
   updatedAt: string;
 }
@@ -393,11 +350,6 @@ Delete a train route from the system.
    - `endStationId` must match last station in sequence
    - All referenced stations must exist in the database
 
-4. **Compartment Assignment**:
-   - At least one compartment must be assigned
-   - Compartments define what train classes are available for this route
-   - Same compartment can be used in multiple routes
-
 ## Example Usage
 
 ### JavaScript/Node.js
@@ -427,8 +379,7 @@ const createRoute = async () => {
           distanceFromStart: 0
         },
         // ... more stations
-      ],
-      compartmentIds: ['compartment-uuid-1', 'compartment-uuid-2']
+      ]
     })
   });
   return await response.json();
@@ -477,8 +428,7 @@ curl -X POST http://localhost:3000/api/v1/train-routes \
         "distance": 245.0,
         "distanceFromStart": 245.0
       }
-    ],
-    "compartmentIds": ["COMPARTMENT_ID_1"]
+    ]
   }'
 
 # Get All Routes
@@ -502,13 +452,9 @@ Use route data for:
 - Station sequence display
 - Real-time train tracking
 
-### 3. Compartment Availability
-Determine which train classes are available for a specific route.
-
 ## Related Documentation
 - [Station Management API](stations.md) - Manage stations used in routes
-- [Compartment API](compartments.md) - Manage compartments for routes
-- [Train Management API](trains.md) - Assign routes to trains
+- [Train Management API](trains.md) - Assign routes to trains and manage compartments
 - [Database Schema](../workflows/database-schema.md) - Route data model
 
 ---

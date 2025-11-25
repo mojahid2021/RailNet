@@ -35,7 +35,6 @@ export const createTrainRouteSchema = z.object({
     distance: z.number().positive('Distance must be positive'),
     distanceFromStart: z.number().min(0, 'Distance from start must be non-negative'),
   })).min(1, 'At least one station is required'),
-  compartmentIds: z.array(z.string().uuid('Invalid compartment ID')).min(1, 'At least one compartment is required'),
 })
 
 export const updateTrainRouteSchema = z.object({
@@ -50,7 +49,6 @@ export const updateTrainRouteSchema = z.object({
     distance: z.number().positive('Distance must be positive'),
     distanceFromStart: z.number().min(0, 'Distance from start must be non-negative'),
   })).optional(),
-  compartmentIds: z.array(z.string().uuid('Invalid compartment ID')).optional(),
 })
 
 export const createCompartmentSchema = z.object({

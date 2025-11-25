@@ -14,7 +14,7 @@ export async function trainRoutes(app: FastifyInstance) {
       security: [{ bearerAuth: [] }],
       body: {
         type: 'object',
-        required: ['name', 'totalDistance', 'startStationId', 'endStationId', 'stations', 'compartmentIds'],
+        required: ['name', 'totalDistance', 'startStationId', 'endStationId', 'stations'],
         properties: {
           name: { type: 'string' },
           totalDistance: { type: 'number' },
@@ -32,10 +32,6 @@ export async function trainRoutes(app: FastifyInstance) {
                 distanceFromStart: { type: 'number' },
               },
             },
-          },
-          compartmentIds: {
-            type: 'array',
-            items: { type: 'string' },
           },
         },
       },
@@ -85,19 +81,6 @@ export async function trainRoutes(app: FastifyInstance) {
                     },
                   },
                 },
-                compartments: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      id: { type: 'string' },
-                      name: { type: 'string' },
-                      type: { type: 'string' },
-                      price: { type: 'number' },
-                      totalSeat: { type: 'integer' },
-                    },
-                  },
-                },
                 createdAt: { type: 'string' },
               },
             },
@@ -138,15 +121,6 @@ export async function trainRoutes(app: FastifyInstance) {
 
       const stationMap = new Map(existingStations.map((s: { id: string; name: string }) => [s.id, s.name]))
 
-      // Check if all compartments exist
-      const existingCompartments = await (app as any).prisma.compartment.findMany({
-        where: { id: { in: routeData.compartmentIds } },
-        select: { id: true, name: true, type: true, price: true, totalSeat: true },
-      })
-      if (existingCompartments.length !== routeData.compartmentIds.length) {
-        throw new NotFoundError('One or more compartments not found')
-      }
-
       const route = await (app as any).prisma.trainRoute.create({
         data: {
           name: routeData.name,
@@ -162,11 +136,6 @@ export async function trainRoutes(app: FastifyInstance) {
               distanceFromStart: station.distanceFromStart,
             })),
           },
-          compartments: {
-            create: routeData.compartmentIds.map(compartmentId => ({
-              compartmentId,
-            })),
-          },
         },
         include: {
           startStation: { select: { id: true, name: true } },
@@ -176,11 +145,6 @@ export async function trainRoutes(app: FastifyInstance) {
               currentStation: { select: { id: true, name: true } },
             },
             orderBy: { distanceFromStart: 'asc' },
-          },
-          compartments: {
-            include: {
-              compartment: { select: { id: true, name: true, type: true, price: true, totalSeat: true } },
-            },
           },
         },
       })
@@ -312,19 +276,6 @@ export async function trainRoutes(app: FastifyInstance) {
                     },
                   },
                 },
-                compartments: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      id: { type: 'string' },
-                      name: { type: 'string' },
-                      type: { type: 'string' },
-                      price: { type: 'number' },
-                      totalSeat: { type: 'integer' },
-                    },
-                  },
-                },
                 createdAt: { type: 'string' },
                 updatedAt: { type: 'string' },
               },
@@ -354,11 +305,6 @@ export async function trainRoutes(app: FastifyInstance) {
               currentStation: { select: { id: true, name: true } },
             },
             orderBy: { distanceFromStart: 'asc' },
-          },
-          compartments: {
-            include: {
-              compartment: { select: { id: true, name: true, type: true, price: true, totalSeat: true } },
-            },
           },
         },
       })
@@ -410,10 +356,6 @@ export async function trainRoutes(app: FastifyInstance) {
               },
             },
           },
-          compartmentIds: {
-            type: 'array',
-            items: { type: 'string' },
-          },
         },
       },
       response: {
@@ -462,19 +404,6 @@ export async function trainRoutes(app: FastifyInstance) {
                     },
                   },
                 },
-                compartments: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      id: { type: 'string' },
-                      name: { type: 'string' },
-                      type: { type: 'string' },
-                      price: { type: 'number' },
-                      totalSeat: { type: 'integer' },
-                    },
-                  },
-                },
                 updatedAt: { type: 'string' },
               },
             },
@@ -512,28 +441,6 @@ export async function trainRoutes(app: FastifyInstance) {
         updatePayload.endStationId = updateData.endStationId
       }
 
-      if (updateData.compartmentIds) {
-        // Check if all compartments exist
-        const existingCompartments = await (app as any).prisma.compartment.findMany({
-          where: { id: { in: updateData.compartmentIds } },
-          select: { id: true },
-        })
-        if (existingCompartments.length !== updateData.compartmentIds.length) {
-          throw new NotFoundError('One or more compartments not found')
-        }
-
-        // Delete existing compartments and create new ones
-        await (app as any).prisma.trainRouteCompartment.deleteMany({
-          where: { trainRouteId: id },
-        })
-
-        updatePayload.compartments = {
-          create: updateData.compartmentIds.map(compartmentId => ({
-            compartmentId,
-          })),
-        }
-      }
-
       const route = await (app as any).prisma.trainRoute.update({
         where: { id },
         data: updatePayload,
@@ -545,11 +452,6 @@ export async function trainRoutes(app: FastifyInstance) {
               currentStation: { select: { id: true, name: true } },
             },
             orderBy: { distanceFromStart: 'asc' },
-          },
-          compartments: {
-            include: {
-              compartment: { select: { id: true, name: true, type: true, price: true, totalSeat: true } },
-            },
           },
         },
       })
