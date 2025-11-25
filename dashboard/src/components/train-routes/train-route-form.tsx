@@ -128,8 +128,7 @@ export function TrainRouteForm({
         totalDistance: cumulativeDistance,
         startStationId: routeStations[0].stationId,
         endStationId: routeStations[routeStations.length - 1].stationId,
-        stations: stationsPayload,
-        // compartmentIds removed from create payload as per new docs
+        // stations: stationsPayload, // Temporarily removed to debug API issue
       };
     } else {
       // Update mode - simplified for now, maybe just name and compartments?

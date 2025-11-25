@@ -184,7 +184,7 @@ export interface CreateTrainRouteRequest {
   totalDistance: number;
   startStationId: string;
   endStationId: string;
-  stations: CreateRouteStationRequest[];
+  stations?: CreateRouteStationRequest[];
 }
 
 export interface UpdateTrainRouteRequest {

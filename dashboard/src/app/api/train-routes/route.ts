@@ -62,6 +62,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+    console.log("Train route creation request body:", JSON.stringify(body, null, 2));
 
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TRAIN_ROUTES}`, {
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
       });
 
       const data = await response.json();
+      console.log("Backend response:", response.status, JSON.stringify(data, null, 2));
 
       if (!response.ok) {
         return NextResponse.json(

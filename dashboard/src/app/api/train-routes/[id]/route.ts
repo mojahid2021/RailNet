@@ -123,6 +123,8 @@ export async function DELETE(
       );
     }
 
+    console.log(`Deleting train route with ID: ${id}`);
+
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TRAIN_ROUTES}/${id}`, {
         method: "DELETE",
@@ -133,6 +135,7 @@ export async function DELETE(
       });
 
       const data = await response.json();
+      console.log("Backend delete response:", response.status, JSON.stringify(data, null, 2));
 
       if (!response.ok) {
         return NextResponse.json(
