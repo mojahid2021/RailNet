@@ -121,5 +121,21 @@ export function useTrainRoutes() {
     createTrainRoute,
     updateTrainRoute,
     deleteTrainRoute,
+    getTrainRoute: async (id: string): Promise<TrainRoute | null> => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/train-routes/${id}`);
+        const data: ApiResponse<TrainRoute> = await res.json();
+        if (data.success && data.data) {
+          return data.data;
+        }
+        return null;
+      } catch (err) {
+        console.error(err);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
   };
 }

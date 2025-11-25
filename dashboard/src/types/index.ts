@@ -195,3 +195,43 @@ export interface UpdateTrainRouteRequest {
   endStationId?: string;
   compartmentIds?: string[];
 }
+
+// Schedule Types
+export interface StationSchedule {
+  id: string;
+  stationId: string;
+  sequenceOrder: number;
+  estimatedArrival: string;
+  estimatedDeparture: string;
+  durationFromPrevious: number;
+  waitingTime: number;
+  status: string;
+  platformNumber: string;
+  remarks: string;
+  station?: Station;
+}
+
+export interface Schedule {
+  id: string;
+  trainId: string;
+  routeId: string;
+  departureDate: string;
+  status: string;
+  train?: Train;
+  route?: TrainRoute;
+  stationSchedules: StationSchedule[];
+}
+
+export interface CreateStationScheduleRequest {
+  stationId: string;
+  estimatedArrival: string;
+  estimatedDeparture: string;
+  platformNumber: string;
+  remarks: string;
+}
+
+export interface CreateScheduleRequest {
+  trainId: string;
+  departureDate: string;
+  stationSchedules: CreateStationScheduleRequest[];
+}

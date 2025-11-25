@@ -27,12 +27,32 @@ async function main() {
     const stationsRes = await axios.get(`${BASE_URL}/stations`, axiosConfig);
     const stations = stationsRes.data.data;
     
-    const stationA = stations.find(s => s.name === 'Station A');
-    const stationB = stations.find(s => s.name === 'Station B');
+    let stationA = stations.find(s => s.name === 'Station A');
+    let stationB = stations.find(s => s.name === 'Station B');
 
-    if (!stationA || !stationB) {
-      console.error('Stations A or B not found.');
-      return;
+    if (!stationA) {
+        console.log('Creating Station A...');
+        const res = await axios.post(`${BASE_URL}/stations`, {
+            name: 'Station A',
+            city: 'STA',
+            district: 'Loc A',
+            division: 'Div A',
+            latitude: 0,
+            longitude: 0
+        }, axiosConfig);
+        stationA = res.data.data;
+    }
+    if (!stationB) {
+        console.log('Creating Station B...');
+        const res = await axios.post(`${BASE_URL}/stations`, {
+            name: 'Station B',
+            city: 'STB',
+            district: 'Loc B',
+            division: 'Div B',
+            latitude: 0,
+            longitude: 0
+        }, axiosConfig);
+        stationB = res.data.data;
     }
     console.log(`Found Station A: ${stationA.id}, Station B: ${stationB.id}`);
 
