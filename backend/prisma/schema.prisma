@@ -60,7 +60,6 @@ model TrainRoute {
   totalDistance Float
   startStationId String  @db.Uuid
   endStationId   String  @db.Uuid
-  reverse       Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

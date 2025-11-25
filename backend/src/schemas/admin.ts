@@ -28,7 +28,6 @@ export const createTrainRouteSchema = z.object({
   totalDistance: z.number().positive('Total distance must be positive'),
   startStationId: z.string().uuid('Invalid start station ID'),
   endStationId: z.string().uuid('Invalid end station ID'),
-  reverse: z.boolean().default(false).optional(),
   stations: z.array(z.object({
     currentStationId: z.string().uuid('Invalid current station ID'),
     beforeStationId: z.string().uuid().optional(),
@@ -43,7 +42,6 @@ export const updateTrainRouteSchema = z.object({
   totalDistance: z.number().positive('Total distance must be positive').optional(),
   startStationId: z.string().uuid('Invalid start station ID').optional(),
   endStationId: z.string().uuid('Invalid end station ID').optional(),
-  reverse: z.boolean().optional(),
   stations: z.array(z.object({
     currentStationId: z.string().uuid('Invalid current station ID'),
     beforeStationId: z.string().uuid().optional(),

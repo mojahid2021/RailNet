@@ -20,7 +20,6 @@ export async function trainRoutes(app: FastifyInstance) {
           totalDistance: { type: 'number' },
           startStationId: { type: 'string' },
           endStationId: { type: 'string' },
-          reverse: { type: 'boolean', default: false },
           stations: {
             type: 'array',
             items: {
@@ -48,7 +47,6 @@ export async function trainRoutes(app: FastifyInstance) {
                 id: { type: 'string' },
                 name: { type: 'string' },
                 totalDistance: { type: 'number' },
-                reverse: { type: 'boolean' },
                 startStation: {
                   type: 'object',
                   properties: {
@@ -129,7 +127,6 @@ export async function trainRoutes(app: FastifyInstance) {
           totalDistance: routeData.totalDistance,
           startStationId: routeData.startStationId,
           endStationId: routeData.endStationId,
-          reverse: routeData.reverse || false,
           stations: {
             create: routeData.stations.map(station => ({
               currentStationId: station.currentStationId,
@@ -181,7 +178,6 @@ export async function trainRoutes(app: FastifyInstance) {
                   id: { type: 'string' },
                   name: { type: 'string' },
                   totalDistance: { type: 'number' },
-                  reverse: { type: 'boolean' },
                   startStation: {
                     type: 'object',
                     properties: {
@@ -246,7 +242,6 @@ export async function trainRoutes(app: FastifyInstance) {
                 id: { type: 'string' },
                 name: { type: 'string' },
                 totalDistance: { type: 'number' },
-                reverse: { type: 'boolean' },
                 startStation: {
                   type: 'object',
                   properties: {
@@ -346,7 +341,6 @@ export async function trainRoutes(app: FastifyInstance) {
         properties: {
           name: { type: 'string' },
           totalDistance: { type: 'number' },
-          reverse: { type: 'boolean' },
           startStationId: { type: 'string' },
           endStationId: { type: 'string' },
           stations: {
@@ -376,7 +370,6 @@ export async function trainRoutes(app: FastifyInstance) {
                 id: { type: 'string' },
                 name: { type: 'string' },
                 totalDistance: { type: 'number' },
-                reverse: { type: 'boolean' },
                 startStation: {
                   type: 'object',
                   properties: {
@@ -427,7 +420,6 @@ export async function trainRoutes(app: FastifyInstance) {
 
       if (updateData.name !== undefined) updatePayload.name = updateData.name
       if (updateData.totalDistance !== undefined) updatePayload.totalDistance = updateData.totalDistance
-      if (updateData.reverse !== undefined) updatePayload.reverse = updateData.reverse
       if (updateData.startStationId) {
         const startStation = await (app as any).prisma.station.findUnique({
           where: { id: updateData.startStationId },

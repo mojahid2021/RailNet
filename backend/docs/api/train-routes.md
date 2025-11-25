@@ -28,7 +28,6 @@ Create a new train route with station sequence, distances, and compartment assig
 {
   "name": "Dhaka to Chittagong Express Route",
   "totalDistance": 264.5,
-  "reverse": false,
   "startStationId": "station-uuid-1",
   "endStationId": "station-uuid-3",
   "stations": [
@@ -62,7 +61,6 @@ Create a new train route with station sequence, distances, and compartment assig
 |-------|------|----------|-------------|
 | name | string | Yes | Route name |
 | totalDistance | number | Yes | Total distance in kilometers |
-| reverse | boolean | No | Whether this route travels in reverse direction (default: false) |
 | startStationId | string (UUID) | Yes | Starting station ID |
 | endStationId | string (UUID) | Yes | Ending station ID |
 | stations | array | Yes | Ordered list of stations in route |
@@ -85,7 +83,6 @@ Create a new train route with station sequence, distances, and compartment assig
     "id": "route-uuid-1",
     "name": "Dhaka to Chittagong Express Route",
     "totalDistance": 264.5,
-    "reverse": false,
     "startStation": {
       "id": "station-uuid-1",
       "name": "Dhaka Railway Station"
@@ -138,7 +135,6 @@ Retrieve a list of all train routes with basic information.
       "id": "route-uuid-1",
       "name": "Dhaka to Chittagong Express Route",
       "totalDistance": 264.5,
-      "reverse": false,
       "startStation": {
         "id": "station-uuid-1",
         "name": "Dhaka Railway Station"
@@ -178,7 +174,6 @@ Retrieve detailed information about a specific train route, including all statio
     "id": "route-uuid-1",
     "name": "Dhaka to Chittagong Express Route",
     "totalDistance": 264.5,
-    "reverse": false,
     "startStation": {
       "id": "station-uuid-1",
       "name": "Dhaka Railway Station"
@@ -255,7 +250,6 @@ All fields are optional; only include fields you want to update.
 {
   "name": "Dhaka to Chittagong Premium Route",
   "totalDistance": 264.5,
-  "reverse": true,
   "startStationId": "station-uuid-1",
   "endStationId": "station-uuid-3"
 }
@@ -309,7 +303,6 @@ Delete a train route from the system.
   id: string;
   name: string;
   totalDistance: number;      // Total route distance in km
-  reverse: boolean;          // Whether route travels in reverse direction
   startStationId: string;
   endStationId: string;
   startStation: Station;      // Populated station object
@@ -370,7 +363,6 @@ const createRoute = async () => {
     body: JSON.stringify({
       name: 'Dhaka to Chittagong Express Route',
       totalDistance: 264.5,
-      reverse: false,
       startStationId: 'station-uuid-1',
       endStationId: 'station-uuid-3',
       stations: [
@@ -414,7 +406,6 @@ curl -X POST http://localhost:3000/api/v1/train-routes \
   -d '{
     "name": "Dhaka to Sylhet Route",
     "totalDistance": 245.0,
-    "reverse": false,
     "startStationId": "START_STATION_ID",
     "endStationId": "END_STATION_ID",
     "stations": [
