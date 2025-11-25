@@ -138,7 +138,7 @@ export default function TrainsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {train.compartments.length > 0 ? (
+                          {train.compartments && train.compartments.length > 0 ? (
                             train.compartments.map((tc) => (
                               <Badge key={tc.id} variant="secondary" className="text-xs">
                                 {tc.compartment.name}

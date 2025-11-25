@@ -19,11 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TrainRoute, CreateTrainRouteRequest, UpdateTrainRouteRequest, CreateRouteStationRequest } from "@/types";
 import { useStations } from "@/hooks/use-stations";
-import { useCompartments } from "@/hooks/use-compartments";
 import { Plus, Trash2, ArrowDown } from "lucide-react";
 
 interface TrainRouteFormProps {
@@ -47,17 +45,15 @@ export function TrainRouteForm({
   mode,
 }: TrainRouteFormProps) {
   const { data: availableStations = [] } = useStations();
-  const { data: availableCompartments = [] } = useCompartments();
   const [loading, setLoading] = useState(false);
 
   const [name, setName] = useState("");
-  const [selectedCompartments, setSelectedCompartments] = useState<string[]>([]);
   const [routeStations, setRouteStations] = useState<TempStation[]>([]);
 
   useEffect(() => {
     if (initialData && mode === "edit") {
       setName(initialData.name);
-      setSelectedCompartments(initialData.compartments.map((c) => c.id));
+      // Routes no longer have compartments - removed compartment loading
       // For edit, we need to map existing stations to temp structure
       // Note: Editing stations is complex and often discouraged, but we'll populate it for display
       // If the user wants to edit, they might need to recreate the sequence or we handle it carefully.
@@ -70,7 +66,6 @@ export function TrainRouteForm({
       );
     } else {
       setName("");
-      setSelectedCompartments([]);
       setRouteStations([{ stationId: "", distance: 0 }]); // Start with one empty station
     }
   }, [initialData, mode, open]);
@@ -91,14 +86,6 @@ export function TrainRouteForm({
     setRouteStations(newStations);
   };
 
-  const handleCompartmentToggle = (compartmentId: string) => {
-    setSelectedCompartments((prev) =>
-      prev.includes(compartmentId)
-        ? prev.filter((id) => id !== compartmentId)
-        : [...prev, compartmentId]
-    );
-  };
-
   const calculateTotalDistance = () => {
     return routeStations.reduce((acc, curr) => acc + (curr.distance || 0), 0);
   };
@@ -115,11 +102,6 @@ export function TrainRouteForm({
     }
     if (routeStations.some((s) => !s.stationId)) {
       alert("All stations must be selected.");
-      setLoading(false);
-      return;
-    }
-    if (mode === "edit" && selectedCompartments.length === 0) {
-      alert("At least one compartment must be selected.");
       setLoading(false);
       return;
     }
@@ -161,7 +143,6 @@ export function TrainRouteForm({
         totalDistance: calculateTotalDistance(),
         startStationId: routeStations[0].stationId,
         endStationId: routeStations[routeStations.length - 1].stationId,
-        compartmentIds: selectedCompartments,
       };
     }
 
@@ -202,22 +183,7 @@ export function TrainRouteForm({
               <div className="grid gap-2">
                 <Label>Compartments</Label>
                 <div className="flex flex-wrap gap-2 border p-3 rounded-md min-h-[60px]">
-                  {availableCompartments.length === 0 ? (
-                    <span className="text-sm text-muted-foreground">Loading compartments...</span>
-                  ) : (
-                    availableCompartments.map((compartment) => (
-                      <div key={compartment.id} className="flex items-center space-x-2 bg-muted/50 px-3 py-1 rounded-full">
-                        <Checkbox
-                          id={`comp-${compartment.id}`}
-                          checked={selectedCompartments.includes(compartment.id)}
-                          onCheckedChange={() => handleCompartmentToggle(compartment.id)}
-                        />
-                        <Label htmlFor={`comp-${compartment.id}`} className="cursor-pointer text-sm font-medium">
-                          {compartment.name}
-                        </Label>
-                      </div>
-                    ))
-                  )}
+                  <span className="text-sm text-muted-foreground">Compartments are assigned to trains, not routes.</span>
                 </div>
               </div>
             )}

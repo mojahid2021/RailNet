@@ -167,7 +167,6 @@ export interface TrainRoute {
   startStation?: Station;
   endStation?: Station;
   stations: RouteStation[];
-  compartments: Compartment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -193,7 +192,6 @@ export interface UpdateTrainRouteRequest {
   totalDistance?: number;
   startStationId?: string;
   endStationId?: string;
-  compartmentIds?: string[];
 }
 
 // Schedule Types

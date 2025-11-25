@@ -134,16 +134,8 @@ export default function TrainRoutesPage() {
                       <TableCell>{route.totalDistance.toFixed(1)} km</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {route.compartments.slice(0, 2).map((c) => (
-                            <Badge key={c.id} variant="secondary" className="text-xs">
-                              {c.name}
-                            </Badge>
-                          ))}
-                          {route.compartments.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{route.compartments.length - 2}
-                            </Badge>
-                          )}
+                          {/* Routes no longer have compartments - they are assigned to trains */}
+                          <span className="text-muted-foreground italic text-xs">Assigned to trains</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
