@@ -15,7 +15,7 @@ export async function GET() {
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.COMPARTMENTS}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TRAINS}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -27,23 +27,23 @@ export async function GET() {
 
       if (!response.ok) {
         return NextResponse.json(
-          { error: data.message || "Failed to fetch compartments" },
+          { error: data.message || "Failed to fetch trains" },
           { status: response.status }
         );
       }
 
       return NextResponse.json(data);
     } catch (error) {
-      console.error("Compartments fetch error:", error);
+      console.error("Trains fetch error:", error);
       return NextResponse.json(
         { error: "Backend API unavailable or network error" },
         { status: 503 }
       );
     }
   } catch (error) {
-    console.error("Cookie error:", error);
+    console.error("Request error:", error);
     return NextResponse.json(
-      { error: "Authentication error" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.COMPARTMENTS}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TRAINS}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -77,14 +77,14 @@ export async function POST(request: Request) {
 
       if (!response.ok) {
         return NextResponse.json(
-          { error: data.message || "Failed to create compartment" },
+          { error: data.message || "Failed to create train" },
           { status: response.status }
         );
       }
 
       return NextResponse.json(data);
     } catch (error) {
-      console.error("Compartment creation error:", error);
+      console.error("Train creation error:", error);
       return NextResponse.json(
         { error: "Backend API unavailable or network error" },
         { status: 503 }

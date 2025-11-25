@@ -98,6 +98,56 @@ export interface Compartment {
   totalSeat: number;
 }
 
+export interface CreateCompartmentRequest {
+  name: string;
+  type: string;
+  price: number;
+  totalSeat: number;
+}
+
+export interface UpdateCompartmentRequest {
+  name?: string;
+  type?: string;
+  price?: number;
+  totalSeat?: number;
+}
+
+export interface TrainCompartment {
+  id: string;
+  compartment: Compartment;
+}
+
+export interface Train {
+  id: string;
+  name: string;
+  number: string;
+  type: string;
+  trainRouteId?: string;
+  trainRoute?: {
+    id: string;
+    name: string;
+  };
+  compartments: TrainCompartment[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTrainRequest {
+  name: string;
+  number: string;
+  type: string;
+  trainRouteId?: string;
+  compartmentIds?: string[];
+}
+
+export interface UpdateTrainRequest {
+  name?: string;
+  number?: string;
+  type?: string;
+  trainRouteId?: string;
+  compartmentIds?: string[];
+}
+
 export interface RouteStation {
   id: string;
   currentStationId: string;
