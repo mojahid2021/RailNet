@@ -106,16 +106,18 @@ app.register(swaggerUi, {
   transformStaticCSP: (header) => header,
 });
 
-// Health check endpoint
+// Health check endpoint (public - no authentication required)
 app.get('/', {
-  preHandler: authenticateUser,
   schema: {
     description: 'Health check endpoint',
     tags: ['health'],
-    security: [{ bearerAuth: [] }],
   },
 }, async (request, reply) => {
-  return { status: 'Server is running...', timestamp: new Date().toISOString() };
+  return { 
+    status: 'Server is running...', 
+    timestamp: new Date().toISOString(),
+    version: '2.0.0',
+  };
 });
 
 // Register routes

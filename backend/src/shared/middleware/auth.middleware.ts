@@ -7,16 +7,8 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { JWTUtil } from '../utils/jwt.util';
 import { ResponseHandler } from '../utils/response.handler';
-import { JWTPayload, UserRole } from '../../common/types';
 import { ERROR_MESSAGES, USER_ROLES } from '../../common/constants';
-
-declare module 'fastify' {
-  interface FastifyRequest {
-    admin?: JWTPayload;
-    user?: JWTPayload;
-    currentUser?: JWTPayload;
-  }
-}
+import '../../common/types/fastify';
 
 export async function authenticateAdmin(request: FastifyRequest, reply: FastifyReply) {
   try {

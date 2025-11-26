@@ -7,9 +7,8 @@
 import { FastifyInstance } from 'fastify';
 import { stationService } from '../services/station.service';
 import { CreateStationSchema, UpdateStationSchema } from '../dtos';
-import { ResponseHandler } from '../../../shared/utils/response.handler';
+import { ResponseHandler, ErrorHandlerUtil } from '../../../shared/utils';
 import { authenticateAdmin } from '../../../shared/middleware/auth.middleware';
-import { NotFoundError } from '../../../shared/errors';
 
 export async function stationRoutes(app: FastifyInstance) {
   // Create station
@@ -38,7 +37,7 @@ export async function stationRoutes(app: FastifyInstance) {
       const station = await stationService.create(data);
       return ResponseHandler.created(reply, station, 'Station created successfully');
     } catch (error) {
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500);
+      return ErrorHandlerUtil.handle(reply, error);
     }
   });
 
@@ -55,7 +54,7 @@ export async function stationRoutes(app: FastifyInstance) {
       const stations = await stationService.findAll();
       return ResponseHandler.success(reply, stations);
     } catch (error) {
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500);
+      return ErrorHandlerUtil.handle(reply, error);
     }
   });
 
@@ -80,10 +79,7 @@ export async function stationRoutes(app: FastifyInstance) {
       const station = await stationService.findById(id);
       return ResponseHandler.success(reply, station);
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        return ResponseHandler.notFound(reply, error.message);
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500);
+      return ErrorHandlerUtil.handle(reply, error);
     }
   });
 
@@ -120,10 +116,7 @@ export async function stationRoutes(app: FastifyInstance) {
       const station = await stationService.update(id, data);
       return ResponseHandler.success(reply, station, 'Station updated successfully');
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        return ResponseHandler.notFound(reply, error.message);
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500);
+      return ErrorHandlerUtil.handle(reply, error);
     }
   });
 
@@ -148,10 +141,7 @@ export async function stationRoutes(app: FastifyInstance) {
       await stationService.delete(id);
       return ResponseHandler.noContent(reply);
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        return ResponseHandler.notFound(reply, error.message);
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500);
+      return ErrorHandlerUtil.handle(reply, error);
     }
   });
 }

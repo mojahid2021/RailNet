@@ -7,8 +7,7 @@
 import { FastifyInstance } from 'fastify';
 import { authService } from '../services/auth.service';
 import { RegisterUserSchema, LoginSchema } from '../dtos';
-import { ResponseHandler } from '../../../shared/utils/response.handler';
-import { ConflictError, NotFoundError } from '../../../shared/errors';
+import { ResponseHandler, ErrorHandlerUtil } from '../../../shared/utils';
 
 export async function userAuthRoutes(app: FastifyInstance) {
   app.post('/register', {
@@ -33,10 +32,7 @@ export async function userAuthRoutes(app: FastifyInstance) {
       const user = await authService.registerUser(data);
       return ResponseHandler.created(reply, user, 'User registered successfully');
     } catch (error) {
-      if (error instanceof ConflictError) {
-        return ResponseHandler.conflict(reply, error.message);
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500);
+      return ErrorHandlerUtil.handle(reply, error);
     }
   });
 
@@ -59,10 +55,7 @@ export async function userAuthRoutes(app: FastifyInstance) {
       const result = await authService.loginUser(data);
       return ResponseHandler.success(reply, result, 'Login successful');
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        return ResponseHandler.unauthorized(reply, 'Invalid credentials');
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500);
+      return ErrorHandlerUtil.handle(reply, error);
     }
   });
 }
