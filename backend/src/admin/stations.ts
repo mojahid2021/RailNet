@@ -1,8 +1,8 @@
 import { FastifyInstance } from 'fastify'
 import { createStationSchema, CreateStationInput, updateStationSchema, UpdateStationInput } from '../schemas/admin'
-import { ResponseHandler } from '../utils/response'
-import { ConflictError, NotFoundError } from '../errors'
-import { authenticateAdmin } from '../middleware/auth'
+import { ResponseHandler } from '../shared/utils/response.handler'
+import { ConflictError, NotFoundError } from '../shared/errors'
+import { authenticateAdmin } from '../shared/middleware/auth.middleware'
 
 export async function stationRoutes(app: FastifyInstance) {
   // Create station

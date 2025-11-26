@@ -1,10 +1,10 @@
 import { FastifyInstance } from 'fastify'
 import bcrypt from 'bcrypt'
 import { registerUserSchema, RegisterUserInput, loginUserSchema, LoginUserInput, bookTicketSchema, BookTicketInput } from '../schemas/user'
-import { JWTUtils } from '../utils/jwt'
-import { ResponseHandler } from '../utils/response'
-import { ConflictError, NotFoundError } from '../errors'
-import { authenticateUser } from '../middleware/auth'
+import { JWTUtil } from '../shared/utils/jwt.util'
+import { ResponseHandler } from '../shared/utils/response.handler'
+import { ConflictError, NotFoundError } from '../shared/errors'
+import { authenticateUser } from '../shared/middleware/auth.middleware'
 
 export async function userRoutes(app: FastifyInstance) {
   // User Registration
@@ -146,7 +146,7 @@ export async function userRoutes(app: FastifyInstance) {
       }
 
       // Generate token
-      const token = JWTUtils.generateToken({
+      const token = JWTUtil.generateToken({
         id: user.id,
         email: user.email,
         type: 'user',

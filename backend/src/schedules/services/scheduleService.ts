@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { CreateScheduleInput, StationScheduleInput } from '../../schemas/schedules'
-import { ConflictError, NotFoundError } from '../../errors'
+import { ConflictError, NotFoundError } from '../../shared/errors'
 
 const prisma = new PrismaClient()
 

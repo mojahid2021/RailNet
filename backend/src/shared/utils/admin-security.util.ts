@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
-import { ResponseHandler } from './response'
+import { ResponseHandler } from './response.handler'
 
 /**
  * Admin Security Utilities
