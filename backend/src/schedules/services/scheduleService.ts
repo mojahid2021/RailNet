@@ -102,6 +102,9 @@ export class ScheduleService {
       }
     })
 
+    // Extract departure date from the first station's departure time
+    const departureDate = new Date(stationSchedules[0].estimatedDeparture)
+
     // Create schedule in transaction
     const schedule = await prisma.$transaction(async (tx) => {
       // Create main schedule
@@ -109,6 +112,7 @@ export class ScheduleService {
         data: {
           trainId,
           routeId: train.trainRoute!.id,
+          departureDate,
           departureTime,
           status: 'scheduled',
         },

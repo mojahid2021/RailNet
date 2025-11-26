@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { createScheduleSchema, CreateScheduleInput, scheduleQuerySchema, ScheduleQueryInput } from '../schemas/schedules'
 import { ResponseHandler } from '../utils/response'
 import { ConflictError, NotFoundError } from '../errors'
-import { authenticateAdmin } from '../middleware/auth'
+import { authenticateAdmin, authenticateUser } from '../middleware/auth'
 import { AdminSecurity } from '../utils/adminSecurity'
 import { ScheduleService } from './services/scheduleService'
 
@@ -163,9 +163,11 @@ export async function scheduleRoutes(app: FastifyInstance) {
 
   // Get all schedules with optional filters
   app.get('/', {
+    preHandler: authenticateUser,
     schema: {
-      description: 'Get all train schedules with optional filters (public access)',
+      description: 'Get all train schedules with optional filters',
       tags: ['schedules'],
+      security: [{ bearerAuth: [] }],
       querystring: {
         type: 'object',
         properties: {
@@ -263,9 +265,11 @@ export async function scheduleRoutes(app: FastifyInstance) {
 
   // Get schedule by ID
   app.get('/:id', {
+    preHandler: authenticateUser,
     schema: {
-      description: 'Get schedule details by ID (public access)',
+      description: 'Get schedule details by ID',
       tags: ['schedules'],
+      security: [{ bearerAuth: [] }],
       params: {
         type: 'object',
         properties: {

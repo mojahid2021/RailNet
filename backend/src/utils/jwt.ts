@@ -4,7 +4,7 @@ import config from '../config'
 export interface JWTPayload {
   id: string
   email: string
-  type: 'admin'
+  type: 'admin' | 'user'
 }
 
 export class JWTUtils {

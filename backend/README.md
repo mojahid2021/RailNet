@@ -12,8 +12,11 @@ A production-ready Fastify API server with TypeScript, Zod validation, Swagger d
 - **PostgreSQL**: Database
 - **Security**: Helmet, CORS, Rate Limiting
 - **Logging**: Pino
-- **Authentication**: JWT-based admin authentication
+- **Authentication**: JWT-based admin and user authentication
+- **Train Search**: Comprehensive route discovery with direction validation
+- **Ticket Booking**: Secure seat reservation system
 - **Station Management**: Full CRUD operations for railway stations
+- **Schedule Management**: Detailed train scheduling with station-by-station timing
 
 ## API Endpoints
 
@@ -22,6 +25,17 @@ A production-ready Fastify API server with TypeScript, Zod validation, Swagger d
 - `POST /api/v1/admin/register` - Register a new admin
 - `POST /api/v1/admin/login` - Login admin and get JWT token
 - `GET /api/v1/admin/profile` - Get admin profile (requires authentication)
+
+### User Authentication & Booking
+
+- `POST /api/v1/auth/register` - Register a new user
+- `POST /api/v1/auth/login` - Login user and get JWT token
+- `POST /api/v1/auth/book-ticket` - Book a train ticket (requires user authentication)
+
+### Train Search & Information (User Authentication Required)
+
+- `GET /api/v1/trains/search` - Search trains between stations on a specific date (requires user authentication)
+- `GET /api/v1/trains/seat-status/:scheduleId/:compartmentId` - Check seat availability (requires user authentication)
 
 ### Train Route Management
 
@@ -47,11 +61,19 @@ A production-ready Fastify API server with TypeScript, Zod validation, Swagger d
 - `PUT /api/v1/compartments/:id` - Update compartment (requires authentication)
 - `DELETE /api/v1/compartments/:id` - Delete compartment (requires authentication)
 
+### Station Management
+
+- `POST /api/v1/stations` - Create a new station (requires authentication)
+- `GET /api/v1/stations` - Get all stations (requires authentication)
+- `GET /api/v1/stations/:id` - Get station by ID (requires authentication)
+- `PUT /api/v1/stations/:id` - Update station (requires authentication)
+- `DELETE /api/v1/stations/:id` - Delete station (requires authentication)
+
 ### Schedule Management (Admin Only for Creation)
 
 - `POST /api/v1/schedules` - Create a new train schedule (admin only)
-- `GET /api/v1/schedules` - Get all schedules with filters (public access)
-- `GET /api/v1/schedules/:id` - Get schedule details by ID (public access)
+- `GET /api/v1/schedules` - Get all schedules with filters (requires user authentication)
+- `GET /api/v1/schedules/:id` - Get schedule details by ID (requires user authentication)
 
 ## Setup
 

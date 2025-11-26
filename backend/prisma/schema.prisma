@@ -8,19 +8,17 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
-}
+  id        String   @id @default(uuid()) @db.Uuid
+  firstName String
+  lastName  String
+  email     String   @unique
+  password  String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-model Post {
-  id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  author    User    @relation(fields: [authorId], references: [id])
-  authorId  Int
+  // Relations
+  bookings Booking[]
 }
 
 model Admin {
@@ -55,6 +53,10 @@ model Station {
 
   // Schedule relations
   stationSchedules StationSchedule[]
+
+  // Booking relations
+  fromBookings Booking[] @relation("BookingFromStation")
+  toBookings   Booking[] @relation("BookingToStation")
 }
 
 model TrainRoute {
@@ -114,6 +116,7 @@ model Compartment {
   updatedAt DateTime @updatedAt
 
   trainCompartments TrainCompartment[]
+  bookings          Booking[]
 }
 
 model Train {
@@ -134,6 +137,7 @@ model TrainSchedule {
   id            String   @id @default(uuid()) @db.Uuid
   trainId       String   @db.Uuid
   routeId       String   @db.Uuid
+  departureDate DateTime // Travel date
   departureTime String   // HH:MM format (e.g., "08:30")
   status        String   @default("scheduled") // scheduled, running, completed, delayed, cancelled
   createdAt     DateTime @default(now())
@@ -142,6 +146,7 @@ model TrainSchedule {
   train         Train            @relation(fields: [trainId], references: [id], onDelete: Cascade)
   route         TrainRoute       @relation(fields: [routeId], references: [id])
   stationSchedules StationSchedule[]
+  bookings      Booking[]
 
   @@unique([trainId, departureTime])
 }
@@ -181,4 +186,27 @@ model ScheduleUpdate {
   updatedAt         DateTime @default(now())
 
   stationSchedule   StationSchedule @relation(fields: [stationScheduleId], references: [id], onDelete: Cascade)
+}
+
+model Booking {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  scheduleId    String   @db.Uuid
+  compartmentId String   @db.Uuid
+  seatNumber    String
+  fromStationId String   @db.Uuid
+  toStationId   String   @db.Uuid
+  price         Float
+  status        String   @default("confirmed") // confirmed, cancelled, completed
+  bookingDate   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schedule    TrainSchedule @relation(fields: [scheduleId], references: [id])
+  compartment Compartment @relation(fields: [compartmentId], references: [id])
+  fromStation Station     @relation("BookingFromStation", fields: [fromStationId], references: [id])
+  toStation   Station     @relation("BookingToStation", fields: [toStationId], references: [id])
+
+  @@unique([scheduleId, compartmentId, seatNumber])
 }

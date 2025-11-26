@@ -8,8 +8,25 @@ The Train Management API provides complete CRUD operations for trains, including
 ```
 
 ## Authentication
-All endpoints require JWT authentication. Include the token in the Authorization header:
-```
+
+All endpoints require authentication. Admin endpoints require admin JWT authentication for train management operations. User-facing endpoints (search and seat status) require user JWT authentication.
+
+**Admin Endpoints (Require Admin Authentication):**
+
+- Create Train
+- Get All Trains
+- Get Train by ID
+- Update Train
+- Delete Train
+
+**User Endpoints (Require User Authentication):**
+
+- Search Trains for Purchase
+- Check Compartment Seat Status
+
+Include the appropriate JWT token in the request header for protected endpoints:
+
+```http
 Authorization: Bearer <jwt-token>
 ```
 
@@ -318,6 +335,164 @@ Delete a train from the system.
 
 ---
 
+### 6. Search Trains for Purchase
+
+Search for available trains between two stations on a specific date. This endpoint finds train schedules that operate on routes connecting the specified stations for the given travel date.
+
+**Endpoint:** `GET /api/v1/trains/search`
+
+**Authentication:** Required (User JWT Token)
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| from_station_id | string (UUID) | Yes | Starting station ID |
+| to_station_id | string (UUID) | Yes | Destination station ID |
+| date | string (YYYY-MM-DD) | Yes | Travel date |
+
+**Example Request:**
+
+```bash
+GET /api/v1/trains/search?from_station_id=station-uuid-1&to_station_id=station-uuid-2&date=2025-11-26
+```
+
+**Success Response:** `200 OK`
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "train-uuid-1",
+      "name": "Suborno Express",
+      "number": "701",
+      "type": "INTERCITY",
+      "scheduleId": "schedule-uuid-1",
+      "departureTime": "2025-11-26T08:30:00.000Z",
+      "compartments": [
+        {
+          "id": "compartment-uuid-1",
+          "name": "AC Sleeper",
+          "type": "AC_SLEEPER",
+          "price": 1200.50,
+          "totalSeat": 60
+        },
+        {
+          "id": "compartment-uuid-2",
+          "name": "AC Chair",
+          "type": "AC_CHAIR",
+          "price": 800.00,
+          "totalSeat": 80
+        }
+      ]
+    },
+    {
+      "id": "train-uuid-2",
+      "name": "Paharika Express",
+      "number": "801",
+      "type": "INTERCITY",
+      "scheduleId": "schedule-uuid-2",
+      "departureTime": "2025-11-26T10:15:00.000Z",
+      "compartments": [
+        // ... compartments for this train
+      ]
+    }
+  ]
+}
+```
+
+**Error Responses:**
+
+- `400 Bad Request` - No valid train routes found between stations
+
+```json
+{
+  "success": false,
+  "error": "No valid train routes found between these stations"
+}
+```
+
+- `404 Not Found` - Station not found on any route
+
+```json
+{
+  "success": false,
+  "error": "From station not found on any train route"
+}
+```
+
+**Business Logic:**
+1. **Route Discovery**: Finds ALL train routes that contain both the from and to stations
+2. **Order Validation**: For each route found, validates that `from_station.distanceFromStart < to_station.distanceFromStart`
+3. **Route Filtering**: Only includes routes where the from station comes before the to station
+4. **Schedule Lookup**: Finds all train schedules for valid routes on the specified date
+5. **Result Compilation**: Returns all trains with their schedule information, sorted by departure time
+
+### 7. Check Compartment Seat Status
+
+Check the booking status of all seats in a specific compartment for a given date.
+
+**Endpoint:** `GET /api/v1/trains/seat-status/:scheduleId/:compartmentId?date=2025-11-26`
+
+**Authentication:** Required (User JWT Token)
+
+**URL Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| scheduleId | string (UUID) | Yes | Train schedule ID |
+| compartmentId | string (UUID) | Yes | Compartment ID |
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| date | string (YYYY-MM-DD) | Yes | Travel date |
+
+**Success Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "scheduleId": "schedule-uuid-1",
+    "compartmentId": "compartment-uuid-1",
+    "date": "2025-11-26",
+    "totalSeats": 60,
+    "bookedSeats": 15,
+    "availableSeats": 45,
+    "seats": [
+      {
+        "seatNumber": "1",
+        "status": "available",
+        "bookingId": null
+      },
+      {
+        "seatNumber": "2",
+        "status": "booked",
+        "bookingId": "booking-uuid-1"
+      }
+    ]
+  }
+}
+```
+
+**Error Responses:**
+
+- `404 Not Found` - Schedule or compartment not found, or no schedule for the date
+```json
+{
+  "success": false,
+  "error": "Train schedule not found"
+}
+```
+
+**Business Logic:**
+1. **Schedule Validation**: Verifies the schedule exists and matches the requested date
+2. **Compartment Validation**: Ensures the compartment is available on the train
+3. **Seat Status**: Returns status for all seats (available/booked)
+4. **Booking Details**: Includes booking ID for booked seats
+
+---
+
 ## Data Model
 
 ### Train Object
@@ -455,6 +630,12 @@ const deleteTrain = async (trainId) => {
   });
   return await response.json();
 };
+
+// Search Trains for Purchase
+const searchTrains = async (fromStationId, toStationId, date) => {
+  const response = await fetch(`${baseURL}/trains/search?from_station_id=${fromStationId}&to_station_id=${toStationId}&date=${date}`);
+  return await response.json();
+};
 ```
 
 ### cURL Examples
@@ -491,6 +672,12 @@ curl -X PUT http://localhost:3000/api/v1/trains/TRAIN_ID \
 # Delete Train
 curl -X DELETE http://localhost:3000/api/v1/trains/TRAIN_ID \
   -H "Authorization: Bearer YOUR_TOKEN"
+
+# Check Seat Status
+curl -X GET "http://localhost:3000/api/v1/trains/seat-status/SCHEDULE_ID/COMPARTMENT_ID?date=2025-11-26"
+
+# Search Trains for Purchase
+curl -X GET "http://localhost:3000/api/v1/trains/search?from_station_id=STATION_FROM_ID&to_station_id=STATION_TO_ID&date=2025-11-26"
 ```
 
 ## Use Cases
@@ -556,4 +743,4 @@ const getFleetOverview = async () => {
 
 ---
 
-**Last Updated**: 2025-11-24
+**Last Updated**: 2025-11-26

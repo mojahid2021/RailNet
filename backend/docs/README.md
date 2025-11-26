@@ -9,11 +9,11 @@ This documentation is organized into three main sections:
 ### 🔌 API Documentation (`/api`)
 Detailed documentation for all API endpoints, including request/response schemas, authentication requirements, and examples.
 
-- [Authentication API](api/authentication.md) - Admin registration, login, and profile management
+- [Authentication API](api/authentication.md) - User registration, login, ticket booking, and profile management
 - [Station Management API](api/stations.md) - CRUD operations for railway stations
 - [Train Routes API](api/train-routes.md) - Manage train routes and route stations
 - [Compartment API](api/compartments.md) - Manage train compartments and seat types
-- [Train Management API](api/trains.md) - Complete train management with routes and compartments
+- [Train Management API](api/trains.md) - Complete train management with routes, compartments, and seat availability
 
 ### 🔄 Workflows (`/workflows`)
 Visual diagrams and explanations of system workflows and architecture.
@@ -71,20 +71,34 @@ Step-by-step guides for developers working with the backend.
 
 ## 📋 Key Features
 
-- ✅ JWT-based admin authentication
+- ✅ JWT-based admin and user authentication
+- ✅ User registration and login system
 - ✅ Station management with geographic coordinates
 - ✅ Train route management with multiple stations
 - ✅ Compartment and seat type management
 - ✅ Complete train CRUD operations
+- ✅ Train search and availability checking
+- ✅ Ticket booking with seat selection
+- ✅ Real-time seat availability status
 - ✅ Swagger UI for API documentation
 - ✅ Type-safe with TypeScript and Zod validation
 - ✅ Production-ready security measures
 
 ## 🔐 Authentication
 
-All API endpoints (except registration and login) require JWT authentication. Include the token in the request header:
+The API supports two types of authentication:
 
-```
+### Admin Authentication
+
+For administrative operations (station management, train management, etc.), use admin JWT tokens obtained via admin login.
+
+### User Authentication
+
+For user operations (ticket booking, profile management), use user JWT tokens obtained via user registration/login.
+
+Include the appropriate token in the request header:
+
+```http
 Authorization: Bearer <your-jwt-token>
 ```
 
@@ -107,6 +121,7 @@ Authorization: Bearer <your-jwt-token>
 All API responses follow a consistent format:
 
 **Success Response:**
+
 ```json
 {
   "success": true,
@@ -116,6 +131,7 @@ All API responses follow a consistent format:
 ```
 
 **Error Response:**
+
 ```json
 {
   "success": false,
@@ -128,15 +144,24 @@ All API responses follow a consistent format:
 - [Main Project README](../../README.md)
 - [System Workflow](../../WORKFLOW.md)
 - [Dashboard Documentation](../../dashboard/README.md)
+- [API Documentation Index](api/README.md)
+- [User Authentication API](api/user-auth.md)
+- [Admin Authentication API](api/authentication.md)
+- [Train Management API](api/trains.md)
+- [Station Management API](api/stations.md)
+- [Train Routes API](api/train-routes.md)
+- [Compartment Management API](api/compartments.md)
+- [Schedule Management API](api/schedules-api.md)
 
 ## 📞 Support
 
 For questions, issues, or contributions:
+
 - GitHub: [RailNet Repository](https://github.com/mojahid2021/RailNet)
 - Email: aammojahid@gmail.com
 
 ---
 
-**Last Updated**: 2025-11-24
+**Last Updated**: 2025-11-26
 **Version**: 1.0.0
 **Maintained by**: Team error2k21

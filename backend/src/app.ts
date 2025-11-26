@@ -8,6 +8,7 @@ import { PrismaClient } from '@prisma/client'
 import 'dotenv/config'
 import config from './config'
 import { AppError } from './errors'
+import { authenticateUser } from './middleware/auth'
 
 const prisma = new PrismaClient()
 
@@ -99,9 +100,11 @@ app.register(swaggerUi, {
 // Routes
 app.register(async (app) => {
   app.get('/', {
+    preHandler: authenticateUser,
     schema: {
       description: 'Health check endpoint',
       tags: ['health'],
+      security: [{ bearerAuth: [] }],
       response: {
         200: {
           type: 'object',
@@ -114,6 +117,12 @@ app.register(async (app) => {
   }, async (request, reply) => {
     return { status: 'Server is running...' }
   })
+
+  // Auth routes
+  app.register(async (authApp) => {
+    const { userRoutes } = await import('./user/routes')
+    await userRoutes(authApp)
+  }, { prefix: '/auth' })
 
   // Admin routes
   app.register(async (adminApp) => {

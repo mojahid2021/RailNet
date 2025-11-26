@@ -20,7 +20,7 @@ The Train Schedule API provides **admin-only** endpoints for creating and managi
 Authorization: Bearer <admin-jwt-token>
 ```
 
-**GET** endpoints (`/api/v1/schedules` and `/api/v1/schedules/:id`) are **public** and do not require authentication.
+**GET** endpoints (`/api/v1/schedules` and `/api/v1/schedules/:id`) require **user authentication**.
 
 ### Security Features
 
@@ -136,7 +136,7 @@ Creates a new train schedule with detailed station-by-station timing.
 
 **GET** `/api/v1/schedules`
 
-Retrieves schedules with optional filtering and pagination.
+Retrieves schedules with optional filtering and pagination. Requires user authentication.
 
 #### Query Parameters
 
@@ -197,7 +197,7 @@ GET /api/v1/schedules?trainId=123e4567-e89b-12d3-a456-426614174000&status=schedu
 
 **GET** `/api/v1/schedules/:id`
 
-Retrieves detailed information about a specific schedule including all station schedules and recent updates.
+Retrieves detailed information about a specific schedule including all station schedules and recent updates. Requires user authentication.
 
 #### Path Parameters
 

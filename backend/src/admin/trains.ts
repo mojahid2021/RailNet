@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { createTrainSchema, CreateTrainInput, updateTrainSchema, UpdateTrainInput } from '../schemas/admin'
 import { ResponseHandler } from '../utils/response'
 import { ConflictError, NotFoundError } from '../errors'
-import { authenticateAdmin } from '../middleware/auth'
+import { authenticateAdmin, authenticateUser } from '../middleware/auth'
 
 export async function trainRoutes(app: FastifyInstance) {
   // Create train
@@ -457,6 +457,317 @@ export async function trainRoutes(app: FastifyInstance) {
     } catch (error) {
       if (error instanceof Error && error.message.includes('Record to delete does not exist')) {
         return ResponseHandler.error(reply, 'Train not found', 404)
+      }
+      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+    }
+  })
+
+  // Get trains for purchase ticket (User authentication required)
+  app.get('/search', {
+    preHandler: authenticateUser,
+    schema: {
+      description: 'Get trains available for purchase between two stations on a specific date',
+      tags: ['trains'],
+      security: [{ bearerAuth: [] }],
+      querystring: {
+        type: 'object',
+        required: ['from_station_id', 'to_station_id', 'date'],
+        properties: {
+          from_station_id: { type: 'string' },
+          to_station_id: { type: 'string' },
+          date: { type: 'string', format: 'date' },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                  number: { type: 'string' },
+                  type: { type: 'string' },
+                  scheduleId: { type: 'string' },
+                  departureTime: { type: 'string' },
+                  // arrivalTime: { type: 'string' }, // TODO: Add when arrival time calculation is implemented
+                  compartments: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        name: { type: 'string' },
+                        type: { type: 'string' },
+                        price: { type: 'number' },
+                        totalSeat: { type: 'integer' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            error: { type: 'string' },
+          },
+        },
+        404: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            error: { type: 'string' },
+          },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const { from_station_id, to_station_id, date } = request.query as { from_station_id: string, to_station_id: string, date: string }
+
+      // Parse the date
+      const searchDate = new Date(date)
+      const searchDateString = searchDate.toISOString().split('T')[0]
+
+      // Step 1: Find ALL routes that contain both stations
+      const routesWithBothStations = await (app as any).prisma.trainRouteStation.findMany({
+        where: {
+          currentStationId: {
+            in: [from_station_id, to_station_id]
+          }
+        },
+        select: {
+          trainRouteId: true,
+          currentStationId: true,
+          distanceFromStart: true,
+        },
+      })
+
+      // Group by route to find routes that have both stations
+      const routeMap = new Map<string, Array<{ currentStationId: string; distanceFromStart: number }>>()
+      routesWithBothStations.forEach((routeStation: any) => {
+        if (!routeMap.has(routeStation.trainRouteId)) {
+          routeMap.set(routeStation.trainRouteId, [])
+        }
+        routeMap.get(routeStation.trainRouteId)!.push({
+          currentStationId: routeStation.currentStationId,
+          distanceFromStart: routeStation.distanceFromStart,
+        })
+      })
+
+      // Step 2: Filter routes that have BOTH stations and validate order
+      const validRouteIds: string[] = []
+      for (const [routeId, stations] of routeMap.entries()) {
+        const hasFromStation = stations.find(s => s.currentStationId === from_station_id)
+        const hasToStation = stations.find(s => s.currentStationId === to_station_id)
+
+        // Route must have both stations
+        if (!hasFromStation || !hasToStation) {
+          continue
+        }
+
+        // Step 3: Validate that from station comes before to station
+        if (hasFromStation.distanceFromStart >= hasToStation.distanceFromStart) {
+          continue // Invalid order, skip this route
+        }
+
+        // This route is valid
+        validRouteIds.push(routeId)
+      }
+
+      // If no valid routes found
+      if (validRouteIds.length === 0) {
+        return ResponseHandler.error(reply, 'No valid train routes found between these stations', 400)
+      }
+
+      // Step 4: Get train schedules for the specified date that operate on valid routes
+      const schedules = await (app as any).prisma.trainSchedule.findMany({
+        where: {
+          routeId: {
+            in: validRouteIds
+          },
+          departureDate: {
+            gte: new Date(searchDateString + 'T00:00:00.000Z'),
+            lt: new Date(searchDateString + 'T23:59:59.999Z'),
+          },
+        },
+        include: {
+          train: {
+            include: {
+              compartments: {
+                include: {
+                  compartment: { select: { id: true, name: true, type: true, price: true, totalSeat: true } },
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          departureTime: 'asc',
+        },
+      })
+
+      // Step 5: Format the response to include schedule information
+      const trainsWithSchedules = schedules.map((schedule: any) => ({
+        id: schedule.train.id,
+        name: schedule.train.name,
+        number: schedule.train.number,
+        type: schedule.train.type,
+        scheduleId: schedule.id,
+        departureTime: schedule.departureTime.toISOString(),
+        // arrivalTime: schedule.arrivalTime.toISOString(), // TODO: Calculate based on route duration
+        compartments: schedule.train.compartments.map((tc: any) => tc.compartment),
+      }))
+
+      return ResponseHandler.success(reply, trainsWithSchedules)
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return ResponseHandler.error(reply, error.message, 404)
+      }
+      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+    }
+  })
+
+  // Check compartment seat booking status (User authentication required)
+  app.get('/seat-status/:scheduleId/:compartmentId', {
+    preHandler: authenticateUser,
+    schema: {
+      description: 'Check seat booking status for a compartment on a specific date',
+      tags: ['trains'],
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          scheduleId: { type: 'string' },
+          compartmentId: { type: 'string' },
+        },
+        required: ['scheduleId', 'compartmentId'],
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          date: { type: 'string', format: 'date' },
+        },
+        required: ['date'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'object',
+              properties: {
+                scheduleId: { type: 'string' },
+                compartmentId: { type: 'string' },
+                date: { type: 'string' },
+                totalSeats: { type: 'integer' },
+                bookedSeats: { type: 'integer' },
+                availableSeats: { type: 'integer' },
+                seats: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      seatNumber: { type: 'string' },
+                      status: { type: 'string', enum: ['available', 'booked'] },
+                      bookingId: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const { scheduleId, compartmentId } = request.params as { scheduleId: string, compartmentId: string }
+      const { date } = request.query as { date: string }
+
+      // Validate schedule exists and matches the date
+      const schedule = await (app as any).prisma.trainSchedule.findUnique({
+        where: { id: scheduleId },
+        include: {
+          train: {
+            include: {
+              compartments: {
+                where: { compartmentId },
+                include: { compartment: true }
+              }
+            }
+          }
+        }
+      })
+
+      if (!schedule) {
+        throw new NotFoundError('Train schedule not found')
+      }
+
+      // Check if the schedule date matches
+      const scheduleDate = schedule.departureDate.toISOString().split('T')[0]
+      if (scheduleDate !== date) {
+        throw new NotFoundError('No schedule found for the specified date')
+      }
+
+      // Check if compartment exists on this train
+      if (schedule.train.compartments.length === 0) {
+        throw new NotFoundError('Compartment not found on this train')
+      }
+
+      const compartment = schedule.train.compartments[0].compartment
+      const totalSeats = compartment.totalSeat
+
+      // Get all bookings for this schedule and compartment
+      const bookings: Array<{ seatNumber: string; id: string }> = await (app as any).prisma.booking.findMany({
+        where: {
+          scheduleId,
+          compartmentId,
+        },
+        select: {
+          seatNumber: true,
+          id: true,
+        },
+      })
+
+      // Create seat status array
+      const bookedSeats = new Set(bookings.map(b => b.seatNumber))
+      const seats = []
+
+      // Assuming seats are numbered 1 to totalSeats (this could be more sophisticated)
+      for (let i = 1; i <= totalSeats; i++) {
+        const seatNumber = i.toString()
+        const isBooked = bookedSeats.has(seatNumber)
+        seats.push({
+          seatNumber,
+          status: isBooked ? 'booked' : 'available',
+          bookingId: isBooked ? bookings.find(b => b.seatNumber === seatNumber)?.id : null,
+        })
+      }
+
+      const response = {
+        scheduleId,
+        compartmentId,
+        date,
+        totalSeats,
+        bookedSeats: bookings.length,
+        availableSeats: totalSeats - bookings.length,
+        seats,
+      }
+
+      return ResponseHandler.success(reply, response)
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return ResponseHandler.error(reply, error.message, 404)
       }
       return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
     }
