@@ -1,5 +1,6 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
-import { ResponseHandler } from './response'
+import { FastifyRequest } from 'fastify'
+import { logger } from '../../core/logger/logger.service'
+import '../../common/types/fastify'
 
 /**
  * Admin Security Utilities
@@ -11,7 +12,7 @@ export class AdminSecurity {
    * This is called after authenticateAdmin middleware
    */
   static validateAdminAccess(request: FastifyRequest, operation: string) {
-    const admin = (request as any).admin
+    const admin = request.admin
 
     if (!admin) {
       throw new Error('Admin authentication required')
@@ -22,7 +23,12 @@ export class AdminSecurity {
     }
 
     // Log admin operation for audit trail
-    console.log(`[ADMIN SECURITY] ${admin.id || 'unknown'} performing: ${operation} at ${new Date().toISOString()}`)
+    logger.info(`[ADMIN_SECURITY] ${admin.id || 'unknown'} performing: ${operation}`, {
+      type: 'ADMIN_SECURITY',
+      adminId: admin.id || 'unknown',
+      operation,
+      timestamp: new Date().toISOString()
+    })
 
     return {
       adminId: admin.id,
@@ -35,16 +41,16 @@ export class AdminSecurity {
   /**
    * Create audit log entry for admin actions
    */
-  static logAdminAction(adminId: string, action: string, details?: any) {
+  static logAdminAction(adminId: string, action: string, details?: any, request?: FastifyRequest) {
     const logEntry = {
       adminId,
       action,
       details: details || {},
       timestamp: new Date().toISOString(),
-      ip: 'system', // Could be enhanced to capture actual IP
+      ip: request?.ip || request?.headers['x-forwarded-for'] || 'system',
     }
 
-    console.log(`[ADMIN AUDIT] ${JSON.stringify(logEntry)}`)
+    logger.info(`[ADMIN_AUDIT] ${action} by ${adminId}`, logEntry)
 
     // In production, this could be sent to a logging service
     // or stored in a separate audit table

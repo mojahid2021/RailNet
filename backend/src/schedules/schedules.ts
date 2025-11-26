@@ -1,9 +1,9 @@
 import { FastifyInstance } from 'fastify'
 import { createScheduleSchema, CreateScheduleInput, scheduleQuerySchema, ScheduleQueryInput } from '../schemas/schedules'
-import { ResponseHandler } from '../utils/response'
-import { ConflictError, NotFoundError } from '../errors'
-import { authenticateAdmin, authenticateUser } from '../middleware/auth'
-import { AdminSecurity } from '../utils/adminSecurity'
+import { ResponseHandler } from '../shared/utils/response.handler'
+import { ConflictError, NotFoundError } from '../shared/errors'
+import { authenticateAdmin, authenticateUser } from '../shared/middleware/auth.middleware'
+import { AdminSecurity } from '../shared/utils/admin-security.util'
 import { ScheduleService } from './services/scheduleService'
 
 /**

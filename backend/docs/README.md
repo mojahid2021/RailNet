@@ -9,7 +9,7 @@ This documentation is organized into three main sections:
 ### 🔌 API Documentation (`/api`)
 Detailed documentation for all API endpoints, including request/response schemas, authentication requirements, and examples.
 
-- [Authentication API](api/authentication.md) - User registration, login, ticket booking, and profile management
+- [Authentication API](api/admin-auth.md) - User registration, login, ticket booking, and profile management
 - [Station Management API](api/stations.md) - CRUD operations for railway stations
 - [Train Routes API](api/train-routes.md) - Manage train routes and route stations
 - [Compartment API](api/compartments.md) - Manage train compartments and seat types
@@ -145,8 +145,8 @@ All API responses follow a consistent format:
 - [System Workflow](../../WORKFLOW.md)
 - [Dashboard Documentation](../../dashboard/README.md)
 - [API Documentation Index](api/README.md)
-- [User Authentication API](api/user-auth.md)
-- [Admin Authentication API](api/authentication.md)
+- [User Authentication API](api/auth.md)
+- [Admin Authentication API](api/admin-auth.md)
 - [Train Management API](api/trains.md)
 - [Station Management API](api/stations.md)
 - [Train Routes API](api/train-routes.md)

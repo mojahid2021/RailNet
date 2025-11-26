@@ -1,10 +1,10 @@
 import { FastifyInstance } from 'fastify'
 import bcrypt from 'bcrypt'
 import { registerAdminSchema, RegisterAdminInput, loginAdminSchema, LoginAdminInput } from '../schemas/admin'
-import { ResponseHandler } from '../utils/response'
-import { ConflictError, NotFoundError } from '../errors'
-import { JWTUtils } from '../utils/jwt'
-import { authenticateAdmin } from '../middleware/auth'
+import { ResponseHandler } from '../shared/utils/response.handler'
+import { ConflictError, NotFoundError } from '../shared/errors'
+import { JWTUtil } from '../shared/utils/jwt.util'
+import { authenticateAdmin } from '../shared/middleware/auth.middleware'
 
 export async function adminRoutes(app: FastifyInstance) {
   app.post('/register', {
@@ -153,7 +153,7 @@ export async function adminRoutes(app: FastifyInstance) {
         throw new NotFoundError('Invalid credentials')
       }
 
-      const token = JWTUtils.generateToken({
+      const token = JWTUtil.generateToken({
         id: admin.id,
         email: admin.email,
         type: 'admin',

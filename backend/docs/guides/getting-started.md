@@ -375,7 +375,7 @@ npm run db:push
 After successfully setting up the backend:
 
 1. **Read the API Documentation**
-   - [Authentication API](../api/authentication.md)
+   - [Authentication API](../api/admin-auth.md)
    - [Station Management API](../api/stations.md)
    - [Train Management API](../api/trains.md)
 

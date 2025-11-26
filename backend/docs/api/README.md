@@ -23,8 +23,8 @@ http://localhost:3000/api/v1
 
 #### User Authentication (`/auth`)
 
-- [User Registration & Login](user-auth.md) - User account management and ticket booking
-- [Admin Authentication](authentication.md) - Admin account management
+- [User Registration & Login](auth.md) - User account management and ticket booking
+- [Admin Authentication](admin-auth.md) - Admin account management
 
 ### 🚆 Train Management (`/trains`)
 

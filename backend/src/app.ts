@@ -6,9 +6,9 @@ import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
 import { PrismaClient } from '@prisma/client'
 import 'dotenv/config'
-import config from './config'
-import { AppError } from './errors'
-import { authenticateUser } from './middleware/auth'
+import config from './core/config'
+import { AppError } from './shared/errors'
+import { authenticateUser } from './shared/middleware/auth.middleware'
 
 const prisma = new PrismaClient()
 

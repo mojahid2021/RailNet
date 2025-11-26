@@ -495,7 +495,7 @@ describe('GET /admin/profile', () => {
 - Monitor suspicious activities
 
 ## Related Documentation
-- [Authentication API](../api/authentication.md)
+- [Authentication API](../api/admin-auth.md)
 - [System Architecture](system-architecture.md)
 - [Getting Started Guide](../guides/getting-started.md)
 - [API Testing Guide](../guides/api-testing-guide.md)
