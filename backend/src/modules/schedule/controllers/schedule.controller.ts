@@ -1,10 +1,15 @@
+/**
+ * Schedule Controller
+ * 
+ * Handles schedule management endpoints
+ */
+
 import { FastifyInstance } from 'fastify'
-import { createScheduleSchema, CreateScheduleInput, scheduleQuerySchema, ScheduleQueryInput } from '../schemas/schedules'
-import { ResponseHandler } from '../shared/utils/response.handler'
-import { ConflictError, NotFoundError } from '../shared/errors'
-import { authenticateAdmin, authenticateUser } from '../shared/middleware/auth.middleware'
-import { AdminSecurity } from '../shared/utils/admin-security.util'
-import { ScheduleService } from './services/scheduleService'
+import { scheduleService } from '../services'
+import { CreateScheduleSchema, ScheduleQuerySchema } from '../dtos'
+import { ResponseHandler, ErrorHandlerUtil } from '../../../shared/utils'
+import { AdminSecurity } from '../../../shared/utils/admin-security.util'
+import { authenticateAdmin, authenticateUser } from '../../../shared/middleware'
 
 /**
  * Schedule Management Routes - ADMIN ONLY
@@ -138,26 +143,19 @@ export async function scheduleRoutes(app: FastifyInstance) {
         return ResponseHandler.error(reply, 'Insufficient permissions to create schedules', 403)
       }
 
-      const scheduleData: CreateScheduleInput = createScheduleSchema.parse(request.body)
-
-      const schedule = await ScheduleService.createSchedule(scheduleData, adminInfo.adminId)
+      const data = CreateScheduleSchema.parse(request.body)
+      const schedule = await scheduleService.create(data, adminInfo.adminId)
 
       // Log successful operation
       AdminSecurity.logAdminAction(adminInfo.adminId, 'schedule_created', {
         scheduleId: schedule?.id,
-        trainId: scheduleData.trainId,
-        stationCount: scheduleData.stationSchedules.length,
+        trainId: data.trainId,
+        stationCount: data.stationSchedules.length,
       })
 
       return ResponseHandler.created(reply, schedule, 'Schedule created successfully')
     } catch (error) {
-      if (error instanceof ConflictError) {
-        return ResponseHandler.error(reply, error.message, 409)
-      }
-      if (error instanceof NotFoundError) {
-        return ResponseHandler.error(reply, error.message, 404)
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 
@@ -253,13 +251,11 @@ export async function scheduleRoutes(app: FastifyInstance) {
     },
   }, async (request, reply) => {
     try {
-      const queryParams: ScheduleQueryInput = scheduleQuerySchema.parse(request.query)
-
-      const result = await ScheduleService.getSchedules(queryParams)
-
+      const queryParams = ScheduleQuerySchema.parse(request.query)
+      const result = await scheduleService.findAll(queryParams)
       return ResponseHandler.success(reply, result)
     } catch (error) {
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 
@@ -380,15 +376,10 @@ export async function scheduleRoutes(app: FastifyInstance) {
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string }
-
-      const schedule = await ScheduleService.getScheduleById(id)
-
+      const schedule = await scheduleService.findById(id)
       return ResponseHandler.success(reply, schedule)
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        return ResponseHandler.error(reply, error.message, 404)
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 }

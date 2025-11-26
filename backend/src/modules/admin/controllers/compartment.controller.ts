@@ -1,8 +1,14 @@
+/**
+ * Compartment Controller
+ * 
+ * Handles compartment management endpoints (Admin only)
+ */
+
 import { FastifyInstance } from 'fastify'
-import { createCompartmentSchema, CreateCompartmentInput, updateCompartmentSchema, UpdateCompartmentInput } from '../schemas/admin'
-import { ResponseHandler } from '../shared/utils/response.handler'
-import { ConflictError, NotFoundError } from '../shared/errors'
-import { authenticateAdmin } from '../shared/middleware/auth.middleware'
+import { compartmentService } from '../services'
+import { CreateCompartmentSchema, UpdateCompartmentSchema } from '../dtos'
+import { ResponseHandler, ErrorHandlerUtil } from '../../../shared/utils'
+import { authenticateAdmin } from '../../../shared/middleware'
 
 export async function compartmentRoutes(app: FastifyInstance) {
   // Create compartment
@@ -45,23 +51,11 @@ export async function compartmentRoutes(app: FastifyInstance) {
     },
   }, async (request, reply) => {
     try {
-      const compartmentData: CreateCompartmentInput = createCompartmentSchema.parse(request.body)
-
-      const compartment = await (app as any).prisma.compartment.create({
-        data: compartmentData,
-        select: {
-          id: true,
-          name: true,
-          type: true,
-          price: true,
-          totalSeat: true,
-          createdAt: true,
-        },
-      })
-
+      const data = CreateCompartmentSchema.parse(request.body)
+      const compartment = await compartmentService.create(data)
       return ResponseHandler.created(reply, compartment, 'Compartment created successfully')
     } catch (error) {
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 
@@ -98,13 +92,10 @@ export async function compartmentRoutes(app: FastifyInstance) {
     },
   }, async (request, reply) => {
     try {
-      const compartments = await (app as any).prisma.compartment.findMany({
-        orderBy: { createdAt: 'desc' },
-      })
-
+      const compartments = await compartmentService.findAll()
       return ResponseHandler.success(reply, compartments)
     } catch (error) {
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 
@@ -153,21 +144,10 @@ export async function compartmentRoutes(app: FastifyInstance) {
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string }
-
-      const compartment = await (app as any).prisma.compartment.findUnique({
-        where: { id },
-      })
-
-      if (!compartment) {
-        throw new NotFoundError('Compartment not found')
-      }
-
+      const compartment = await compartmentService.findById(id)
       return ResponseHandler.success(reply, compartment)
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        return ResponseHandler.error(reply, error.message, 404)
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 
@@ -218,27 +198,11 @@ export async function compartmentRoutes(app: FastifyInstance) {
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string }
-      const updateData: UpdateCompartmentInput = updateCompartmentSchema.parse(request.body)
-
-      const compartment = await (app as any).prisma.compartment.update({
-        where: { id },
-        data: updateData,
-        select: {
-          id: true,
-          name: true,
-          type: true,
-          price: true,
-          totalSeat: true,
-          updatedAt: true,
-        },
-      })
-
+      const data = UpdateCompartmentSchema.parse(request.body)
+      const compartment = await compartmentService.update(id, data)
       return ResponseHandler.success(reply, compartment, 'Compartment updated successfully')
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Record to update not found')) {
-        return ResponseHandler.error(reply, 'Compartment not found', 404)
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 
@@ -269,17 +233,10 @@ export async function compartmentRoutes(app: FastifyInstance) {
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string }
-
-      await (app as any).prisma.compartment.delete({
-        where: { id },
-      })
-
+      await compartmentService.delete(id)
       return ResponseHandler.success(reply, null, 'Compartment deleted successfully')
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Record to delete does not exist')) {
-        return ResponseHandler.error(reply, 'Compartment not found', 404)
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 }
