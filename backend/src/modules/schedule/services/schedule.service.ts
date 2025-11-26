@@ -5,6 +5,7 @@
  */
 
 import { prisma } from '../../../core/database/prisma.service'
+import { logger } from '../../../core/logger/logger.service'
 import { ConflictError, NotFoundError } from '../../../shared/errors'
 import { CreateScheduleDto, ScheduleQueryDto } from '../dtos'
 
@@ -17,7 +18,7 @@ export class ScheduleService {
     const { trainId, departureTime, stationSchedules } = input
 
     // Log admin action for audit trail
-    console.log(`Admin ${adminId || 'unknown'} attempting to create schedule for train ${trainId} at ${departureTime}`)
+    logger.info(`Admin ${adminId || 'unknown'} attempting to create schedule for train ${trainId} at ${departureTime}`)
 
     // Validate train exists and has a route
     const train = await prisma.train.findUnique({
@@ -176,7 +177,7 @@ export class ScheduleService {
     })
 
     // Log successful creation
-    console.log(`Admin ${adminId || 'unknown'} successfully created schedule ${schedule?.id} for train ${trainId}`)
+    logger.info(`Admin ${adminId || 'unknown'} successfully created schedule ${schedule?.id} for train ${trainId}`)
 
     return schedule
   }
@@ -184,7 +185,7 @@ export class ScheduleService {
   /**
    * Get schedules with optional filters
    */
-  async findAll(filters: ScheduleQueryDto, userId?: string) {
+  async findAll(filters: ScheduleQueryDto) {
     // Apply defaults and log action
     const appliedFilters = {
       trainId: filters.trainId,
@@ -194,7 +195,7 @@ export class ScheduleService {
       offset: filters.offset || 0,
     }
 
-    console.log(`User/Admin ${userId || 'anonymous'} accessing schedule list with filters:`, appliedFilters)
+    logger.debug(`Accessing schedule list with filters:`, appliedFilters)
 
     const where: Record<string, unknown> = {}
 
@@ -254,9 +255,9 @@ export class ScheduleService {
   /**
    * Get schedule by ID with full details
    */
-  async findById(scheduleId: string, userId?: string) {
+  async findById(scheduleId: string) {
     // Log action
-    console.log(`User/Admin ${userId || 'anonymous'} accessing schedule ${scheduleId}`)
+    logger.debug(`Accessing schedule ${scheduleId}`)
 
     const schedule = await prisma.trainSchedule.findUnique({
       where: { id: scheduleId },
