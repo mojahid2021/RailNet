@@ -682,7 +682,7 @@ curl -v -X POST "$API_URL/admin/login" \
 - Verify data types match schema
 
 ## Related Documentation
-- [Authentication API](../api/authentication.md)
+- [Authentication API](../api/admin-auth.md)
 - [All API Documentation](../api/)
 - [Getting Started Guide](getting-started.md)
 - [Authentication Flow](../workflows/authentication-flow.md)
