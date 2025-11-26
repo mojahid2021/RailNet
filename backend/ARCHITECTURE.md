@@ -86,8 +86,27 @@ backend/src/
 │   │   │   └── index.ts
 │   │   └── index.ts
 │   │
-│   ├── station/                 # Station module (legacy - being refactored)
-│   └── booking/                 # Booking management (future)
+│   ├── station/                 # Station module
+│   │   ├── controllers/         # Route handlers
+│   │   │   └── station.controller.ts
+│   │   ├── services/            # Business logic
+│   │   │   └── station.service.ts
+│   │   ├── dtos/                # Data Transfer Objects
+│   │   │   ├── station.dto.ts
+│   │   │   └── index.ts
+│   │   └── index.ts
+│   │
+│   └── booking/                 # Ticket booking module
+│       ├── controllers/         # Route handlers
+│       │   ├── booking.controller.ts
+│       │   └── index.ts
+│       ├── services/            # Business logic
+│       │   ├── booking.service.ts
+│       │   └── index.ts
+│       ├── dtos/                # Data Transfer Objects
+│       │   ├── booking.dto.ts
+│       │   └── index.ts
+│       └── index.ts
 │
 └── app.ts                       # Application entry point
 ```
@@ -209,7 +228,7 @@ The restructuring follows an incremental approach:
    - ✅ Train-route module (controllers, services, DTOs)
    - ✅ Compartment module (controllers, services, DTOs)
    - ✅ Schedule module (controllers, services, DTOs)
-   - [ ] Booking module
+   - ✅ Booking module (controllers, services, DTOs)
 
 3. **Phase 3**: Advanced features
    - [ ] Repository layer implementation

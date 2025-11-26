@@ -118,10 +118,16 @@ app.register(async (app) => {
     return { status: 'Server is running...' }
   })
 
-  // Auth routes
+  // User auth routes (using new modular structure)
   app.register(async (authApp) => {
-    const { userRoutes } = await import('./user/routes')
-    await userRoutes(authApp)
+    const { userAuthRoutes } = await import('./modules/auth/controllers/user-auth.controller')
+    await userAuthRoutes(authApp)
+  }, { prefix: '/auth' })
+
+  // Booking routes (using new modular structure)
+  app.register(async (bookingApp) => {
+    const { bookingRoutes } = await import('./modules/booking/controllers/booking.controller')
+    await bookingRoutes(bookingApp)
   }, { prefix: '/auth' })
 
   // Admin auth routes (using new modular structure)
