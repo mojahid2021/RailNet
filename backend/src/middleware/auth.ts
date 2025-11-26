@@ -2,13 +2,6 @@ import { FastifyRequest, FastifyReply } from 'fastify'
 import { JWTUtils, JWTPayload } from '../utils/jwt'
 import { ResponseHandler } from '../utils/response'
 
-declare module 'fastify' {
-  interface FastifyRequest {
-    admin?: JWTPayload
-    user?: JWTPayload
-  }
-}
-
 export async function authenticateAdmin(request: FastifyRequest, reply: FastifyReply) {
   try {
     const authHeader = request.headers.authorization
