@@ -8,6 +8,21 @@ import { prisma } from '../../../core/database/prisma.service';
 import { ConflictError, NotFoundError } from '../../../shared/errors';
 import { BookTicketDto } from '../dtos';
 
+interface TrainCompartment {
+  compartmentId: string;
+  compartment: {
+    totalSeat: number;
+    price: number;
+    name: string;
+    type: string;
+  };
+}
+
+interface RouteStation {
+  currentStationId: string;
+  distanceFromStart: number;
+}
+
 interface BookingResponse {
   id: string;
   scheduleId: string;
@@ -70,7 +85,7 @@ export class BookingService {
 
     // Validate compartment exists on this train
     const trainCompartment = schedule.train.compartments.find(
-      (tc: { compartmentId: string }) => tc.compartmentId === data.compartmentId
+      (tc: TrainCompartment) => tc.compartmentId === data.compartmentId
     );
 
     if (!trainCompartment) {
@@ -87,10 +102,10 @@ export class BookingService {
 
     // Validate from and to stations are on the route and in correct order
     const fromStationRoute = schedule.route.stations.find(
-      (station: { currentStationId: string }) => station.currentStationId === data.fromStationId
+      (station: RouteStation) => station.currentStationId === data.fromStationId
     );
     const toStationRoute = schedule.route.stations.find(
-      (station: { currentStationId: string }) => station.currentStationId === data.toStationId
+      (station: RouteStation) => station.currentStationId === data.toStationId
     );
 
     if (!fromStationRoute || !toStationRoute) {
