@@ -20,9 +20,9 @@ import { authenticateUser } from './shared/middleware/auth.middleware';
 
 // Import route modules
 import { adminAuthRoutes, userAuthRoutes } from './modules/auth';
+import { stationRoutes } from './modules/station';
 
 // Import legacy routes (to be refactored)
-import { stationRoutes } from './admin/stations';
 import { trainRoutes as trainRouteRoutes } from './admin/trainRoutes';
 import { compartmentRoutes } from './admin/compartments';
 import { trainRoutes } from './admin/trains';
