@@ -124,39 +124,39 @@ app.register(async (app) => {
     await userRoutes(authApp)
   }, { prefix: '/auth' })
 
-  // Admin routes
+  // Admin auth routes (using new modular structure)
   app.register(async (adminApp) => {
-    const { adminRoutes } = await import('./admin/routes')
-    await adminRoutes(adminApp)
+    const { adminAuthRoutes } = await import('./modules/auth/controllers/admin-auth.controller')
+    await adminAuthRoutes(adminApp)
   }, { prefix: '/admin' })
 
-  // Station routes
+  // Station routes (using new modular structure)
   app.register(async (stationApp) => {
-    const { stationRoutes } = await import('./admin/stations')
+    const { stationRoutes } = await import('./modules/admin/controllers/station.controller')
     await stationRoutes(stationApp)
   }, { prefix: '/stations' })
 
-  // Train route routes
+  // Train route routes (using new modular structure)
   app.register(async (trainRouteApp) => {
-    const { trainRoutes } = await import('./admin/trainRoutes')
-    await trainRoutes(trainRouteApp)
+    const { trainRouteRoutes } = await import('./modules/admin/controllers/train-route.controller')
+    await trainRouteRoutes(trainRouteApp)
   }, { prefix: '/train-routes' })
 
-  // Compartment routes
+  // Compartment routes (using new modular structure)
   app.register(async (compartmentApp) => {
-    const { compartmentRoutes } = await import('./admin/compartments')
+    const { compartmentRoutes } = await import('./modules/admin/controllers/compartment.controller')
     await compartmentRoutes(compartmentApp)
   }, { prefix: '/compartments' })
 
-  // Train routes
+  // Train routes (using new modular structure)
   app.register(async (trainApp) => {
-    const { trainRoutes } = await import('./admin/trains')
+    const { trainRoutes } = await import('./modules/admin/controllers/train.controller')
     await trainRoutes(trainApp)
   }, { prefix: '/trains' })
 
-  // Schedule routes
+  // Schedule routes (using new modular structure)
   app.register(async (scheduleApp) => {
-    const { scheduleRoutes } = await import('./schedules/schedules')
+    const { scheduleRoutes } = await import('./modules/schedule/controllers/schedule.controller')
     await scheduleRoutes(scheduleApp)
   }, { prefix: '/schedules' })
 

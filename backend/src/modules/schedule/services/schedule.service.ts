@@ -1,15 +1,19 @@
-import { PrismaClient } from '@prisma/client'
-import { CreateScheduleInput, StationScheduleInput } from '../../schemas/schedules'
-import { ConflictError, NotFoundError } from '../../shared/errors'
+/**
+ * Schedule Service
+ * 
+ * Business logic for schedule operations
+ */
 
-const prisma = new PrismaClient()
+import { prisma } from '../../../core/database/prisma.service'
+import { ConflictError, NotFoundError } from '../../../shared/errors'
+import { CreateScheduleDto, ScheduleQueryDto } from '../dtos'
 
 export class ScheduleService {
   /**
    * Create a new train schedule with station-by-station timing
    * ADMIN ONLY: This operation requires admin privileges
    */
-  static async createSchedule(input: CreateScheduleInput, adminId?: string) {
+  async create(input: CreateScheduleDto, adminId?: string) {
     const { trainId, departureTime, stationSchedules } = input
 
     // Log admin action for audit trail
@@ -77,7 +81,7 @@ export class ScheduleService {
     const stationSchedulesWithCalculations = stationSchedules.map((schedule, index) => {
       const routeStation = routeStations[index]
       const arrivalTime = new Date(schedule.estimatedArrival)
-      const departureTime = new Date(schedule.estimatedDeparture)
+      const departureTimeLocal = new Date(schedule.estimatedDeparture)
 
       // Calculate duration from previous station
       let durationFromPrevious = 0
@@ -87,14 +91,14 @@ export class ScheduleService {
       }
 
       // Calculate waiting time at station
-      const waitingTime = Math.round((departureTime.getTime() - arrivalTime.getTime()) / (1000 * 60)) // minutes
+      const waitingTime = Math.round((departureTimeLocal.getTime() - arrivalTime.getTime()) / (1000 * 60)) // minutes
 
       return {
         stationId: schedule.stationId,
         routeStationId: routeStation.id,
         sequenceOrder: index + 1,
         estimatedArrival: arrivalTime,
-        estimatedDeparture: departureTime,
+        estimatedDeparture: departureTimeLocal,
         durationFromPrevious,
         waitingTime,
         platformNumber: schedule.platformNumber,
@@ -179,16 +183,9 @@ export class ScheduleService {
 
   /**
    * Get schedules with optional filters
-   * ADMIN ONLY: This operation requires admin privileges
    */
-  static async getSchedules(filters: {
-    trainId?: string
-    departureTime?: string
-    status?: string
-    limit?: number
-    offset?: number
-  }, adminId?: string) {
-    // Apply defaults and log admin action
+  async findAll(filters: ScheduleQueryDto, userId?: string) {
+    // Apply defaults and log action
     const appliedFilters = {
       trainId: filters.trainId,
       departureTime: filters.departureTime,
@@ -197,9 +194,9 @@ export class ScheduleService {
       offset: filters.offset || 0,
     }
 
-    console.log(`User/Admin ${adminId || 'anonymous'} accessing schedule list with filters:`, appliedFilters)
+    console.log(`User/Admin ${userId || 'anonymous'} accessing schedule list with filters:`, appliedFilters)
 
-    const where: any = {}
+    const where: Record<string, unknown> = {}
 
     if (filters.trainId) {
       where.trainId = filters.trainId
@@ -256,11 +253,10 @@ export class ScheduleService {
 
   /**
    * Get schedule by ID with full details
-   * ADMIN ONLY: This operation requires admin privileges
    */
-  static async getScheduleById(scheduleId: string, adminId?: string) {
-    // Log admin action
-    console.log(`User/Admin ${adminId || 'anonymous'} accessing schedule ${scheduleId}`)
+  async findById(scheduleId: string, userId?: string) {
+    // Log action
+    console.log(`User/Admin ${userId || 'anonymous'} accessing schedule ${scheduleId}`)
 
     const schedule = await prisma.trainSchedule.findUnique({
       where: { id: scheduleId },
@@ -308,3 +304,5 @@ export class ScheduleService {
     return schedule
   }
 }
+
+export const scheduleService = new ScheduleService()

@@ -1,16 +1,22 @@
-import { FastifyInstance } from 'fastify'
-import { createTrainRouteSchema, CreateTrainRouteInput, updateTrainRouteSchema, UpdateTrainRouteInput } from '../schemas/admin'
-import { ResponseHandler } from '../shared/utils/response.handler'
-import { ConflictError, NotFoundError } from '../shared/errors'
-import { authenticateAdmin } from '../shared/middleware/auth.middleware'
+/**
+ * Train Route Controller
+ * 
+ * Handles train route management endpoints (Admin only)
+ */
 
-export async function trainRoutes(app: FastifyInstance) {
-  // Create train
+import { FastifyInstance } from 'fastify'
+import { trainRouteService } from '../services'
+import { CreateTrainRouteSchema, UpdateTrainRouteSchema } from '../dtos'
+import { ResponseHandler, ErrorHandlerUtil } from '../../../shared/utils'
+import { authenticateAdmin } from '../../../shared/middleware'
+
+export async function trainRouteRoutes(app: FastifyInstance) {
+  // Create train route
   app.post('/', {
     preHandler: authenticateAdmin,
     schema: {
-      description: 'Create a new train',
-      tags: ['trains'],
+      description: 'Create a new train route',
+      tags: ['train-routes'],
       security: [{ bearerAuth: [] }],
       body: {
         type: 'object',
@@ -90,71 +96,11 @@ export async function trainRoutes(app: FastifyInstance) {
     },
   }, async (request, reply) => {
     try {
-      const routeData: CreateTrainRouteInput = createTrainRouteSchema.parse(request.body)
-
-      // Check if start and end stations exist
-      const startStation = await (app as any).prisma.station.findUnique({
-        where: { id: routeData.startStationId },
-        select: { id: true, name: true },
-      })
-      if (!startStation) {
-        throw new NotFoundError('Start station not found')
-      }
-
-      const endStation = await (app as any).prisma.station.findUnique({
-        where: { id: routeData.endStationId },
-        select: { id: true, name: true },
-      })
-      if (!endStation) {
-        throw new NotFoundError('End station not found')
-      }
-
-      // Check if all stations in the route exist
-      const stationIds = routeData.stations.map(s => s.currentStationId)
-      const existingStations = await (app as any).prisma.station.findMany({
-        where: { id: { in: stationIds } },
-        select: { id: true, name: true },
-      })
-      if (existingStations.length !== stationIds.length) {
-        throw new NotFoundError('One or more stations not found')
-      }
-
-      const stationMap = new Map(existingStations.map((s: { id: string; name: string }) => [s.id, s.name]))
-
-      const route = await (app as any).prisma.trainRoute.create({
-        data: {
-          name: routeData.name,
-          totalDistance: routeData.totalDistance,
-          startStationId: routeData.startStationId,
-          endStationId: routeData.endStationId,
-          stations: {
-            create: routeData.stations.map(station => ({
-              currentStationId: station.currentStationId,
-              beforeStationId: station.beforeStationId,
-              nextStationId: station.nextStationId,
-              distance: station.distance,
-              distanceFromStart: station.distanceFromStart,
-            })),
-          },
-        },
-        include: {
-          startStation: { select: { id: true, name: true } },
-          endStation: { select: { id: true, name: true } },
-          stations: {
-            include: {
-              currentStation: { select: { id: true, name: true } },
-            },
-            orderBy: { distanceFromStart: 'asc' },
-          },
-        },
-      })
-
+      const data = CreateTrainRouteSchema.parse(request.body)
+      const route = await trainRouteService.create(data)
       return ResponseHandler.created(reply, route, 'Train route created successfully')
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        return ResponseHandler.error(reply, error.message, 404)
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 
@@ -203,17 +149,10 @@ export async function trainRoutes(app: FastifyInstance) {
     },
   }, async (request, reply) => {
     try {
-      const routes = await (app as any).prisma.trainRoute.findMany({
-        include: {
-          startStation: { select: { id: true, name: true } },
-          endStation: { select: { id: true, name: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-      })
-
+      const routes = await trainRouteService.findAll()
       return ResponseHandler.success(reply, routes)
     } catch (error) {
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 
@@ -294,31 +233,10 @@ export async function trainRoutes(app: FastifyInstance) {
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string }
-
-      const route = await (app as any).prisma.trainRoute.findUnique({
-        where: { id },
-        include: {
-          startStation: { select: { id: true, name: true } },
-          endStation: { select: { id: true, name: true } },
-          stations: {
-            include: {
-              currentStation: { select: { id: true, name: true } },
-            },
-            orderBy: { distanceFromStart: 'asc' },
-          },
-        },
-      })
-
-      if (!route) {
-        throw new NotFoundError('Train route not found')
-      }
-
+      const route = await trainRouteService.findById(id)
       return ResponseHandler.success(reply, route)
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        return ResponseHandler.error(reply, error.message, 404)
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 
@@ -414,57 +332,11 @@ export async function trainRoutes(app: FastifyInstance) {
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string }
-      const updateData: UpdateTrainRouteInput = updateTrainRouteSchema.parse(request.body)
-
-      const updatePayload: any = {}
-
-      if (updateData.name !== undefined) updatePayload.name = updateData.name
-      if (updateData.totalDistance !== undefined) updatePayload.totalDistance = updateData.totalDistance
-      if (updateData.startStationId) {
-        const startStation = await (app as any).prisma.station.findUnique({
-          where: { id: updateData.startStationId },
-          select: { id: true },
-        })
-        if (!startStation) {
-          throw new NotFoundError('Start station not found')
-        }
-        updatePayload.startStationId = updateData.startStationId
-      }
-      if (updateData.endStationId) {
-        const endStation = await (app as any).prisma.station.findUnique({
-          where: { id: updateData.endStationId },
-          select: { id: true },
-        })
-        if (!endStation) {
-          throw new NotFoundError('End station not found')
-        }
-        updatePayload.endStationId = updateData.endStationId
-      }
-
-      const route = await (app as any).prisma.trainRoute.update({
-        where: { id },
-        data: updatePayload,
-        include: {
-          startStation: { select: { id: true, name: true } },
-          endStation: { select: { id: true, name: true } },
-          stations: {
-            include: {
-              currentStation: { select: { id: true, name: true } },
-            },
-            orderBy: { distanceFromStart: 'asc' },
-          },
-        },
-      })
-
+      const data = UpdateTrainRouteSchema.parse(request.body)
+      const route = await trainRouteService.update(id, data)
       return ResponseHandler.success(reply, route, 'Train route updated successfully')
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        return ResponseHandler.error(reply, error.message, 404)
-      }
-      if (error instanceof Error && error.message.includes('Record to update not found')) {
-        return ResponseHandler.error(reply, 'Train route not found', 404)
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 
@@ -495,17 +367,10 @@ export async function trainRoutes(app: FastifyInstance) {
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string }
-
-      await (app as any).prisma.trainRoute.delete({
-        where: { id },
-      })
-
+      await trainRouteService.delete(id)
       return ResponseHandler.success(reply, null, 'Train route deleted successfully')
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Record to delete does not exist')) {
-        return ResponseHandler.error(reply, 'Train route not found', 404)
-      }
-      return ResponseHandler.error(reply, error instanceof Error ? error.message : 'Internal server error', 500)
+      return ErrorHandlerUtil.handle(reply, error)
     }
   })
 }

@@ -53,15 +53,43 @@ backend/src/
 │   │   ├── repositories/        # Data access (future)
 │   │   └── index.ts
 │   │
-│   ├── station/                 # Station management (future)
-│   ├── train/                   # Train management (future)
-│   ├── train-route/             # Train route management (future)
-│   ├── compartment/             # Compartment management (future)
-│   ├── schedule/                # Schedule management (future)
+│   ├── admin/                   # Admin management module
+│   │   ├── controllers/         # Route handlers
+│   │   │   ├── station.controller.ts
+│   │   │   ├── compartment.controller.ts
+│   │   │   ├── train.controller.ts
+│   │   │   ├── train-route.controller.ts
+│   │   │   └── index.ts
+│   │   ├── services/            # Business logic
+│   │   │   ├── station.service.ts
+│   │   │   ├── compartment.service.ts
+│   │   │   ├── train.service.ts
+│   │   │   ├── train-route.service.ts
+│   │   │   └── index.ts
+│   │   ├── dtos/                # Data Transfer Objects
+│   │   │   ├── station.dto.ts
+│   │   │   ├── compartment.dto.ts
+│   │   │   ├── train.dto.ts
+│   │   │   ├── train-route.dto.ts
+│   │   │   └── index.ts
+│   │   └── index.ts
+│   │
+│   ├── schedule/                # Schedule management module
+│   │   ├── controllers/         # Route handlers
+│   │   │   ├── schedule.controller.ts
+│   │   │   └── index.ts
+│   │   ├── services/            # Business logic
+│   │   │   ├── schedule.service.ts
+│   │   │   └── index.ts
+│   │   ├── dtos/                # Data Transfer Objects
+│   │   │   ├── schedule.dto.ts
+│   │   │   └── index.ts
+│   │   └── index.ts
+│   │
+│   ├── station/                 # Station module (legacy - being refactored)
 │   └── booking/                 # Booking management (future)
 │
-├── app.ts                       # Original application entry (legacy)
-└── app.new.ts                   # New structured application entry
+└── app.ts                       # Application entry point
 ```
 
 ## Architecture Layers
@@ -169,18 +197,18 @@ module-name/
 
 The restructuring follows an incremental approach:
 
-1. **Phase 1 (Current)**: Core infrastructure
+1. **Phase 1 (Completed)**: Core infrastructure
    - ✅ Core layer (config, database, logger)
    - ✅ Common layer (types, constants, interfaces)
    - ✅ Shared layer (errors, middleware, utils)
    - ✅ Auth module (complete example)
 
-2. **Phase 2**: Module migration
-   - [ ] Station module
-   - [ ] Train module
-   - [ ] Train-route module
-   - [ ] Compartment module
-   - [ ] Schedule module
+2. **Phase 2 (Completed)**: Module migration
+   - ✅ Station module (controllers, services, DTOs)
+   - ✅ Train module (controllers, services, DTOs)
+   - ✅ Train-route module (controllers, services, DTOs)
+   - ✅ Compartment module (controllers, services, DTOs)
+   - ✅ Schedule module (controllers, services, DTOs)
    - [ ] Booking module
 
 3. **Phase 3**: Advanced features
