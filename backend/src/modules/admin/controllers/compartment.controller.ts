@@ -7,8 +7,7 @@
 import { FastifyInstance } from 'fastify'
 import { compartmentService } from '../services'
 import { CreateCompartmentSchema, UpdateCompartmentSchema } from '../dtos'
-import { ResponseHandler, ErrorHandlerUtil } from '../../../shared/utils'
-import { authenticateAdmin } from '../../../shared/middleware'
+import { ResponseHandler, ErrorHandlerUtil, authenticateAdmin } from '../../../lib'
 
 export async function compartmentRoutes(app: FastifyInstance) {
   // Create compartment

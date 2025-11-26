@@ -4,8 +4,7 @@
  * Business logic for ticket booking operations
  */
 
-import { prisma } from '../../../core/database/prisma.service';
-import { ConflictError, NotFoundError } from '../../../shared/errors';
+import { prisma, ConflictError, NotFoundError } from '../../../lib';
 import { BookTicketDto } from '../dtos';
 
 interface TrainCompartment {

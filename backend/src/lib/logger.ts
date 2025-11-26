@@ -5,8 +5,8 @@
  */
 
 import pino from 'pino';
-import { ILogger } from '../../common/interfaces';
-import config from '../config';
+import { ILogger } from './types';
+import config from './config';
 
 class LoggerService implements ILogger {
   private logger: pino.Logger;

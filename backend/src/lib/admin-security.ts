@@ -1,6 +1,6 @@
 import { FastifyRequest } from 'fastify'
-import { logger } from '../../core/logger/logger.service'
-import '../../common/types/fastify'
+import { logger } from './logger'
+import './types'
 
 /**
  * Admin Security Utilities

@@ -5,8 +5,8 @@
  */
 
 import { FastifyReply } from 'fastify';
-import { NotFoundError, ConflictError, ValidationError, UnauthorizedError, ForbiddenError } from '../errors';
-import { ResponseHandler } from './response.handler';
+import { NotFoundError, ConflictError, ValidationError, UnauthorizedError, ForbiddenError } from './errors';
+import { ResponseHandler } from './response';
 
 export class ErrorHandlerUtil {
   /**

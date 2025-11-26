@@ -5,10 +5,10 @@
  */
 
 import jwt from 'jsonwebtoken';
-import config from '../../core/config';
-import { JWTPayload } from '../../common/types';
-import { AUTH } from '../../common/constants';
-import { UnauthorizedError } from '../errors';
+import config from './config';
+import { JWTPayload } from './types';
+import { AUTH } from './constants';
+import { UnauthorizedError } from './errors';
 
 export class JWTUtil {
   static generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {

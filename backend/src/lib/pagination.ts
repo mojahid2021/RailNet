@@ -4,8 +4,8 @@
  * Helper functions for pagination
  */
 
-import { PAGINATION } from '../../common/constants';
-import { PaginationParams, PaginationMeta } from '../../common/types';
+import { PAGINATION } from './constants';
+import { PaginationParams, PaginationMeta } from './types';
 
 export class PaginationUtil {
   static getParams(query: any): Required<PaginationParams> {

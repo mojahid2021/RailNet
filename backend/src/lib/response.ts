@@ -5,8 +5,8 @@
  */
 
 import { FastifyReply } from 'fastify';
-import { HTTP_STATUS } from '../../common/constants';
-import { ApiResponse, PaginationMeta } from '../../common/types';
+import { HTTP_STATUS } from './constants';
+import { ApiResponse, PaginationMeta } from './types';
 
 export class ResponseHandler {
   static success<T>(

@@ -4,8 +4,7 @@
  * Business logic for compartment operations
  */
 
-import { prisma } from '../../../core/database/prisma.service'
-import { NotFoundError } from '../../../shared/errors'
+import { prisma, NotFoundError } from '../../../lib'
 import { CreateCompartmentDto, UpdateCompartmentDto } from '../dtos'
 
 export class CompartmentService {

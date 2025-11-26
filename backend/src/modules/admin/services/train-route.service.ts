@@ -4,8 +4,7 @@
  * Business logic for train route operations
  */
 
-import { prisma } from '../../../core/database/prisma.service'
-import { NotFoundError } from '../../../shared/errors'
+import { prisma, NotFoundError } from '../../../lib'
 import { CreateTrainRouteDto, UpdateTrainRouteDto } from '../dtos'
 
 export class TrainRouteService {

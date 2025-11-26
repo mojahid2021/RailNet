@@ -7,7 +7,7 @@
 import { FastifyInstance } from 'fastify';
 import { authService } from '../services/auth.service';
 import { RegisterUserSchema, LoginSchema } from '../dtos';
-import { ResponseHandler, ErrorHandlerUtil } from '../../../shared/utils';
+import { ResponseHandler, ErrorHandlerUtil } from '../../../lib';
 
 export async function userAuthRoutes(app: FastifyInstance) {
   app.post('/register', {
