@@ -7,8 +7,7 @@
 import { FastifyInstance } from 'fastify'
 import { trainRouteService } from '../services'
 import { CreateTrainRouteSchema, UpdateTrainRouteSchema } from '../dtos'
-import { ResponseHandler, ErrorHandlerUtil } from '../../../shared/utils'
-import { authenticateAdmin } from '../../../shared/middleware'
+import { ResponseHandler, ErrorHandlerUtil, authenticateAdmin } from '../../../lib'
 
 export async function trainRouteRoutes(app: FastifyInstance) {
   // Create train route

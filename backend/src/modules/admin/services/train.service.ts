@@ -4,8 +4,7 @@
  * Business logic for train operations
  */
 
-import { prisma } from '../../../core/database/prisma.service'
-import { ConflictError, NotFoundError } from '../../../shared/errors'
+import { prisma, ConflictError, NotFoundError } from '../../../lib'
 import { CreateTrainDto, UpdateTrainDto } from '../dtos'
 
 export class TrainService {

@@ -7,8 +7,7 @@
 import { FastifyInstance } from 'fastify';
 import { bookingService } from '../services/booking.service';
 import { BookTicketSchema } from '../dtos';
-import { ResponseHandler, ErrorHandlerUtil } from '../../../shared/utils';
-import { authenticateUser } from '../../../shared/middleware/auth.middleware';
+import { ResponseHandler, ErrorHandlerUtil, authenticateUser } from '../../../lib';
 
 export async function bookingRoutes(app: FastifyInstance) {
   // Book Ticket

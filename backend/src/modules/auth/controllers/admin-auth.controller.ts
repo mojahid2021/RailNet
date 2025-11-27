@@ -7,8 +7,7 @@
 import { FastifyInstance } from 'fastify';
 import { authService } from '../services/auth.service';
 import { RegisterAdminSchema, LoginSchema } from '../dtos';
-import { ResponseHandler, ErrorHandlerUtil } from '../../../shared/utils';
-import { authenticateAdmin } from '../../../shared/middleware';
+import { ResponseHandler, ErrorHandlerUtil, authenticateAdmin } from '../../../lib';
 
 export async function adminAuthRoutes(app: FastifyInstance) {
   app.post('/register', {

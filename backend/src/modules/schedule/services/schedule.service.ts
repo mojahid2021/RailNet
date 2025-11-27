@@ -4,9 +4,7 @@
  * Business logic for schedule operations
  */
 
-import { prisma } from '../../../core/database/prisma.service'
-import { logger } from '../../../core/logger/logger.service'
-import { ConflictError, NotFoundError } from '../../../shared/errors'
+import { prisma, logger, ConflictError, NotFoundError } from '../../../lib'
 import { CreateScheduleDto, ScheduleQueryDto } from '../dtos'
 
 export class ScheduleService {

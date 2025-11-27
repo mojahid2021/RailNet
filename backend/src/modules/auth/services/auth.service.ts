@@ -5,12 +5,8 @@
  */
 
 import bcrypt from 'bcrypt';
-import { prisma } from '../../../core/database/prisma.service';
-import { JWTUtil } from '../../../shared/utils/jwt.util';
-import { ConflictError, NotFoundError } from '../../../shared/errors';
+import { prisma, JWTUtil, ConflictError, NotFoundError, AUTH, USER_ROLES, IAdmin, IUser } from '../../../lib';
 import { RegisterAdminDto, RegisterUserDto, LoginDto } from '../dtos';
-import { AUTH, USER_ROLES } from '../../../common/constants';
-import { IAdmin, IUser } from '../../../common/types';
 
 export class AuthService {
   async registerAdmin(data: RegisterAdminDto): Promise<Omit<IAdmin, 'password'>> {

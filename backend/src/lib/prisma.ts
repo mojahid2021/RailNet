@@ -5,7 +5,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { logger } from '../logger/logger.service';
+import { logger } from './logger';
 
 class PrismaService {
   private static instance: PrismaClient;

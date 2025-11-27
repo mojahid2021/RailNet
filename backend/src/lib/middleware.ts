@@ -5,10 +5,10 @@
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { JWTUtil } from '../utils/jwt.util';
-import { ResponseHandler } from '../utils/response.handler';
-import { ERROR_MESSAGES, USER_ROLES } from '../../common/constants';
-import '../../common/types/fastify';
+import { JWTUtil } from './jwt';
+import { ResponseHandler } from './response';
+import { ERROR_MESSAGES, USER_ROLES } from './constants';
+import './types';
 
 export async function authenticateAdmin(request: FastifyRequest, reply: FastifyReply) {
   try {

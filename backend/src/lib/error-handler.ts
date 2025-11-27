@@ -4,9 +4,9 @@
  * Centralized error handling for controllers
  */
 
-import { FastifyReply } from 'fastify';
-import { NotFoundError, ConflictError, ValidationError, UnauthorizedError, ForbiddenError } from '../errors';
-import { ResponseHandler } from './response.handler';
+import { FastifyReply, FastifyRequest } from 'fastify';
+import { NotFoundError, ConflictError, ValidationError, UnauthorizedError, ForbiddenError } from './errors';
+import { ResponseHandler } from './response';
 
 export class ErrorHandlerUtil {
   /**
@@ -46,10 +46,10 @@ export class ErrorHandlerUtil {
    * @param handler - The async route handler function
    * @returns Wrapped handler with error handling
    */
-  static async wrap(
-    handler: (request: any, reply: any) => Promise<any>
-  ): Promise<(request: any, reply: any) => Promise<any>> {
-    return async (request: any, reply: any) => {
+  static wrap(
+    handler: (request: FastifyRequest, reply: FastifyReply) => Promise<FastifyReply>
+  ): (request: FastifyRequest, reply: FastifyReply) => Promise<FastifyReply> {
+    return async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         return await handler(request, reply);
       } catch (error) {

@@ -7,9 +7,7 @@
 import { FastifyInstance } from 'fastify'
 import { scheduleService } from '../services'
 import { CreateScheduleSchema, ScheduleQuerySchema } from '../dtos'
-import { ResponseHandler, ErrorHandlerUtil } from '../../../shared/utils'
-import { AdminSecurity } from '../../../shared/utils/admin-security.util'
-import { authenticateAdmin, authenticateUser } from '../../../shared/middleware'
+import { ResponseHandler, ErrorHandlerUtil, AdminSecurity, authenticateAdmin, authenticateUser } from '../../../lib'
 
 /**
  * Schedule Management Routes - ADMIN ONLY

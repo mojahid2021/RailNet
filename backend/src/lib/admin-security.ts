@@ -1,6 +1,6 @@
 import { FastifyRequest } from 'fastify'
-import { logger } from '../../core/logger/logger.service'
-import '../../common/types/fastify'
+import { logger } from './logger'
+import './types'
 
 /**
  * Admin Security Utilities
@@ -23,9 +23,9 @@ export class AdminSecurity {
     }
 
     // Log admin operation for audit trail
-    logger.info(`[ADMIN_SECURITY] ${admin.id || 'unknown'} performing: ${operation}`, {
+    logger.info(`[ADMIN_SECURITY] ${admin.id} performing: ${operation}`, {
       type: 'ADMIN_SECURITY',
-      adminId: admin.id || 'unknown',
+      adminId: admin.id,
       operation,
       timestamp: new Date().toISOString()
     })
@@ -41,7 +41,7 @@ export class AdminSecurity {
   /**
    * Create audit log entry for admin actions
    */
-  static logAdminAction(adminId: string, action: string, details?: any, request?: FastifyRequest) {
+  static logAdminAction(adminId: string, action: string, details?: Record<string, unknown>, request?: FastifyRequest) {
     const logEntry = {
       adminId,
       action,

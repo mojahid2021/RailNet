@@ -7,8 +7,7 @@
 import { FastifyInstance } from 'fastify'
 import { stationService } from '../services'
 import { CreateStationSchema, UpdateStationSchema } from '../dtos'
-import { ResponseHandler, ErrorHandlerUtil } from '../../../shared/utils'
-import { authenticateAdmin } from '../../../shared/middleware'
+import { ResponseHandler, ErrorHandlerUtil, authenticateAdmin } from '../../../lib'
 
 export async function stationRoutes(app: FastifyInstance) {
   // Create station

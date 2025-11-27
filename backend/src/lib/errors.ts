@@ -4,7 +4,7 @@
  * Custom error classes for different error scenarios
  */
 
-import { HTTP_STATUS } from '../../common/constants';
+import { HTTP_STATUS } from './constants';
 
 export class AppError extends Error {
   public readonly statusCode: number;

@@ -4,8 +4,7 @@
  * Business logic for station management
  */
 
-import { prisma } from '../../../core/database/prisma.service';
-import { NotFoundError } from '../../../shared/errors';
+import { prisma, NotFoundError } from '../../../lib';
 import { CreateStationDto, UpdateStationDto } from '../dtos';
 
 export class StationService {
