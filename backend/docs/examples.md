@@ -4,7 +4,7 @@ This document provides practical examples of how to use the RailNet API endpoint
 
 ## Setup
 
-First, set your API base URL and get a JWT token:
+First, set your API base URL:
 
 ```bash
 BASE_URL="http://localhost:3000"
@@ -25,14 +25,28 @@ curl -X POST $BASE_URL/register \
   }'
 ```
 
+### Register an admin user
+
+```bash
+curl -X POST $BASE_URL/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "firstName": "Admin",
+    "lastName": "User",
+    "password": "adminpassword123",
+    "role": "admin"
+  }'
+```
+
 ### Login and get JWT token
 
 ```bash
-TOKEN=$(curl -X POST $BASE_URL/login \
+TOKEN=$(curl -s -X POST $BASE_URL/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "user@example.com",
-    "password": "securepassword123"
+    "email": "admin@example.com",
+    "password": "adminpassword123"
   }' | jq -r '.token')
 
 echo "JWT Token: $TOKEN"
@@ -68,70 +82,6 @@ curl -X GET $BASE_URL/stations/1 \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-### Update a station (Admin only)
-
-```bash
-curl -X PUT $BASE_URL/stations/1 \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{
-    "name": "Updated Central Station",
-    "city": "New York",
-    "latitude": 40.7128,
-    "longitude": -74.0060
-  }'
-```
-
-### Delete a station (Admin only)
-
-```bash
-curl -X DELETE $BASE_URL/stations/1 \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-## Train Routes Management
-
-### Create a train route (Admin only)
-
-```bash
-curl -X POST $BASE_URL/train-routes \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{
-    "name": "NYC to Boston Express",
-    "startStationId": 1,
-    "endStationId": 2,
-    "stations": [
-      {
-        "stationId": 1,
-        "distanceFromStart": 0
-      },
-      {
-        "stationId": 3,
-        "distanceFromStart": 50
-      },
-      {
-        "stationId": 2,
-        "distanceFromStart": 100
-      }
-    ]
-  }'
-```
-
-### Get all train routes
-
-```bash
-curl -X GET $BASE_URL/train-routes \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-### Get train route by ID
-
-```bash
-curl -X GET $BASE_URL/train-routes/1 \
-  -H "Authorization: Bearer $TOKEN"
-```
-
 ## Compartments Management
 
 ### Create a compartment (Admin only)
@@ -145,7 +95,7 @@ curl -X POST $BASE_URL/compartments \
     "class": "First",
     "type": "AC",
     "price": 150.00,
-    "seats": 50
+    "totalSeats": 50
   }'
 ```
 
@@ -153,6 +103,54 @@ curl -X POST $BASE_URL/compartments \
 
 ```bash
 curl -X GET $BASE_URL/compartments \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Get compartment by ID
+
+```bash
+curl -X GET $BASE_URL/compartments/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## Train Routes Management
+
+### Create a train route (Admin only)
+
+```bash
+curl -X POST $BASE_URL/train-routes \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "name": "NYC to Boston Express",
+    "stations": [
+      {
+        "stationId": 1,
+        "distance": 0
+      },
+      {
+        "stationId": 3,
+        "distance": 50
+      },
+      {
+        "stationId": 2,
+        "distance": 50
+      }
+    ]
+  }'
+```
+
+### Get all train routes (Admin only)
+
+```bash
+curl -X GET $BASE_URL/train-routes \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Get train route by ID (Admin only)
+
+```bash
+curl -X GET $BASE_URL/train-routes/1 \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -170,10 +168,12 @@ curl -X POST $BASE_URL/trains \
     "trainRouteId": 1,
     "compartments": [
       {
-        "compartmentId": 1
+        "compartmentId": 1,
+        "quantity": 2
       },
       {
-        "compartmentId": 2
+        "compartmentId": 2,
+        "quantity": 3
       }
     ]
   }'
@@ -183,6 +183,13 @@ curl -X POST $BASE_URL/trains \
 
 ```bash
 curl -X GET $BASE_URL/trains \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Get train by ID
+
+```bash
+curl -X GET $BASE_URL/trains/1 \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -236,6 +243,61 @@ curl -X GET "$BASE_URL/train-schedules/search?fromStationId=1&toStationId=2&date
   -H "Authorization: Bearer $TOKEN"
 ```
 
+### Get seat availability for schedule
+
+```bash
+curl -X GET $BASE_URL/train-schedules/1/seats \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Get available seats for journey segment
+
+```bash
+curl -X GET "$BASE_URL/train-schedules/1/available-seats?fromStationId=1&toStationId=2" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## Ticket Booking
+
+### Book a ticket
+
+```bash
+curl -X POST $BASE_URL/tickets \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "trainScheduleId": 1,
+    "fromStationId": 1,
+    "toStationId": 2,
+    "compartmentId": 1,
+    "seatNumber": "1A",
+    "passengerName": "John Doe",
+    "passengerAge": 30,
+    "passengerGender": "Male"
+  }'
+```
+
+### Get user's tickets
+
+```bash
+curl -X GET $BASE_URL/tickets \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Get ticket by ID
+
+```bash
+curl -X GET $BASE_URL/tickets/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Cancel a ticket
+
+```bash
+curl -X PUT $BASE_URL/tickets/1/cancel \
+  -H "Authorization: Bearer $TOKEN"
+```
+
 ## Complete Workflow Example
 
 Here's a complete example of setting up and using the RailNet API:
@@ -246,50 +308,58 @@ Here's a complete example of setting up and using the RailNet API:
 # Set base URL
 BASE_URL="http://localhost:3000"
 
+echo "=== RailNet API Complete Workflow ==="
+
 # 1. Register admin user
-echo "Registering admin user..."
-ADMIN_TOKEN=$(curl -s -X POST $BASE_URL/register \
+echo -e "\n1. Registering admin user..."
+ADMIN_RESPONSE=$(curl -s -X POST $BASE_URL/register \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "admin@example.com",
+    "email": "admin@railnet.com",
     "firstName": "Admin",
     "lastName": "User",
-    "password": "admin123"
-  }' | jq -r '.token')
+    "password": "admin123",
+    "role": "admin"
+  }')
 
-echo "Admin token: $ADMIN_TOKEN"
+ADMIN_TOKEN=$(echo $ADMIN_RESPONSE | jq -r '.token')
+echo "Admin token obtained"
 
 # 2. Create stations
-echo "Creating stations..."
+echo -e "\n2. Creating stations..."
 curl -s -X POST $BASE_URL/stations \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -d '{"name": "New York Central", "city": "New York", "latitude": 40.7128, "longitude": -74.0060}'
+  -d '{"name": "New York Central", "city": "New York", "latitude": 40.7128, "longitude": -74.0060}' | jq '.id'
 
 curl -s -X POST $BASE_URL/stations \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -d '{"name": "Boston South", "city": "Boston", "latitude": 42.3601, "longitude": -71.0589}'
+  -d '{"name": "Boston South", "city": "Boston", "latitude": 42.3601, "longitude": -71.0589}' | jq '.id'
 
 curl -s -X POST $BASE_URL/stations \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -d '{"name": "New Haven", "city": "New Haven", "latitude": 41.3083, "longitude": -72.9279}'
+  -d '{"name": "New Haven Union", "city": "New Haven", "latitude": 41.3083, "longitude": -72.9279}' | jq '.id'
+
+echo "Stations created: 1, 2, 3"
 
 # 3. Create compartments
-echo "Creating compartments..."
+echo -e "\n3. Creating compartments..."
 curl -s -X POST $BASE_URL/compartments \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -d '{"name": "First Class AC", "class": "First", "type": "AC", "price": 150.00, "seats": 50}'
+  -d '{"name": "First Class AC", "class": "First", "type": "AC", "price": 150.00, "totalSeats": 50}' | jq '.id'
 
 curl -s -X POST $BASE_URL/compartments \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -d '{"name": "Second Class Non-AC", "class": "Second", "type": "Non-AC", "price": 75.00, "seats": 100}'
+  -d '{"name": "Second Class Non-AC", "class": "Second", "type": "Non-AC", "price": 75.00, "totalSeats": 100}' | jq '.id'
+
+echo "Compartments created: 1, 2"
 
 # 4. Create train route
-echo "Creating train route..."
+echo -e "\n4. Creating train route..."
 curl -s -X POST $BASE_URL/train-routes \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -300,10 +370,12 @@ curl -s -X POST $BASE_URL/train-routes \
       {"stationId": 3, "distance": 50},
       {"stationId": 2, "distance": 50}
     ]
-  }'
+  }' | jq '.id'
+
+echo "Train route created: 1"
 
 # 5. Create train
-echo "Creating train..."
+echo -e "\n5. Creating train..."
 curl -s -X POST $BASE_URL/trains \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -312,42 +384,100 @@ curl -s -X POST $BASE_URL/trains \
     "number": "NER101",
     "trainRouteId": 1,
     "compartments": [
-      {"compartmentId": 1},
-      {"compartmentId": 2}
+      {"compartmentId": 1, "quantity": 2},
+      {"compartmentId": 2, "quantity": 3}
     ]
-  }'
+  }' | jq '.id'
+
+echo "Train created: 1"
 
 # 6. Create schedule
-echo "Creating train schedule..."
+echo -e "\n6. Creating train schedule..."
 curl -s -X POST $BASE_URL/train-schedules \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -d '{
     "trainId": 1,
-    "date": "2025-11-30",
+    "date": "2025-12-01",
     "time": "08:00"
-  }'
+  }' | jq '.id'
 
-# 7. Search for trains
-echo "Searching for trains..."
-curl -s -X GET "$BASE_URL/train-schedules/search?fromStationId=1&toStationId=2&date=2025-11-30" \
-  -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.'
+echo "Schedule created: 1"
 
-echo "Setup complete! API is ready to use."
+# 7. Register a regular user
+echo -e "\n7. Registering regular user..."
+USER_RESPONSE=$(curl -s -X POST $BASE_URL/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "password": "user123"
+  }')
+
+USER_TOKEN=$(echo $USER_RESPONSE | jq -r '.token')
+echo "User token obtained"
+
+# 8. Search for trains
+echo -e "\n8. Searching for trains from New York to Boston..."
+curl -s -X GET "$BASE_URL/train-schedules/search?fromStationId=1&toStationId=2&date=2025-12-01" \
+  -H "Authorization: Bearer $USER_TOKEN" | jq 'length'
+
+echo "Found trains"
+
+# 9. Check seat availability
+echo -e "\n9. Checking seat availability..."
+curl -s -X GET "$BASE_URL/train-schedules/1/available-seats?fromStationId=1&toStationId=2" \
+  -H "Authorization: Bearer $USER_TOKEN" | jq '.compartments[] | {name: .compartmentName, available: .availableSeats}'
+
+# 10. Book a ticket
+echo -e "\n10. Booking a ticket..."
+TICKET_RESPONSE=$(curl -s -X POST $BASE_URL/tickets \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $USER_TOKEN" \
+  -d '{
+    "trainScheduleId": 1,
+    "fromStationId": 1,
+    "toStationId": 2,
+    "compartmentId": 1,
+    "seatNumber": "1A",
+    "passengerName": "John Doe",
+    "passengerAge": 30,
+    "passengerGender": "Male"
+  }')
+
+TICKET_ID=$(echo $TICKET_RESPONSE | jq '.id')
+echo "Ticket booked with ID: $TICKET_ID"
+
+# 11. View user's tickets
+echo -e "\n11. Viewing user's tickets..."
+curl -s -X GET $BASE_URL/tickets \
+  -H "Authorization: Bearer $USER_TOKEN" | jq 'length'
+
+echo "Tickets found"
+
+# 12. View specific ticket
+echo -e "\n12. Viewing ticket details..."
+curl -s -X GET "$BASE_URL/tickets/$TICKET_ID" \
+  -H "Authorization: Bearer $USER_TOKEN" | jq '{id: .id, train: .trainSchedule.train.name, from: .fromStation.name, to: .toStation.name, seat: .seatNumber, status: .status}'
+
+echo -e "\n=== Setup complete! API is ready to use. ==="
 ```
 
 ## Error Handling
 
 All endpoints return appropriate HTTP status codes and error messages:
 
-- `200` - Success
-- `201` - Created
-- `400` - Bad Request (validation errors)
-- `401` - Unauthorized (missing/invalid token)
-- `403` - Forbidden (insufficient permissions)
-- `404` - Not Found
-- `409` - Conflict (duplicate data)
-- `500` - Internal Server Error
+| Status Code | Description |
+|-------------|-------------|
+| `200` | Success |
+| `201` | Created |
+| `400` | Bad Request (validation errors, invalid data) |
+| `401` | Unauthorized (missing/invalid token) |
+| `403` | Forbidden (insufficient permissions) |
+| `404` | Not Found |
+| `409` | Conflict (duplicate data, seat already booked) |
+| `500` | Internal Server Error |
 
 Error response format:
 ```json
@@ -359,7 +489,9 @@ Error response format:
 ## Notes
 
 - Replace `$TOKEN` with your actual JWT token
-- All admin operations require admin role
+- All admin operations require admin role (set during registration)
 - Dates should be in YYYY-MM-DD format
 - Times should be in HH:MM format (24-hour)
 - The search endpoint validates station order and returns empty array if no valid routes found
+- Seat numbers must be unique per train/date/compartment
+- Tickets can only be cancelled up to 2 hours before departure

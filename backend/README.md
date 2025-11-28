@@ -49,7 +49,7 @@ A comprehensive railway management system API built with Fastify and TypeScript,
 
 ## API Endpoints
 
-All endpoints except `/auth/register` and `/auth/login` require authentication. Include the JWT token in the Authorization header:
+All endpoints except `/register` and `/login` require authentication. Include the JWT token in the Authorization header:
 
 ```bash
 Authorization: Bearer <your-jwt-token>
@@ -60,20 +60,22 @@ Authorization: Bearer <your-jwt-token>
 #### Register User
 
 ```http
-POST /auth/register
+POST /register
 Content-Type: application/json
 
 {
   "email": "user@example.com",
   "password": "password123",
-  "name": "John Doe"
+  "firstName": "John",
+  "lastName": "Doe",
+  "role": "user"
 }
 ```
 
 #### Login
 
 ```http
-POST /auth/login
+POST /login
 Content-Type: application/json
 
 {
@@ -86,13 +88,14 @@ Content-Type: application/json
 
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": 1,
     "email": "user@example.com",
-    "name": "John Doe",
+    "firstName": "John",
+    "lastName": "Doe",
     "role": "user"
-  }
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
@@ -107,9 +110,9 @@ Content-Type: application/json
 
 {
   "name": "Central Station",
-  "code": "CS",
   "city": "New York",
-  "state": "NY"
+  "latitude": 40.7128,
+  "longitude": -74.0060
 }
 ```
 
@@ -117,12 +120,14 @@ Content-Type: application/json
 
 ```http
 GET /stations
+Authorization: Bearer <token>
 ```
 
 #### Get Station by ID
 
 ```http
 GET /stations/{id}
+Authorization: Bearer <token>
 ```
 
 ### Train Routes
@@ -137,23 +142,25 @@ Content-Type: application/json
 {
   "name": "Express Route",
   "stations": [
-    { "stationId": 1, "sequence": 1 },
-    { "stationId": 2, "sequence": 2 },
-    { "stationId": 3, "sequence": 3 }
+    { "stationId": 1, "distance": 0 },
+    { "stationId": 2, "distance": 50 },
+    { "stationId": 3, "distance": 50 }
   ]
 }
 ```
 
-#### Get All Train Routes
+#### Get All Train Routes (Admin Only)
 
 ```http
 GET /train-routes
+Authorization: Bearer <token>
 ```
 
-#### Get Train Route by ID
+#### Get Train Route by ID (Admin Only)
 
 ```http
 GET /train-routes/{id}
+Authorization: Bearer <token>
 ```
 
 ### Compartments
@@ -166,10 +173,11 @@ Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "class": "Economy",
-  "type": "Standard",
-  "capacity": 50,
-  "price": 25.00
+  "name": "First Class AC",
+  "class": "First",
+  "type": "AC",
+  "price": 150.00,
+  "totalSeats": 50
 }
 ```
 
@@ -177,6 +185,14 @@ Content-Type: application/json
 
 ```http
 GET /compartments
+Authorization: Bearer <token>
+```
+
+#### Get Compartment by ID
+
+```http
+GET /compartments/{id}
+Authorization: Bearer <token>
 ```
 
 ### Trains
@@ -190,9 +206,10 @@ Content-Type: application/json
 
 {
   "name": "Express Train 101",
+  "number": "EXP101",
   "trainRouteId": 1,
   "compartments": [
-    { "compartmentId": 1, "quantity": 5 },
+    { "compartmentId": 1, "quantity": 2 },
     { "compartmentId": 2, "quantity": 3 }
   ]
 }
@@ -202,6 +219,14 @@ Content-Type: application/json
 
 ```http
 GET /trains
+Authorization: Bearer <token>
+```
+
+#### Get Train by ID
+
+```http
+GET /trains/{id}
+Authorization: Bearer <token>
 ```
 
 ### Train Schedules
@@ -216,19 +241,45 @@ Content-Type: application/json
 {
   "trainId": 1,
   "date": "2025-12-01",
-  "time": "08:00",
-  "stationTimes": [
-    { "stationId": 1, "arrivalTime": "08:00", "departureTime": "08:05" },
-    { "stationId": 2, "arrivalTime": "10:30", "departureTime": "10:35" },
-    { "stationId": 3, "arrivalTime": "12:00", "departureTime": null }
-  ]
+  "time": "08:00"
 }
+```
+
+**Note:** Station times are automatically calculated based on route distances (1 minute per km + 5 minute stop at each station).
+
+#### Get All Train Schedules
+
+```http
+GET /train-schedules
+Authorization: Bearer <token>
+```
+
+#### Get Train Schedule by ID
+
+```http
+GET /train-schedules/{id}
+Authorization: Bearer <token>
+```
+
+#### Get Schedules by Date
+
+```http
+GET /train-schedules/date/2025-12-01
+Authorization: Bearer <token>
+```
+
+#### Get Schedules by Route
+
+```http
+GET /train-schedules/route/1
+Authorization: Bearer <token>
 ```
 
 #### Search Trains
 
 ```http
 GET /train-schedules/search?fromStationId=1&toStationId=3&date=2025-12-01
+Authorization: Bearer <token>
 ```
 
 #### Get Seat Availability for Schedule
