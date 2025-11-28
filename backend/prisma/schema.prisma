@@ -1,212 +1,23 @@
 generator client {
+
   provider = "prisma-client-js"
+
 }
 
 datasource db {
+
   provider = "postgresql"
+
   url      = env("DATABASE_URL")
+
 }
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  firstName String
-  lastName  String
-  email     String   @unique
-  password  String
-  phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  // Relations
-  bookings Booking[]
-}
+  id    Int     @id @default(autoincrement())
 
-model Admin {
-  id        String   @id @default(uuid()) @db.Uuid
-  firstName String
-  lastName  String
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+  email String  @unique
 
-model Station {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  city      String
-  district  String
-  division  String
-  latitude  Float
-  longitude Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  name  String?
 
-  // Relations for train routes
-  startRoutes TrainRoute[] @relation("StartStation")
-  endRoutes   TrainRoute[] @relation("EndStation")
-  routeStations TrainRouteStation[]
-
-  // Opposite relations for train route stations
-  beforeStations TrainRouteStation[] @relation("BeforeStation")
-  nextStations   TrainRouteStation[] @relation("NextStation")
-
-  // Schedule relations
-  stationSchedules StationSchedule[]
-
-  // Booking relations
-  fromBookings Booking[] @relation("BookingFromStation")
-  toBookings   Booking[] @relation("BookingToStation")
-}
-
-model TrainRoute {
-  id            String   @id @default(uuid()) @db.Uuid
-  name          String
-  totalDistance Float
-  startStationId String  @db.Uuid
-  endStationId   String  @db.Uuid
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  startStation Station @relation("StartStation", fields: [startStationId], references: [id])
-  endStation   Station @relation("EndStation", fields: [endStationId], references: [id])
-  stations     TrainRouteStation[]
-  trains       Train[]
-  schedules    TrainSchedule[]
-}
-
-model TrainRouteStation {
-  id                String  @id @default(uuid()) @db.Uuid
-  trainRouteId      String  @db.Uuid
-  beforeStationId   String? @db.Uuid
-  currentStationId  String  @db.Uuid
-  nextStationId     String? @db.Uuid
-  distance          Float
-  distanceFromStart Float
-
-  trainRoute      TrainRoute @relation(fields: [trainRouteId], references: [id], onDelete: Cascade)
-  currentStation  Station    @relation(fields: [currentStationId], references: [id])
-  beforeStation   Station?   @relation("BeforeStation", fields: [beforeStationId], references: [id])
-  nextStation     Station?   @relation("NextStation", fields: [nextStationId], references: [id])
-
-  // Schedule relations
-  stationSchedules StationSchedule[]
-
-  @@unique([trainRouteId, currentStationId])
-}
-
-model TrainCompartment {
-  id            String @id @default(uuid()) @db.Uuid
-  trainId       String @db.Uuid
-  compartmentId String @db.Uuid
-
-  train       Train      @relation(fields: [trainId], references: [id], onDelete: Cascade)
-  compartment Compartment @relation(fields: [compartmentId], references: [id], onDelete: Cascade)
-
-  @@unique([trainId, compartmentId])
-}
-
-model Compartment {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  type      String
-  price     Float
-  totalSeat Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  trainCompartments TrainCompartment[]
-  bookings          Booking[]
-}
-
-model Train {
-  id            String   @id @default(uuid()) @db.Uuid
-  name          String
-  number        String   @unique
-  type          String
-  trainRouteId  String?  @db.Uuid
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  trainRoute    TrainRoute?     @relation(fields: [trainRouteId], references: [id])
-  compartments  TrainCompartment[]
-  schedules     TrainSchedule[]
-}
-
-model TrainSchedule {
-  id            String   @id @default(uuid()) @db.Uuid
-  trainId       String   @db.Uuid
-  routeId       String   @db.Uuid
-  departureDate DateTime // Travel date
-  departureTime String   // HH:MM format (e.g., "08:30")
-  status        String   @default("scheduled") // scheduled, running, completed, delayed, cancelled
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  train         Train            @relation(fields: [trainId], references: [id], onDelete: Cascade)
-  route         TrainRoute       @relation(fields: [routeId], references: [id])
-  stationSchedules StationSchedule[]
-  bookings      Booking[]
-
-  @@unique([trainId, departureTime])
-}
-
-model StationSchedule {
-  id                String   @id @default(uuid()) @db.Uuid
-  scheduleId        String   @db.Uuid
-  stationId         String   @db.Uuid
-  routeStationId    String   @db.Uuid
-  sequenceOrder     Int
-  estimatedArrival  DateTime
-  estimatedDeparture DateTime
-  actualArrival     DateTime?
-  actualDeparture   DateTime?
-  durationFromPrevious Int    // minutes
-  waitingTime       Int      // minutes
-  status            String   @default("pending") // pending, arrived, departed, skipped, delayed
-  platformNumber    String?
-  remarks           String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  schedule          TrainSchedule   @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  station           Station         @relation(fields: [stationId], references: [id])
-  routeStation      TrainRouteStation @relation(fields: [routeStationId], references: [id])
-  updates           ScheduleUpdate[]
-
-  @@unique([scheduleId, stationId])
-}
-
-model ScheduleUpdate {
-  id                String   @id @default(uuid()) @db.Uuid
-  stationScheduleId String   @db.Uuid
-  previousStatus    String
-  newStatus         String
-  reason            String?
-  updatedAt         DateTime @default(now())
-
-  stationSchedule   StationSchedule @relation(fields: [stationScheduleId], references: [id], onDelete: Cascade)
-}
-
-model Booking {
-  id            String   @id @default(uuid()) @db.Uuid
-  userId        String   @db.Uuid
-  scheduleId    String   @db.Uuid
-  compartmentId String   @db.Uuid
-  seatNumber    String
-  fromStationId String   @db.Uuid
-  toStationId   String   @db.Uuid
-  price         Float
-  status        String   @default("confirmed") // confirmed, cancelled, completed
-  bookingDate   DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  schedule    TrainSchedule @relation(fields: [scheduleId], references: [id])
-  compartment Compartment @relation(fields: [compartmentId], references: [id])
-  fromStation Station     @relation("BookingFromStation", fields: [fromStationId], references: [id])
-  toStation   Station     @relation("BookingToStation", fields: [toStationId], references: [id])
-
-  @@unique([scheduleId, compartmentId, seatNumber])
 }
