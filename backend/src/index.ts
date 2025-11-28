@@ -9,6 +9,7 @@ import stationRoutes from './routes/stations';
 import trainRouteRoutes from './routes/trainRoutes';
 import compartmentRoutes from './routes/compartments';
 import trainRoutes from './routes/trains';
+import trainScheduleRoutes from './routes/trainSchedules';
 
 const start = async () => {
   const app = Fastify({
@@ -104,6 +105,7 @@ const start = async () => {
     app.register(trainRouteRoutes);
     app.register(compartmentRoutes);
     app.register(trainRoutes);
+    app.register(trainScheduleRoutes);
 
     // Root route
     app.get('/', {

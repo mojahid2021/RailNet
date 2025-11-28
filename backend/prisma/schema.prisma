@@ -57,6 +57,8 @@ model Station {
 
   endRoutes   TrainRoute[] @relation("EndStation")
 
+  scheduleStations ScheduleStation[]
+
 }
 
 model TrainRoute {
@@ -76,6 +78,8 @@ model TrainRoute {
   routeStations RouteStation[]
 
   trains       Train[]
+
+  schedules    TrainSchedule[]
 
   createdAt    DateTime      @default(now())
 
@@ -149,6 +153,8 @@ model Train {
 
   compartments TrainCompartment[]
 
+  schedules    TrainSchedule[]
+
   createdAt    DateTime     @default(now())
 
   updatedAt    DateTime     @updatedAt
@@ -170,5 +176,55 @@ model TrainCompartment {
   createdAt     DateTime    @default(now())
 
   updatedAt     DateTime    @updatedAt
+
+}
+
+model TrainSchedule {
+
+  id            Int       @id @default(autoincrement())
+
+  trainId       Int
+
+  trainRouteId  Int
+
+  train         Train     @relation(fields: [trainId], references: [id], onDelete: Cascade)
+
+  trainRoute    TrainRoute @relation(fields: [trainRouteId], references: [id])
+
+  date          DateTime  // Schedule date
+
+  time          String    // Departure time (HH:MM format)
+
+  stationTimes  ScheduleStation[]
+
+  createdAt     DateTime  @default(now())
+
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([trainId, date]) // Prevent duplicate schedules for same train on same date
+
+}
+
+model ScheduleStation {
+
+  id                Int           @id @default(autoincrement())
+
+  trainScheduleId   Int
+
+  trainSchedule     TrainSchedule @relation(fields: [trainScheduleId], references: [id], onDelete: Cascade)
+
+  stationId         Int
+
+  station           Station       @relation(fields: [stationId], references: [id])
+
+  arrivalTime       String?       // Arrival time at this station (HH:MM format)
+
+  departureTime     String?       // Departure time from this station (HH:MM format)
+
+  sequence          Int           // Order of station in the schedule
+
+  createdAt         DateTime      @default(now())
+
+  updatedAt         DateTime      @updatedAt
 
 }
