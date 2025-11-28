@@ -2,13 +2,21 @@
 
 ## Overview
 
-RailNet is a comprehensive train management system API built with Fastify, TypeScript, and Prisma. It provides endpoints for managing stations, train routes, compartments, trains, and schedules.
+RailNet is a comprehensive train management system API built with Fastify, TypeScript, and Prisma. It provides endpoints for managing stations, train routes, compartments, trains, schedules, and ticket booking.
 
 **Base URL:** `http://localhost:3000`
+
+**Interactive Documentation:** `http://localhost:3000/documentation` (Swagger UI)
 
 **Authentication:** JWT Bearer token required for most endpoints
 
 ## Authentication
+
+All endpoints except `/register` and `/login` require authentication. Include the JWT token in the Authorization header:
+
+```
+Authorization: Bearer <your-jwt-token>
+```
 
 ### Register User
 
@@ -20,11 +28,20 @@ Register a new user account.
 ```json
 {
   "email": "user@example.com",
+  "password": "securepassword123",
   "firstName": "John",
   "lastName": "Doe",
-  "password": "securepassword123"
+  "role": "user"
 }
 ```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| email | string | Yes | Valid email address |
+| password | string | Yes | Minimum 6 characters |
+| firstName | string | No | User's first name |
+| lastName | string | No | User's last name |
+| role | string | No | `user` or `admin` (defaults to `user`) |
 
 **Response (200):**
 ```json
@@ -54,6 +71,11 @@ Authenticate user and receive JWT token.
 }
 ```
 
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| email | string | Yes | Registered email address |
+| password | string | Yes | User's password |
+
 **Response (200):**
 ```json
 {
@@ -69,6 +91,8 @@ Authenticate user and receive JWT token.
 ```
 
 ## Stations
+
+Endpoints for managing railway stations.
 
 ### Create Station (Admin Only)
 
@@ -91,6 +115,13 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| name | string | Yes | Station name (must be unique) |
+| city | string | Yes | City where station is located |
+| latitude | number | Yes | Geographic latitude |
+| longitude | number | Yes | Geographic longitude |
+
 **Response (201):**
 ```json
 {
@@ -108,7 +139,7 @@ Authorization: Bearer <jwt_token>
 
 **GET** `/stations`
 
-Retrieve all train stations.
+Retrieve all train stations (ordered by creation date, descending).
 
 **Headers:**
 ```
@@ -154,41 +185,9 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
-### Update Station (Admin Only)
-
-**PUT** `/stations/{id}`
-
-Update station information.
-
-**Headers:**
-```
-Authorization: Bearer <jwt_token>
-```
-
-**Request Body:**
-```json
-{
-  "name": "Updated Central Station",
-  "city": "New York",
-  "latitude": 40.7128,
-  "longitude": -74.0060
-}
-```
-
-### Delete Station (Admin Only)
-
-**DELETE** `/stations/{id}`
-
-Delete a station.
-
-**Headers:**
-```
-Authorization: Bearer <jwt_token>
-```
-
-**Response (204):** No Content
-
 ## Train Routes
+
+Endpoints for managing train routes (Admin only for all operations).
 
 ### Create Train Route (Admin Only)
 
@@ -222,6 +221,15 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| name | string | Yes | Route name (must be unique) |
+| stations | array | Yes | Array of station objects (minimum 2 required) |
+| stations[].stationId | number | Yes | ID of the station |
+| stations[].distance | number | Yes | Distance to next station (0 for first station) |
+
+**Note:** The first and last stations in the array automatically become the start and end stations of the route. The `distanceFromStart` is calculated as a cumulative sum of distances.
+
 **Response (201):**
 ```json
 {
@@ -232,22 +240,41 @@ Authorization: Bearer <jwt_token>
   "startStation": {
     "id": 1,
     "name": "Central Station",
-    "city": "New York"
+    "city": "New York",
+    "latitude": 40.7128,
+    "longitude": -74.0060
   },
   "endStation": {
     "id": 2,
     "name": "South Station",
-    "city": "Boston"
+    "city": "Boston",
+    "latitude": 42.3601,
+    "longitude": -71.0589
   },
   "routeStations": [
     {
       "id": 1,
-      "currentStation": {
-        "id": 1,
-        "name": "Central Station",
-        "city": "New York"
-      },
+      "previousStationId": null,
+      "currentStationId": 1,
+      "nextStationId": 3,
+      "distance": 0,
       "distanceFromStart": 0
+    },
+    {
+      "id": 2,
+      "previousStationId": 1,
+      "currentStationId": 3,
+      "nextStationId": 2,
+      "distance": 50,
+      "distanceFromStart": 50
+    },
+    {
+      "id": 3,
+      "previousStationId": 3,
+      "currentStationId": 2,
+      "nextStationId": null,
+      "distance": null,
+      "distanceFromStart": 100
     }
   ],
   "createdAt": "2025-11-29T10:00:00.000Z",
@@ -255,18 +282,63 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
-### Get All Train Routes
+### Get All Train Routes (Admin Only)
 
 **GET** `/train-routes`
 
-Retrieve all train routes.
+Retrieve all train routes with full station details.
 
 **Headers:**
 ```
 Authorization: Bearer <jwt_token>
 ```
 
-### Get Train Route by ID
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "name": "NYC to Boston Express",
+    "startStationId": 1,
+    "endStationId": 2,
+    "startStation": {
+      "id": 1,
+      "name": "Central Station",
+      "city": "New York",
+      "latitude": 40.7128,
+      "longitude": -74.0060
+    },
+    "endStation": {
+      "id": 2,
+      "name": "South Station",
+      "city": "Boston",
+      "latitude": 42.3601,
+      "longitude": -71.0589
+    },
+    "routeStations": [
+      {
+        "id": 1,
+        "previousStationId": null,
+        "currentStationId": 1,
+        "nextStationId": 3,
+        "distance": 0,
+        "distanceFromStart": 0,
+        "currentStation": {
+          "id": 1,
+          "name": "Central Station",
+          "city": "New York",
+          "latitude": 40.7128,
+          "longitude": -74.0060
+        }
+      }
+    ],
+    "createdAt": "2025-11-29T10:00:00.000Z",
+    "updatedAt": "2025-11-29T10:00:00.000Z"
+  }
+]
+```
+
+### Get Train Route by ID (Admin Only)
 
 **GET** `/train-routes/{id}`
 
@@ -277,29 +349,12 @@ Retrieve a specific train route with all stations.
 Authorization: Bearer <jwt_token>
 ```
 
-### Update Train Route (Admin Only)
-
-**PUT** `/train-routes/{id}`
-
-Update train route information.
-
-**Headers:**
-```
-Authorization: Bearer <jwt_token>
-```
-
-### Delete Train Route (Admin Only)
-
-**DELETE** `/train-routes/{id}`
-
-Delete a train route.
-
-**Headers:**
-```
-Authorization: Bearer <jwt_token>
-```
+**Response (200):**
+Same as Get All Train Routes (single object)
 
 ## Compartments
+
+Endpoints for managing train compartment types.
 
 ### Create Compartment (Admin Only)
 
@@ -319,9 +374,17 @@ Authorization: Bearer <jwt_token>
   "class": "First",
   "type": "AC",
   "price": 150.00,
-  "seats": 50
+  "totalSeats": 50
 }
 ```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| name | string | Yes | Compartment name |
+| class | string | Yes | Compartment class (e.g., "First", "Second", "Third") |
+| type | string | Yes | Compartment type (e.g., "AC", "Non-AC", "Sleeper") |
+| price | number | Yes | Base price per ticket (minimum 0) |
+| totalSeats | number | Yes | Total number of seats (minimum 1) |
 
 **Response (201):**
 ```json
@@ -331,7 +394,7 @@ Authorization: Bearer <jwt_token>
   "class": "First",
   "type": "AC",
   "price": 150.00,
-  "seats": 50,
+  "totalSeats": 50,
   "createdAt": "2025-11-29T10:00:00.000Z",
   "updatedAt": "2025-11-29T10:00:00.000Z"
 }
@@ -348,6 +411,22 @@ Retrieve all compartment types.
 Authorization: Bearer <jwt_token>
 ```
 
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "name": "First Class AC",
+    "class": "First",
+    "type": "AC",
+    "price": 150.00,
+    "totalSeats": 50,
+    "createdAt": "2025-11-29T10:00:00.000Z",
+    "updatedAt": "2025-11-29T10:00:00.000Z"
+  }
+]
+```
+
 ### Get Compartment by ID
 
 **GET** `/compartments/{id}`
@@ -359,29 +438,23 @@ Retrieve a specific compartment type.
 Authorization: Bearer <jwt_token>
 ```
 
-### Update Compartment (Admin Only)
-
-**PUT** `/compartments/{id}`
-
-Update compartment information.
-
-**Headers:**
-```
-Authorization: Bearer <jwt_token>
-```
-
-### Delete Compartment (Admin Only)
-
-**DELETE** `/compartments/{id}`
-
-Delete a compartment type.
-
-**Headers:**
-```
-Authorization: Bearer <jwt_token>
+**Response (200):**
+```json
+{
+  "id": 1,
+  "name": "First Class AC",
+  "class": "First",
+  "type": "AC",
+  "price": 150.00,
+  "totalSeats": 50,
+  "createdAt": "2025-11-29T10:00:00.000Z",
+  "updatedAt": "2025-11-29T10:00:00.000Z"
+}
 ```
 
 ## Trains
+
+Endpoints for creating and managing trains by combining routes and compartments.
 
 ### Create Train (Admin Only)
 
@@ -402,14 +475,25 @@ Authorization: Bearer <jwt_token>
   "trainRouteId": 1,
   "compartments": [
     {
-      "compartmentId": 1
+      "compartmentId": 1,
+      "quantity": 2
     },
     {
-      "compartmentId": 2
+      "compartmentId": 2,
+      "quantity": 3
     }
   ]
 }
 ```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| name | string | Yes | Train name |
+| number | string | Yes | Train number (must be unique) |
+| trainRouteId | number | Yes | ID of the train route |
+| compartments | array | Yes | Array of compartment assignments (minimum 1) |
+| compartments[].compartmentId | number | Yes | ID of the compartment type |
+| compartments[].quantity | number | No | Number of this compartment type (defaults to 1) |
 
 **Response (201):**
 ```json
@@ -421,26 +505,39 @@ Authorization: Bearer <jwt_token>
   "trainRoute": {
     "id": 1,
     "name": "NYC to Boston Express",
+    "startStationId": 1,
+    "endStationId": 2,
     "startStation": {
       "id": 1,
-      "name": "Central Station"
+      "name": "Central Station",
+      "city": "New York",
+      "latitude": 40.7128,
+      "longitude": -74.0060
     },
     "endStation": {
       "id": 2,
-      "name": "South Station"
+      "name": "South Station",
+      "city": "Boston",
+      "latitude": 42.3601,
+      "longitude": -71.0589
     }
   },
   "compartments": [
     {
       "id": 1,
+      "trainId": 1,
       "compartmentId": 1,
+      "quantity": 2,
       "compartment": {
         "id": 1,
         "name": "First Class AC",
         "class": "First",
+        "type": "AC",
         "price": 150.00,
-        "seats": 50
-      }
+        "totalSeats": 50
+      },
+      "createdAt": "2025-11-29T10:00:00.000Z",
+      "updatedAt": "2025-11-29T10:00:00.000Z"
     }
   ],
   "createdAt": "2025-11-29T10:00:00.000Z",
@@ -459,6 +556,49 @@ Retrieve all trains with their routes and compartments.
 Authorization: Bearer <jwt_token>
 ```
 
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "name": "Express Train 101",
+    "number": "EXP101",
+    "trainRouteId": 1,
+    "trainRoute": {
+      "id": 1,
+      "name": "NYC to Boston Express",
+      "startStation": {
+        "id": 1,
+        "name": "Central Station",
+        "city": "New York"
+      },
+      "endStation": {
+        "id": 2,
+        "name": "South Station",
+        "city": "Boston"
+      }
+    },
+    "compartments": [
+      {
+        "id": 1,
+        "compartmentId": 1,
+        "quantity": 2,
+        "compartment": {
+          "id": 1,
+          "name": "First Class AC",
+          "class": "First",
+          "type": "AC",
+          "price": 150.00,
+          "totalSeats": 50
+        }
+      }
+    ],
+    "createdAt": "2025-11-29T10:00:00.000Z",
+    "updatedAt": "2025-11-29T10:00:00.000Z"
+  }
+]
+```
+
 ### Get Train by ID
 
 **GET** `/trains/{id}`
@@ -470,35 +610,18 @@ Retrieve a specific train with full details.
 Authorization: Bearer <jwt_token>
 ```
 
-### Update Train (Admin Only)
-
-**PUT** `/trains/{id}`
-
-Update train information.
-
-**Headers:**
-```
-Authorization: Bearer <jwt_token>
-```
-
-### Delete Train (Admin Only)
-
-**DELETE** `/trains/{id}`
-
-Delete a train.
-
-**Headers:**
-```
-Authorization: Bearer <jwt_token>
-```
+**Response (200):**
+Same structure as Get All Trains (single object)
 
 ## Train Schedules
+
+Endpoints for creating and searching train schedules.
 
 ### Create Train Schedule (Admin Only)
 
 **POST** `/train-schedules`
 
-Create a new train schedule for a specific date and time.
+Create a new train schedule for a specific date and time. Station times are automatically calculated based on route distances (1 minute per km with 5-minute stop at each station).
 
 **Headers:**
 ```
@@ -514,6 +637,12 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| trainId | number | Yes | ID of the train |
+| date | string | Yes | Schedule date (YYYY-MM-DD format) |
+| time | string | Yes | Departure time (HH:MM format, 24-hour) |
+
 **Response (201):**
 ```json
 {
@@ -525,21 +654,39 @@ Authorization: Bearer <jwt_token>
   "train": {
     "id": 1,
     "name": "Express Train 101",
-    "number": "EXP101"
+    "number": "EXP101",
+    "trainRoute": {
+      "id": 1,
+      "name": "NYC to Boston Express",
+      "startStation": { "id": 1, "name": "Central Station", "city": "New York" },
+      "endStation": { "id": 2, "name": "South Station", "city": "Boston" }
+    },
+    "compartments": [
+      {
+        "id": 1,
+        "compartmentId": 1,
+        "compartment": {
+          "id": 1,
+          "name": "First Class AC",
+          "class": "First",
+          "type": "AC",
+          "price": 150.00,
+          "totalSeats": 50
+        }
+      }
+    ]
   },
   "trainRoute": {
     "id": 1,
-    "name": "NYC to Boston Express"
+    "name": "NYC to Boston Express",
+    "startStation": { "id": 1, "name": "Central Station" },
+    "endStation": { "id": 2, "name": "South Station" }
   },
   "stationTimes": [
     {
       "id": 1,
       "stationId": 1,
-      "station": {
-        "id": 1,
-        "name": "Central Station",
-        "city": "New York"
-      },
+      "station": { "id": 1, "name": "Central Station", "city": "New York" },
       "arrivalTime": "2025-11-30T08:00:00.000Z",
       "departureTime": "2025-11-30T08:05:00.000Z",
       "sequence": 1
@@ -547,25 +694,17 @@ Authorization: Bearer <jwt_token>
     {
       "id": 2,
       "stationId": 3,
-      "station": {
-        "id": 3,
-        "name": "Intermediate Station",
-        "city": "New Haven"
-      },
-      "arrivalTime": "2025-11-30T08:50:00.000Z",
-      "departureTime": "2025-11-30T08:55:00.000Z",
+      "station": { "id": 3, "name": "Intermediate Station", "city": "New Haven" },
+      "arrivalTime": "2025-11-30T08:55:00.000Z",
+      "departureTime": "2025-11-30T09:00:00.000Z",
       "sequence": 2
     },
     {
       "id": 3,
       "stationId": 2,
-      "station": {
-        "id": 2,
-        "name": "South Station",
-        "city": "Boston"
-      },
-      "arrivalTime": "2025-11-30T09:40:00.000Z",
-      "departureTime": null,
+      "station": { "id": 2, "name": "South Station", "city": "Boston" },
+      "arrivalTime": "2025-11-30T10:00:00.000Z",
+      "departureTime": "2025-11-30T10:05:00.000Z",
       "sequence": 3
     }
   ],
@@ -607,6 +746,11 @@ Retrieve all train schedules for a specific date.
 Authorization: Bearer <jwt_token>
 ```
 
+**Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| date | string | Date in YYYY-MM-DD format |
+
 **Example:** `GET /train-schedules/date/2025-11-30`
 
 ### Get Schedules by Route
@@ -620,13 +764,18 @@ Retrieve all train schedules for a specific route.
 Authorization: Bearer <jwt_token>
 ```
 
+**Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| routeId | number | Route ID |
+
 **Example:** `GET /train-schedules/route/1`
 
 ### Search Trains Between Stations
 
-**GET** `/train-schedules/search?fromStationId={id}&toStationId={id}&date={date}`
+**GET** `/train-schedules/search`
 
-Search for trains between two stations on a specific date.
+Search for trains between two stations on a specific date. Only returns schedules where the "from" station comes before the "to" station in the route.
 
 **Headers:**
 ```
@@ -634,151 +783,279 @@ Authorization: Bearer <jwt_token>
 ```
 
 **Query Parameters:**
-- `fromStationId`: Departure station ID
-- `toStationId`: Arrival station ID
-- `date`: Date in YYYY-MM-DD format
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| fromStationId | number | Yes | Departure station ID |
+| toStationId | number | Yes | Arrival station ID |
+| date | string | Yes | Date in YYYY-MM-DD format |
 
 **Example:** `GET /train-schedules/search?fromStationId=1&toStationId=2&date=2025-11-30`
 
 **Response (200):**
+Returns an array of train schedules matching the search criteria (same structure as Get All Train Schedules).
+
+### Get Seat Availability for Schedule
+
+**GET** `/train-schedules/{id}/seats`
+
+Get seat availability for a specific train schedule with all compartment and seat details.
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200):**
 ```json
-[
-  {
+{
+  "scheduleId": 1,
+  "trainName": "Express Train 101",
+  "trainNumber": "EXP101",
+  "date": "2025-11-30",
+  "time": "08:00",
+  "compartments": [
+    {
+      "compartmentId": 1,
+      "compartmentName": "First Class AC",
+      "class": "First",
+      "type": "AC",
+      "totalSeats": 50,
+      "availableSeats": 48,
+      "seats": [
+        {
+          "seatId": 1,
+          "seatNumber": "1A",
+          "seatType": "Window",
+          "row": 1,
+          "column": "A",
+          "isAvailable": false,
+          "passengerName": "John Doe",
+          "passengerAge": 30,
+          "passengerGender": "Male"
+        },
+        {
+          "seatId": null,
+          "seatNumber": "Seat-3",
+          "seatType": "Standard",
+          "row": 1,
+          "column": "A",
+          "isAvailable": true,
+          "passengerName": null,
+          "passengerAge": null,
+          "passengerGender": null
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Get Available Seats for Journey Segment
+
+**GET** `/train-schedules/{id}/available-seats`
+
+Get available seats for a specific journey segment within a train schedule. This endpoint checks for overlapping journeys to ensure accurate availability.
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| fromStationId | number | Yes | Departure station ID |
+| toStationId | number | Yes | Arrival station ID |
+
+**Example:** `GET /train-schedules/1/available-seats?fromStationId=1&toStationId=2`
+
+**Response (200):**
+```json
+{
+  "scheduleId": 1,
+  "trainName": "Express Train 101",
+  "trainNumber": "EXP101",
+  "date": "2025-11-30",
+  "time": "08:00",
+  "journeySegment": {
+    "fromStation": "Central Station",
+    "toStation": "South Station"
+  },
+  "compartments": [
+    {
+      "compartmentId": 1,
+      "compartmentName": "First Class AC",
+      "class": "First",
+      "type": "AC",
+      "price": 150.00,
+      "totalSeats": 50,
+      "bookedSeats": 2,
+      "availableSeats": 48
+    }
+  ]
+}
+```
+
+## Tickets
+
+Endpoints for booking and managing train tickets.
+
+### Book Ticket
+
+**POST** `/tickets`
+
+Book a train ticket. Users must provide their own seat number from the available seats.
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Request Body:**
+```json
+{
+  "trainScheduleId": 1,
+  "fromStationId": 1,
+  "toStationId": 2,
+  "compartmentId": 1,
+  "seatNumber": "1A",
+  "passengerName": "John Doe",
+  "passengerAge": 30,
+  "passengerGender": "Male"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| trainScheduleId | number | Yes | ID of the train schedule |
+| fromStationId | number | Yes | Departure station ID |
+| toStationId | number | Yes | Arrival station ID |
+| compartmentId | number | Yes | ID of the compartment type |
+| seatNumber | string | Yes | Seat number (e.g., "1A", "2B") |
+| passengerName | string | Yes | Passenger's full name |
+| passengerAge | number | Yes | Passenger's age (1-120) |
+| passengerGender | string | Yes | One of: "Male", "Female", "Other" |
+
+**Features:**
+- Validates that the journey segment is valid for the route
+- Checks that seat number isn't already booked for this train/date
+- Uses database transactions to prevent race conditions
+- Price is calculated based on compartment pricing
+
+**Response (201):**
+```json
+{
+  "id": 1,
+  "userId": 1,
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "user"
+  },
+  "trainScheduleId": 1,
+  "trainSchedule": {
     "id": 1,
     "trainId": 1,
-    "trainRouteId": 1,
     "date": "2025-11-30T08:00:00.000Z",
     "time": "08:00",
     "train": {
       "id": 1,
       "name": "Express Train 101",
-      "number": "EXP101",
-      "trainRoute": {
-        "id": 1,
-        "name": "NYC to Boston Express",
-        "startStation": {
-          "id": 1,
-          "name": "Central Station",
-          "city": "New York"
-        },
-        "endStation": {
-          "id": 2,
-          "name": "South Station",
-          "city": "Boston"
-        },
-        "routeStations": [
-          {
-            "id": 1,
-            "currentStation": {
-              "id": 1,
-              "name": "Central Station",
-              "city": "New York"
-            },
-            "distanceFromStart": 0
-          },
-          {
-            "id": 2,
-            "currentStation": {
-              "id": 3,
-              "name": "Intermediate Station",
-              "city": "New Haven"
-            },
-            "distanceFromStart": 50
-          },
-          {
-            "id": 3,
-            "currentStation": {
-              "id": 2,
-              "name": "South Station",
-              "city": "Boston"
-            },
-            "distanceFromStart": 100
-          }
-        ]
-      },
-      "compartments": [
-        {
-          "id": 1,
-          "compartmentId": 1,
-          "compartment": {
-            "id": 1,
-            "name": "First Class AC",
-            "class": "First",
-            "type": "AC",
-            "price": 150.00,
-            "seats": 50
-          }
-        }
-      ]
-    },
-    "trainRoute": {
+      "number": "EXP101"
+    }
+  },
+  "fromStationId": 1,
+  "fromStation": {
+    "id": 1,
+    "name": "Central Station",
+    "city": "New York"
+  },
+  "toStationId": 2,
+  "toStation": {
+    "id": 2,
+    "name": "South Station",
+    "city": "Boston"
+  },
+  "seatId": 1,
+  "trainCompartmentId": 1,
+  "seatNumber": "1A",
+  "seat": {
+    "id": 1,
+    "seatNumber": "1A",
+    "seatType": "Standard",
+    "row": 1,
+    "column": "A",
+    "trainCompartment": {
       "id": 1,
-      "name": "NYC to Boston Express",
-      "startStation": {
+      "compartment": {
         "id": 1,
-        "name": "Central Station",
-        "city": "New York"
-      },
-      "endStation": {
-        "id": 2,
-        "name": "South Station",
-        "city": "Boston"
-      },
-      "routeStations": [
-        {
-          "id": 1,
-          "currentStation": {
-            "id": 1,
-            "name": "Central Station",
-            "city": "New York"
-          },
-          "distanceFromStart": 0
-        }
-      ]
-    },
-    "stationTimes": [
-      {
-        "id": 1,
-        "stationId": 1,
-        "station": {
-          "id": 1,
-          "name": "Central Station",
-          "city": "New York"
-        },
-        "arrivalTime": "2025-11-30T08:00:00.000Z",
-        "departureTime": "2025-11-30T08:05:00.000Z",
-        "sequence": 1
-      },
-      {
-        "id": 2,
-        "stationId": 3,
-        "station": {
-          "id": 3,
-          "name": "Intermediate Station",
-          "city": "New Haven"
-        },
-        "arrivalTime": "2025-11-30T08:50:00.000Z",
-        "departureTime": "2025-11-30T08:55:00.000Z",
-        "sequence": 2
-      },
-      {
-        "id": 3,
-        "stationId": 2,
-        "station": {
-          "id": 2,
-          "name": "South Station",
-          "city": "Boston"
-        },
-        "arrivalTime": "2025-11-30T09:40:00.000Z",
-        "departureTime": null,
-        "sequence": 3
+        "name": "First Class AC",
+        "class": "First",
+        "type": "AC",
+        "price": 150.00,
+        "totalSeats": 50
       }
-    ],
-    "createdAt": "2025-11-29T10:00:00.000Z",
-    "updatedAt": "2025-11-29T10:00:00.000Z"
-  }
-]
+    }
+  },
+  "passengerName": "John Doe",
+  "passengerAge": 30,
+  "passengerGender": "Male",
+  "price": 150.00,
+  "status": "booked",
+  "bookedAt": "2025-11-29T10:00:00.000Z",
+  "createdAt": "2025-11-29T10:00:00.000Z",
+  "updatedAt": "2025-11-29T10:00:00.000Z"
+}
 ```
+
+### Get User's Tickets
+
+**GET** `/tickets`
+
+Retrieve all tickets for the authenticated user.
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200):**
+Returns an array of tickets (same structure as Book Ticket response).
+
+### Get Ticket by ID
+
+**GET** `/tickets/{id}`
+
+Retrieve a specific ticket by ID. Users can only view their own tickets.
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200):**
+Same structure as Book Ticket response.
+
+### Cancel Ticket
+
+**PUT** `/tickets/{id}/cancel`
+
+Cancel a booked ticket. Tickets can only be cancelled up to 2 hours before departure.
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200):**
+Returns the cancelled ticket with `status: "cancelled"`.
+
+**Error Responses:**
+- `400` - Ticket already cancelled or within 2 hours of departure
+- `403` - Not authorized to cancel this ticket
+- `404` - Ticket not found
 
 ## Error Responses
 
@@ -826,9 +1103,11 @@ All endpoints may return the following error responses:
 {
   "id": "number",
   "email": "string",
-  "firstName": "string",
-  "lastName": "string",
-  "role": "string"
+  "firstName": "string (nullable)",
+  "lastName": "string (nullable)",
+  "role": "string (user | admin)",
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
 }
 ```
 
@@ -836,12 +1115,28 @@ All endpoints may return the following error responses:
 ```json
 {
   "id": "number",
-  "name": "string",
+  "name": "string (unique)",
   "city": "string",
   "latitude": "number",
   "longitude": "number",
-  "createdAt": "string",
-  "updatedAt": "string"
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}
+```
+
+### RouteStation
+```json
+{
+  "id": "number",
+  "trainRouteId": "number",
+  "previousStationId": "number (nullable)",
+  "currentStationId": "number",
+  "nextStationId": "number (nullable)",
+  "distance": "number (nullable) - distance to next station",
+  "distanceFromStart": "number - cumulative distance from route start",
+  "currentStation": "Station",
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
 }
 ```
 
@@ -849,14 +1144,14 @@ All endpoints may return the following error responses:
 ```json
 {
   "id": "number",
-  "name": "string",
+  "name": "string (unique)",
   "startStationId": "number",
   "endStationId": "number",
   "startStation": "Station",
   "endStation": "Station",
   "routeStations": "RouteStation[]",
-  "createdAt": "string",
-  "updatedAt": "string"
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
 }
 ```
 
@@ -865,12 +1160,25 @@ All endpoints may return the following error responses:
 {
   "id": "number",
   "name": "string",
-  "class": "string",
-  "type": "string",
+  "class": "string (First | Second | Third)",
+  "type": "string (AC | Non-AC | Sleeper)",
   "price": "number",
-  "seats": "number",
-  "createdAt": "string",
-  "updatedAt": "string"
+  "totalSeats": "number",
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}
+```
+
+### TrainCompartment
+```json
+{
+  "id": "number",
+  "trainId": "number",
+  "compartmentId": "number",
+  "quantity": "number - number of this compartment type in the train",
+  "compartment": "Compartment",
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
 }
 ```
 
@@ -879,12 +1187,27 @@ All endpoints may return the following error responses:
 {
   "id": "number",
   "name": "string",
-  "number": "string",
+  "number": "string (unique)",
   "trainRouteId": "number",
   "trainRoute": "TrainRoute",
   "compartments": "TrainCompartment[]",
-  "createdAt": "string",
-  "updatedAt": "string"
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}
+```
+
+### ScheduleStation
+```json
+{
+  "id": "number",
+  "trainScheduleId": "number",
+  "stationId": "number",
+  "station": "Station",
+  "arrivalTime": "string (nullable)",
+  "departureTime": "string (nullable)",
+  "sequence": "number - order in the schedule",
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
 }
 ```
 
@@ -896,37 +1219,103 @@ All endpoints may return the following error responses:
   "trainRouteId": "number",
   "train": "Train",
   "trainRoute": "TrainRoute",
-  "date": "string",
-  "time": "string",
+  "date": "string (ISO 8601)",
+  "time": "string (HH:MM)",
   "stationTimes": "ScheduleStation[]",
-  "createdAt": "string",
-  "updatedAt": "string"
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}
+```
+
+### Seat
+```json
+{
+  "id": "number",
+  "trainCompartmentId": "number",
+  "seatNumber": "string (e.g., 1A, 2B)",
+  "seatType": "string (Window | Aisle | Middle)",
+  "row": "number",
+  "column": "string (A, B, C, etc.)",
+  "isAvailable": "boolean",
+  "trainCompartment": "TrainCompartment",
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}
+```
+
+### Ticket
+```json
+{
+  "id": "number",
+  "userId": "number",
+  "user": "User",
+  "trainScheduleId": "number",
+  "trainSchedule": "TrainSchedule",
+  "fromStationId": "number",
+  "fromStation": "Station",
+  "toStationId": "number",
+  "toStation": "Station",
+  "seatId": "number",
+  "seat": "Seat",
+  "trainCompartmentId": "number",
+  "seatNumber": "string",
+  "passengerName": "string",
+  "passengerAge": "number",
+  "passengerGender": "string (Male | Female | Other)",
+  "price": "number",
+  "status": "string (booked | cancelled | used)",
+  "bookedAt": "string (ISO 8601)",
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
 }
 ```
 
 ## Getting Started
 
-1. **Start the server:**
+1. **Install dependencies:**
    ```bash
-   npm start
+   cd backend
+   npm install
    ```
 
-2. **Access API documentation:**
-   Visit `http://localhost:3000/documentation`
+2. **Set up environment:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your PostgreSQL connection and JWT secret
+   ```
 
-3. **Register an admin user** (first user is automatically admin)
+3. **Set up database:**
+   ```bash
+   npm run prisma:migrate
+   npm run prisma:generate
+   ```
 
-4. **Create stations, routes, compartments, and trains**
+4. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
 
-5. **Create train schedules** for specific dates and times
+5. **Access API documentation:**
+   Visit `http://localhost:3000/documentation` for interactive Swagger UI
 
-6. **Search for trains** between stations using the search endpoint
+6. **Register an admin user:**
+   Use the `/register` endpoint with `"role": "admin"`
+
+7. **Create resources (as admin):**
+   - Create stations → Create routes → Create compartments → Create trains → Create schedules
+
+8. **Book tickets (as user):**
+   - Search for trains → Check available seats → Book ticket
 
 ## Notes
 
-- All dates should be in ISO format (YYYY-MM-DD)
-- Times should be in HH:MM format (24-hour)
-- JWT tokens are required for authenticated endpoints
-- Admin role is required for create/update/delete operations
-- The search endpoint validates that the "to" station comes after the "from" station in the route
-- Schedule times are automatically calculated based on route distances (1 minute per km)
+- **Authentication**: All endpoints except `/register` and `/login` require a valid JWT token
+- **Admin Access**: Create/Update/Delete operations on stations, routes, compartments, trains, and schedules require admin role
+- **Date Format**: All dates should be in ISO format (YYYY-MM-DD)
+- **Time Format**: Times should be in HH:MM format (24-hour)
+- **Unique Constraints**: Station names, train numbers, and route names must be unique
+- **Route Validation**: The search endpoint validates that the "to" station comes after the "from" station in the route
+- **Booking Validation**: Seat numbers are validated to prevent double bookings
+- **Cancellation Policy**: Tickets can only be cancelled up to 2 hours before departure
+- **Schedule Calculation**: Station times are automatically calculated based on route distances (1 minute per km + 5 minute stop)
+- **Rate Limiting**: API is rate-limited to 100 requests per minute per IP
