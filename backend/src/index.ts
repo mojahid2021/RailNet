@@ -7,6 +7,8 @@ import fastifySwaggerUi from '@fastify/swagger-ui';
 import authRoutes from './routes/auth';
 import stationRoutes from './routes/stations';
 import trainRouteRoutes from './routes/trainRoutes';
+import compartmentRoutes from './routes/compartments';
+import trainRoutes from './routes/trains';
 
 const start = async () => {
   const app = Fastify({
@@ -100,6 +102,8 @@ const start = async () => {
     app.register(authRoutes);
     app.register(stationRoutes);
     app.register(trainRouteRoutes);
+    app.register(compartmentRoutes);
+    app.register(trainRoutes);
 
     // Root route
     app.get('/', {

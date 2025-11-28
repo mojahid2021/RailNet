@@ -75,6 +75,8 @@ model TrainRoute {
 
   routeStations RouteStation[]
 
+  trains       Train[]
+
   createdAt    DateTime      @default(now())
 
   updatedAt    DateTime      @updatedAt
@@ -108,5 +110,65 @@ model RouteStation {
   createdAt         DateTime   @default(now())
 
   updatedAt         DateTime   @updatedAt
+
+}
+
+model Compartment {
+
+  id        Int      @id @default(autoincrement())
+
+  name      String
+
+  class     String   // e.g., "First", "Second", "Third"
+
+  type      String   // e.g., "AC", "Non-AC", "Sleeper"
+
+  price     Float    // Price per ticket
+
+  seats     Int      // Number of seats available
+
+  trainCompartments TrainCompartment[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+}
+
+model Train {
+
+  id           Int          @id @default(autoincrement())
+
+  name         String       // Train name
+
+  number       String       @unique // Train number
+
+  trainRouteId Int
+
+  trainRoute   TrainRoute   @relation(fields: [trainRouteId], references: [id])
+
+  compartments TrainCompartment[]
+
+  createdAt    DateTime     @default(now())
+
+  updatedAt    DateTime     @updatedAt
+
+}
+
+model TrainCompartment {
+
+  id            Int         @id @default(autoincrement())
+
+  trainId       Int
+
+  compartmentId Int
+
+  train         Train       @relation(fields: [trainId], references: [id], onDelete: Cascade)
+
+  compartment   Compartment @relation(fields: [compartmentId], references: [id])
+
+  createdAt     DateTime    @default(now())
+
+  updatedAt     DateTime    @updatedAt
 
 }
