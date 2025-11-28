@@ -26,6 +26,8 @@ model User {
 
   role      String   @default("user")
 
+  tickets   Ticket[]
+
   createdAt DateTime @default(now())
 
   updatedAt DateTime @updatedAt
@@ -58,6 +60,10 @@ model Station {
   endRoutes   TrainRoute[] @relation("EndStation")
 
   scheduleStations ScheduleStation[]
+
+  fromTickets Ticket[] @relation("TicketFromStation")
+
+  toTickets   Ticket[] @relation("TicketToStation")
 
 }
 
@@ -129,7 +135,7 @@ model Compartment {
 
   price     Float    // Price per ticket
 
-  seats     Int      // Number of seats available
+  totalSeats Int     // Total number of seats in this compartment type
 
   trainCompartments TrainCompartment[]
 
@@ -169,13 +175,47 @@ model TrainCompartment {
 
   compartmentId Int
 
+  quantity      Int         // Number of this compartment type in the train
+
   train         Train       @relation(fields: [trainId], references: [id], onDelete: Cascade)
 
   compartment   Compartment @relation(fields: [compartmentId], references: [id])
 
+  seats         Seat[]
+
+  tickets       Ticket[]    // Tickets booked in this compartment
+
   createdAt     DateTime    @default(now())
 
   updatedAt     DateTime    @updatedAt
+
+}
+
+model Seat {
+
+  id                Int             @id @default(autoincrement())
+
+  trainCompartmentId Int
+
+  trainCompartment  TrainCompartment @relation(fields: [trainCompartmentId], references: [id], onDelete: Cascade)
+
+  seatNumber        String          // e.g., "1A", "2B", "15C"
+
+  seatType          String          // "Window", "Aisle", "Middle"
+
+  row               Int
+
+  column            String          // "A", "B", "C", etc.
+
+  isAvailable       Boolean         @default(true)
+
+  ticket            Ticket?         // Nullable - seat can be unbooked
+
+  createdAt         DateTime        @default(now())
+
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([trainCompartmentId, seatNumber]) // Ensure unique seat numbers per compartment
 
 }
 
@@ -196,6 +236,8 @@ model TrainSchedule {
   time          String    // Departure time (HH:MM format)
 
   stationTimes  ScheduleStation[]
+
+  tickets       Ticket[]
 
   createdAt     DateTime  @default(now())
 
@@ -222,6 +264,54 @@ model ScheduleStation {
   departureTime     String?       // Departure time from this station (HH:MM format)
 
   sequence          Int           // Order of station in the schedule
+
+  createdAt         DateTime      @default(now())
+
+  updatedAt         DateTime      @updatedAt
+
+}
+
+model Ticket {
+
+  id                Int           @id @default(autoincrement())
+
+  userId            Int
+
+  user              User          @relation(fields: [userId], references: [id])
+
+  trainScheduleId   Int
+
+  trainSchedule     TrainSchedule @relation(fields: [trainScheduleId], references: [id])
+
+  fromStationId     Int
+
+  fromStation       Station       @relation("TicketFromStation", fields: [fromStationId], references: [id])
+
+  toStationId       Int
+
+  toStation         Station       @relation("TicketToStation", fields: [toStationId], references: [id])
+
+  seatId            Int           @unique // Reference to specific seat - unique for one-to-one relation
+
+  seat              Seat          @relation(fields: [seatId], references: [id])
+
+  trainCompartmentId Int          // Store train compartment ID for better performance
+
+  trainCompartment  TrainCompartment @relation(fields: [trainCompartmentId], references: [id])
+
+  seatNumber        String        // Store seat number for easy access (e.g., "1A", "2B")
+
+  passengerName     String
+
+  passengerAge      Int
+
+  passengerGender   String        // "Male", "Female", "Other"
+
+  price             Float
+
+  status            String        @default("booked") // "booked", "cancelled", "used"
+
+  bookedAt          DateTime      @default(now())
 
   createdAt         DateTime      @default(now())
 

@@ -630,4 +630,363 @@ export default async function trainScheduleRoutes(fastify: FastifyInstance) {
 
     reply.send(trainSchedules);
   });
+
+  // Get seat availability for a train schedule - Authenticated users
+  fastify.get('/train-schedules/:id/seats', {
+    preHandler: (fastify as any).authenticate,
+    schema: {
+      description: 'Get seat availability for a specific train schedule',
+      tags: ['Train Schedules'],
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            scheduleId: { type: 'number' },
+            trainName: { type: 'string' },
+            trainNumber: { type: 'string' },
+            date: { type: 'string' },
+            time: { type: 'string' },
+            compartments: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  compartmentId: { type: 'number' },
+                  compartmentName: { type: 'string' },
+                  class: { type: 'string' },
+                  type: { type: 'string' },
+                  totalSeats: { type: 'number' },
+                  availableSeats: { type: 'number' },
+                  seats: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        seatId: { type: 'number' },
+                        seatNumber: { type: 'string' },
+                        seatType: { type: 'string' },
+                        row: { type: 'number' },
+                        column: { type: 'string' },
+                        isAvailable: { type: 'boolean' },
+                        passengerName: { type: 'string' },
+                        passengerAge: { type: 'number' },
+                        passengerGender: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        400: errorResponseSchema,
+        401: errorResponseSchema,
+        404: errorResponseSchema,
+      },
+    },
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const scheduleId = parseInt(id);
+
+    if (isNaN(scheduleId)) {
+      return reply.code(400).send({ error: 'Invalid schedule ID' });
+    }
+
+    // Get train schedule with train and compartments
+    const trainSchedule = await prisma.trainSchedule.findUnique({
+      where: { id: scheduleId },
+      include: {
+        train: {
+          include: {
+            compartments: {
+              include: {
+                compartment: true,
+                seats: {
+                  include: {
+                    ticket: {
+                      include: {
+                        user: true,
+                      },
+                    },
+                  },
+                  orderBy: [
+                    { row: 'asc' },
+                    { column: 'asc' },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!trainSchedule) {
+      return reply.code(404).send({ error: 'Train schedule not found' });
+    }
+
+    // Build response with seat availability
+    const compartments = trainSchedule.train.compartments.map((trainComp) => {
+      const existingSeats = trainComp.seats;
+      const bookedCount = existingSeats.filter(seat => !seat.isAvailable).length;
+      const availableCount = trainComp.compartment.totalSeats - bookedCount;
+
+      // Generate seats list from existing records plus available slots
+      const seats = [];
+
+      // Add existing seats
+      existingSeats.forEach(seat => {
+        seats.push({
+          seatId: seat.id,
+          seatNumber: seat.seatNumber,
+          seatType: seat.seatType,
+          row: seat.row,
+          column: seat.column,
+          isAvailable: seat.isAvailable,
+          passengerName: seat.ticket?.passengerName || null,
+          passengerAge: seat.ticket?.passengerAge || null,
+          passengerGender: seat.ticket?.passengerGender || null,
+        });
+      });
+
+      // Add available slots
+      for (let i = 0; i < availableCount; i++) {
+        seats.push({
+          seatId: null,
+          seatNumber: `Seat-${bookedCount + i + 1}`,
+          seatType: 'Standard',
+          row: 1,
+          column: 'A',
+          isAvailable: true,
+          passengerName: null,
+          passengerAge: null,
+          passengerGender: null,
+        });
+      }
+
+      const availableSeats = seats.filter(seat => seat.isAvailable).length;
+
+      return {
+        compartmentId: trainComp.compartmentId,
+        compartmentName: trainComp.compartment.name,
+        class: trainComp.compartment.class,
+        type: trainComp.compartment.type,
+        totalSeats: trainComp.compartment.totalSeats,
+        availableSeats,
+        seats,
+      };
+    });
+
+    const response = {
+      scheduleId: trainSchedule.id,
+      trainName: trainSchedule.train.name,
+      trainNumber: trainSchedule.train.number,
+      date: trainSchedule.date.toISOString().split('T')[0],
+      time: trainSchedule.time,
+      compartments,
+    };
+
+    reply.send(response);
+  });
+
+  // Get available seats for a journey segment within a schedule - Authenticated users
+  fastify.get('/train-schedules/:id/available-seats', {
+    preHandler: (fastify as any).authenticate,
+    schema: {
+      description: 'Get available seats for a specific journey segment within a train schedule',
+      tags: ['Train Schedules'],
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+        },
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          fromStationId: { type: 'number' },
+          toStationId: { type: 'number' },
+        },
+        required: ['fromStationId', 'toStationId'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            scheduleId: { type: 'number' },
+            trainName: { type: 'string' },
+            trainNumber: { type: 'string' },
+            date: { type: 'string' },
+            time: { type: 'string' },
+            journeySegment: {
+              type: 'object',
+              properties: {
+                fromStation: { type: 'string' },
+                toStation: { type: 'string' },
+              },
+            },
+            compartments: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  compartmentId: { type: 'number' },
+                  compartmentName: { type: 'string' },
+                  class: { type: 'string' },
+                  type: { type: 'string' },
+                  price: { type: 'number' },
+                  totalSeats: { type: 'number' },
+                  bookedSeats: { type: 'number' },
+                  availableSeats: { type: 'number' },
+                },
+              },
+            },
+          },
+        },
+        400: errorResponseSchema,
+        401: errorResponseSchema,
+        404: errorResponseSchema,
+      },
+    },
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { fromStationId, toStationId } = request.query as { fromStationId: number; toStationId: number };
+    const scheduleId = parseInt(id);
+
+    if (isNaN(scheduleId)) {
+      return reply.code(400).send({ error: 'Invalid schedule ID' });
+    }
+
+    // Get train schedule with route validation
+    const trainSchedule = await prisma.trainSchedule.findUnique({
+      where: { id: scheduleId },
+      include: {
+        train: {
+          include: {
+            trainRoute: {
+              include: {
+                routeStations: {
+                  include: {
+                    currentStation: true,
+                  },
+                  orderBy: { distanceFromStart: 'asc' },
+                },
+              },
+            },
+            compartments: {
+              include: {
+                compartment: true,
+                seats: true, // Get all seats, we'll filter by availability
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!trainSchedule) {
+      return reply.code(404).send({ error: 'Train schedule not found' });
+    }
+
+    // Validate journey segment is valid for this route
+    const fromStationInRoute = trainSchedule.train.trainRoute.routeStations.find(rs => rs.currentStationId === fromStationId);
+    const toStationInRoute = trainSchedule.train.trainRoute.routeStations.find(rs => rs.currentStationId === toStationId);
+
+    if (!fromStationInRoute || !toStationInRoute) {
+      return reply.code(400).send({ error: 'Invalid from or to station for this route' });
+    }
+
+    if (toStationInRoute.distanceFromStart <= fromStationInRoute.distanceFromStart) {
+      return reply.code(400).send({ error: 'To station must come after from station in the route' });
+    }
+
+    // Get all booked tickets for this schedule
+    const allTickets = await prisma.ticket.findMany({
+      where: {
+        trainScheduleId: scheduleId,
+        status: 'booked',
+      },
+      include: {
+        fromStation: {
+          include: {
+            currentStations: {
+              where: { trainRouteId: trainSchedule.trainRouteId },
+              select: { distanceFromStart: true },
+            },
+          },
+        },
+        toStation: {
+          include: {
+            currentStations: {
+              where: { trainRouteId: trainSchedule.trainRouteId },
+              select: { distanceFromStart: true },
+            },
+          },
+        },
+      },
+    });
+
+    // Filter tickets that overlap with the requested journey segment
+    const overlappingTickets = allTickets.filter(ticket => {
+      const ticketFromDistance = ticket.fromStation.currentStations[0]?.distanceFromStart || 0;
+      const ticketToDistance = ticket.toStation.currentStations[0]?.distanceFromStart || 0;
+      const requestedFromDistance = fromStationInRoute.distanceFromStart;
+      const requestedToDistance = toStationInRoute.distanceFromStart;
+
+      // Check if ticket overlaps with requested journey
+      return (
+        // Ticket starts before or at requested fromStation and ends after requested fromStation
+        (ticketFromDistance <= requestedFromDistance && ticketToDistance > requestedFromDistance) ||
+        // Ticket starts after requested fromStation and before or at requested toStation
+        (ticketFromDistance > requestedFromDistance && ticketFromDistance <= requestedToDistance)
+      );
+    });
+
+    // Count booked seats per compartment for overlapping journeys
+    const bookedSeatsByCompartment = new Map<number, number>();
+    overlappingTickets.forEach(ticket => {
+      const count = bookedSeatsByCompartment.get(ticket.trainCompartmentId) || 0;
+      bookedSeatsByCompartment.set(ticket.trainCompartmentId, count + 1);
+    });
+
+    // Build response with available seats for the journey segment
+    const compartments = trainSchedule.train.compartments.map((trainComp) => {
+      const bookedCount = bookedSeatsByCompartment.get(trainComp.id) || 0;
+      const availableCount = Math.max(0, trainComp.compartment.totalSeats - bookedCount);
+
+      return {
+        compartmentId: trainComp.compartmentId,
+        compartmentName: trainComp.compartment.name,
+        class: trainComp.compartment.class,
+        type: trainComp.compartment.type,
+        price: trainComp.compartment.price,
+        totalSeats: trainComp.compartment.totalSeats,
+        bookedSeats: bookedCount,
+        availableSeats: availableCount,
+      };
+    });
+
+    const response = {
+      scheduleId: trainSchedule.id,
+      trainName: trainSchedule.train.name,
+      trainNumber: trainSchedule.train.number,
+      date: trainSchedule.date.toISOString().split('T')[0],
+      time: trainSchedule.time,
+      journeySegment: {
+        fromStation: fromStationInRoute.currentStation.name,
+        toStation: toStationInRoute.currentStation.name,
+      },
+      compartments,
+    };
+
+    reply.send(response);
+  });
 }

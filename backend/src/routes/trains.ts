@@ -25,7 +25,7 @@ export default async function trainRoutes(fastify: FastifyInstance) {
       name: string;
       number: string;
       trainRouteId: number;
-      compartments: { compartmentId: number }[];
+      compartments: { compartmentId: number; quantity?: number }[];
     };
 
     // Validate train route exists
@@ -57,6 +57,7 @@ export default async function trainRoutes(fastify: FastifyInstance) {
         compartments: {
           create: compartments.map(comp => ({
             compartmentId: comp.compartmentId,
+            quantity: comp.quantity || 1,
           })),
         },
       },

@@ -21,12 +21,12 @@ export default async function compartmentRoutes(fastify: FastifyInstance) {
       },
     },
   }, async (request, reply) => {
-    const { name, class: compartmentClass, type, price, seats } = request.body as {
+    const { name, class: compartmentClass, type, price, totalSeats } = request.body as {
       name: string;
       class: string;
       type: string;
       price: number;
-      seats: number;
+      totalSeats: number;
     };
 
     const compartment = await prisma.compartment.create({
@@ -35,7 +35,7 @@ export default async function compartmentRoutes(fastify: FastifyInstance) {
         class: compartmentClass,
         type,
         price,
-        seats,
+        totalSeats,
       },
     });
 

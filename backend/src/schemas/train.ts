@@ -7,6 +7,7 @@ export const trainCompartmentSchema = {
     id: { type: 'number' },
     trainId: { type: 'number' },
     compartmentId: { type: 'number' },
+    quantity: { type: 'number' },
     compartment: compartmentSchema,
     createdAt: { type: 'string' },
     updatedAt: { type: 'string' },
@@ -60,6 +61,7 @@ export const createTrainBodySchema = {
         required: ['compartmentId'],
         properties: {
           compartmentId: { type: 'number' },
+          quantity: { type: 'number', minimum: 1, default: 1 },
         },
       },
     },

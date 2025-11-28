@@ -6,7 +6,7 @@ export const compartmentSchema = {
     class: { type: 'string' },
     type: { type: 'string' },
     price: { type: 'number' },
-    seats: { type: 'number' },
+    totalSeats: { type: 'number' },
   },
 };
 
@@ -18,7 +18,7 @@ export const compartmentWithTimestampsSchema = {
     class: { type: 'string' },
     type: { type: 'string' },
     price: { type: 'number' },
-    seats: { type: 'number' },
+    totalSeats: { type: 'number' },
     createdAt: { type: 'string' },
     updatedAt: { type: 'string' },
   },
@@ -26,12 +26,12 @@ export const compartmentWithTimestampsSchema = {
 
 export const createCompartmentBodySchema = {
   type: 'object',
-  required: ['name', 'class', 'type', 'price', 'seats'],
+  required: ['name', 'class', 'type', 'price', 'totalSeats'],
   properties: {
     name: { type: 'string' },
     class: { type: 'string' },
     type: { type: 'string' },
     price: { type: 'number', minimum: 0 },
-    seats: { type: 'number', minimum: 1 },
+    totalSeats: { type: 'number', minimum: 1 },
   },
 };
