@@ -22,10 +22,15 @@ export default async function trainScheduleRoutes(fastify: FastifyInstance) {
       },
     },
   }, async (request, reply) => {
-    const { trainId, date, time } = request.body as {
+    const { trainId, date, time, stationTimes } = request.body as {
       trainId: number;
       date: string;
       time: string;
+      stationTimes: Array<{
+        stationId: number;
+        arrivalTime: string;
+        departureTime: string;
+      }>;
     };
 
     // Validate train exists and get route stations
@@ -49,6 +54,15 @@ export default async function trainScheduleRoutes(fastify: FastifyInstance) {
       return reply.code(400).send({ error: 'Train not found' });
     }
 
+    // Validate that provided stationTimes match route stations
+    const routeStationIds = train.trainRoute.routeStations.map(rs => rs.currentStationId);
+    const providedStationIds = stationTimes.map(st => st.stationId);
+
+    if (routeStationIds.length !== providedStationIds.length ||
+        !routeStationIds.every(id => providedStationIds.includes(id))) {
+      return reply.code(400).send({ error: 'Station times must be provided for all stations in the route' });
+    }
+
     // Parse date and create DateTime
     const scheduleDate = new Date(date);
     if (isNaN(scheduleDate.getTime())) {
@@ -70,27 +84,34 @@ export default async function trainScheduleRoutes(fastify: FastifyInstance) {
         },
       });
 
-      // Create ScheduleStation records for each route station
+      // Create ScheduleStation records using provided times
       const scheduleStations = [];
-      let currentTime = new Date(scheduleDate);
 
-      for (let i = 0; i < train.trainRoute.routeStations.length; i++) {
-        const routeStation = train.trainRoute.routeStations[i];
+      for (let i = 0; i < stationTimes.length; i++) {
+        const stationTime = stationTimes[i];
+        const routeStation = train.trainRoute.routeStations.find(rs => rs.currentStationId === stationTime.stationId);
 
-        // Calculate arrival time (assume 1 minute per km for simplicity)
-        const travelMinutes = routeStation.distanceFromStart;
-        const arrivalTime = new Date(currentTime.getTime() + travelMinutes * 60 * 1000);
+        if (!routeStation) {
+          return reply.code(400).send({ error: `Station ${stationTime.stationId} not found in route` });
+        }
 
-        // Departure time is 5 minutes after arrival (stop time)
-        const departureTime = new Date(arrivalTime.getTime() + 5 * 60 * 1000);
+        // Parse arrival and departure times for the schedule date
+        const [arrHours, arrMinutes] = stationTime.arrivalTime.split(':').map(Number);
+        const [depHours, depMinutes] = stationTime.departureTime.split(':').map(Number);
+
+        const arrivalDateTime = new Date(scheduleDate);
+        arrivalDateTime.setHours(arrHours, arrMinutes, 0, 0);
+
+        const departureDateTime = new Date(scheduleDate);
+        departureDateTime.setHours(depHours, depMinutes, 0, 0);
 
         const scheduleStation = await prisma.scheduleStation.create({
           data: {
             trainScheduleId: trainSchedule.id,
-            stationId: routeStation.currentStationId,
-            arrivalTime: arrivalTime.toISOString(),
-            departureTime: departureTime.toISOString(),
-            sequence: i + 1, // Sequence starts from 1
+            stationId: stationTime.stationId,
+            arrivalTime: arrivalDateTime.toISOString(),
+            departureTime: departureDateTime.toISOString(),
+            sequence: i + 1, // Sequence based on provided order
           },
           include: {
             station: true,
@@ -98,7 +119,6 @@ export default async function trainScheduleRoutes(fastify: FastifyInstance) {
         });
 
         scheduleStations.push(scheduleStation);
-        currentTime = departureTime; // Next station starts from this departure time
       }
 
       // Return the complete schedule with station times

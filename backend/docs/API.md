@@ -625,7 +625,7 @@ Endpoints for creating and searching train schedules.
 
 **POST** `/train-schedules`
 
-Create a new train schedule for a specific date and time. Station times are automatically calculated based on route distances (1 minute per km with 5-minute stop at each station).
+Create a new train schedule for a specific date and time with manual station times.
 
 **Headers:**
 ```
@@ -637,7 +637,24 @@ Authorization: Bearer <jwt_token>
 {
   "trainId": 1,
   "date": "2025-11-30",
-  "time": "08:00"
+  "time": "08:00",
+  "stationTimes": [
+    {
+      "stationId": 1,
+      "arrivalTime": "08:00",
+      "departureTime": "08:05"
+    },
+    {
+      "stationId": 3,
+      "arrivalTime": "08:55",
+      "departureTime": "09:00"
+    },
+    {
+      "stationId": 2,
+      "arrivalTime": "10:00",
+      "departureTime": "10:05"
+    }
+  ]
 }
 ```
 
@@ -645,7 +662,16 @@ Authorization: Bearer <jwt_token>
 |-------|------|----------|-------------|
 | trainId | number | Yes | ID of the train |
 | date | string | Yes | Schedule date (YYYY-MM-DD format) |
-| time | string | Yes | Departure time (HH:MM format, 24-hour) |
+| time | string | Yes | Base departure time (HH:MM format, 24-hour) |
+| stationTimes | array | Yes | Array of station timing objects (must include all stations in route) |
+| stationTimes[].stationId | number | Yes | ID of the station |
+| stationTimes[].arrivalTime | string | Yes | Arrival time at station (HH:MM format, 24-hour) |
+| stationTimes[].departureTime | string | Yes | Departure time from station (HH:MM format, 24-hour) |
+
+**Note:** 
+- Station times must be provided for all stations in the train's route
+- The sequence is determined by the order of stations in the `stationTimes` array
+- Times should be provided in HH:MM format and will be combined with the schedule date
 
 **Response (201):**
 ```json
@@ -1321,5 +1347,5 @@ All endpoints may return the following error responses:
 - **Route Validation**: The search endpoint validates that the "to" station comes after the "from" station in the route
 - **Booking Validation**: Seat numbers are validated to prevent double bookings
 - **Cancellation Policy**: Tickets can only be cancelled up to 2 hours before departure
-- **Schedule Calculation**: Station times are automatically calculated based on route distances (1 minute per km + 5 minute stop)
+- **Schedule Calculation**: Station times are provided manually when creating train schedules
 - **Rate Limiting**: API is rate-limited to 100 requests per minute per IP

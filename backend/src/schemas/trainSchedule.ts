@@ -53,10 +53,23 @@ export const trainScheduleWithTimestampsSchema = {
 
 export const createTrainScheduleBodySchema = {
   type: 'object',
-  required: ['trainId', 'date', 'time'],
+  required: ['trainId', 'date', 'time', 'stationTimes'],
   properties: {
     trainId: { type: 'number' },
     date: { type: 'string', format: 'date' },
     time: { type: 'string', pattern: '^([01]?[0-9]|2[0-3]):[0-5][0-9]$' },
+    stationTimes: {
+      type: 'array',
+      minItems: 2,
+      items: {
+        type: 'object',
+        required: ['stationId', 'arrivalTime', 'departureTime'],
+        properties: {
+          stationId: { type: 'number' },
+          arrivalTime: { type: 'string', pattern: '^([01]?[0-9]|2[0-3]):[0-5][0-9]$' },
+          departureTime: { type: 'string', pattern: '^([01]?[0-9]|2[0-3]):[0-5][0-9]$' },
+        },
+      },
+    },
   },
 };
