@@ -228,7 +228,11 @@ Authorization: Bearer <jwt_token>
 | stations[].stationId | number | Yes | ID of the station |
 | stations[].distance | number | Yes | Distance to next station (0 for first station) |
 
-**Note:** The first and last stations in the array automatically become the start and end stations of the route. The `distanceFromStart` is calculated as a cumulative sum of distances.
+**Note:** 
+- The first and last stations in the array automatically become the start and end stations of the route
+- The `distance` field in the request represents the distance from the previous station (used to calculate `distanceFromStart`)
+- In the response, the `distance` field in RouteStation represents the stored input value (set to `null` for the last station since there's no next station)
+- The `distanceFromStart` is calculated as a cumulative sum of all input distances
 
 **Response (201):**
 ```json
