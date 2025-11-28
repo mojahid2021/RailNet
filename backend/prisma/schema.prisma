@@ -14,10 +14,99 @@ datasource db {
 
 model User {
 
-  id    Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
 
-  email String  @unique
+  email     String   @unique
 
-  name  String?
+  firstName String?
+
+  lastName  String?
+
+  password  String
+
+  role      String   @default("user")
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+}
+
+model Station {
+
+  id        Int      @id @default(autoincrement())
+
+  name      String   @unique
+
+  city      String
+
+  latitude  Float
+
+  longitude Float
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  // Relations for route stations
+  previousStations RouteStation[] @relation("PreviousStation")
+  currentStations  RouteStation[] @relation("CurrentStation")
+  nextStations     RouteStation[] @relation("NextStation")
+
+  startRoutes TrainRoute[] @relation("StartStation")
+
+  endRoutes   TrainRoute[] @relation("EndStation")
+
+}
+
+model TrainRoute {
+
+  id           Int           @id @default(autoincrement())
+
+  name         String        @unique
+
+  startStationId Int
+
+  endStationId   Int
+
+  startStation Station       @relation("StartStation", fields: [startStationId], references: [id])
+
+  endStation   Station       @relation("EndStation", fields: [endStationId], references: [id])
+
+  routeStations RouteStation[]
+
+  createdAt    DateTime      @default(now())
+
+  updatedAt    DateTime      @updatedAt
+
+}
+
+model RouteStation {
+
+  id                Int        @id @default(autoincrement())
+
+  trainRouteId      Int
+
+  trainRoute        TrainRoute @relation(fields: [trainRouteId], references: [id], onDelete: Cascade)
+
+  previousStationId Int?
+
+  currentStationId  Int
+
+  nextStationId     Int?
+
+  distance          Float?     // Distance to next station
+
+  distanceFromStart Float      // Distance from start of route
+
+  previousStation   Station?   @relation("PreviousStation", fields: [previousStationId], references: [id])
+
+  currentStation    Station    @relation("CurrentStation", fields: [currentStationId], references: [id])
+
+  nextStation       Station?   @relation("NextStation", fields: [nextStationId], references: [id])
+
+  createdAt         DateTime   @default(now())
+
+  updatedAt         DateTime   @updatedAt
 
 }
