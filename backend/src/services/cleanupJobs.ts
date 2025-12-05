@@ -15,10 +15,12 @@ class CleanupJobs {
 
       try {
         const result = await bookingCleanupService.cleanupExpiredBookings(
-          parseInt(process.env.BOOKING_EXPIRY_MINUTES || '10')
+          parseInt(process.env.BOOKING_EXPIRY_MINUTES || '10'),
         );
 
-        console.log(`[Cleanup Job] Completed: ${result.expiredTickets} tickets expired, ${result.cancelledTransactions} transactions cancelled`);
+        console.log(
+          `[Cleanup Job] Completed: ${result.expiredTickets} tickets expired, ${result.cancelledTransactions} transactions cancelled`,
+        );
 
         if (result.errors.length > 0) {
           console.error('[Cleanup Job] Errors encountered:', result.errors);
@@ -32,7 +34,9 @@ class CleanupJobs {
     this.statsTask = cron.schedule('*/10 * * * *', async () => {
       try {
         const stats = await bookingCleanupService.getPendingBookingsStats();
-        console.log(`[Stats] Pending bookings: ${stats.totalPending}, Expiring soon: ${stats.expiringSoon}, Expired: ${stats.expired}`);
+        console.log(
+          `[Stats] Pending bookings: ${stats.totalPending}, Expiring soon: ${stats.expiringSoon}, Expired: ${stats.expired}`,
+        );
       } catch (error) {
         console.error('[Stats Job] Failed to get stats:', error);
       }
@@ -66,10 +70,12 @@ class CleanupJobs {
 
     try {
       const result = await bookingCleanupService.cleanupExpiredBookings(
-        parseInt(process.env.BOOKING_EXPIRY_MINUTES || '10')
+        parseInt(process.env.BOOKING_EXPIRY_MINUTES || '10'),
       );
 
-      console.log(`[Manual Cleanup] Completed: ${result.expiredTickets} tickets expired, ${result.cancelledTransactions} transactions cancelled`);
+      console.log(
+        `[Manual Cleanup] Completed: ${result.expiredTickets} tickets expired, ${result.cancelledTransactions} transactions cancelled`,
+      );
 
       if (result.errors.length > 0) {
         console.error('[Manual Cleanup] Errors encountered:', result.errors);

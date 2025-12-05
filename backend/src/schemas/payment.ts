@@ -55,5 +55,15 @@ export const paymentTransactionSchema = {
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
   },
-  required: ['id', 'ticketId', 'transactionId', 'amount', 'currency', 'status', 'paymentMethod', 'createdAt', 'updatedAt'],
+  required: [
+    'id',
+    'ticketId',
+    'transactionId',
+    'amount',
+    'currency',
+    'status',
+    'paymentMethod',
+    'createdAt',
+    'updatedAt',
+  ],
 };

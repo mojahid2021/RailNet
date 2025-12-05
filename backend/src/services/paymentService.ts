@@ -1,9 +1,6 @@
-import { FastifyInstance } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { createSSLCommerzClient, PaymentRequest, ValidationResponse } from '../utils/sslcommerz';
-import { addMinutes } from 'date-fns';
 
-const prisma = new PrismaClient();
 const sslcommerz = createSSLCommerzClient();
 
 export interface PaymentData {
@@ -39,11 +36,8 @@ export class PaymentService {
     // Check if ticket exists and is in pending status
     const ticket = await prisma.ticket.findUnique({
       where: { ticketId },
-      include: { user: true, trainSchedule: { include: { train: true, trainRoute: true } } }
+      include: { user: true, trainSchedule: { include: { train: true, trainRoute: true } } },
     });
-
-    console.log('Payment initiation - ticketId:', ticketId, 'userId:', userId);
-    console.log('Found ticket:', ticket ? 'YES' : 'NO', ticket?.ticketId, ticket?.userId, ticket?.paymentStatus);
 
     if (!ticket) {
       throw new Error('Ticket not found');
@@ -64,7 +58,7 @@ export class PaymentService {
     const transactionId = `TXN_${Date.now()}_${ticketId}`;
 
     // Create payment transaction record
-    const paymentTransaction = await prisma.paymentTransaction.create({
+    await prisma.paymentTransaction.create({
       data: {
         id: transactionId,
         ticketId: ticket.id, // Use numeric database ID for foreign key
@@ -120,7 +114,9 @@ export class PaymentService {
             errorMessage: sslResponse.failedreason || sslResponse.error,
           },
         });
-        throw new Error(`Payment initiation failed: ${sslResponse.failedreason || sslResponse.error}`);
+        throw new Error(
+          `Payment initiation failed: ${sslResponse.failedreason || sslResponse.error}`,
+        );
       }
 
       // Update transaction with session key

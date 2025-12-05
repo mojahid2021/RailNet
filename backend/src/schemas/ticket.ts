@@ -107,7 +107,10 @@ export const ticketBookingResponseSchema = {
         id: { type: 'number' },
         ticketId: { type: 'string' },
         status: { type: 'string' },
-        paymentStatus: { type: 'string', enum: ['pending', 'paid', 'failed', 'cancelled', 'expired'] },
+        paymentStatus: {
+          type: 'string',
+          enum: ['pending', 'paid', 'failed', 'cancelled', 'expired'],
+        },
         expiresAt: { type: 'string', format: 'date-time' },
         createdAt: { type: 'string', format: 'date-time' },
       },
@@ -183,7 +186,10 @@ export const ticketListItemSchema = {
         id: { type: 'number' },
         ticketId: { type: 'string' },
         status: { type: 'string' },
-        paymentStatus: { type: 'string', enum: ['pending', 'paid', 'failed', 'cancelled', 'expired'] },
+        paymentStatus: {
+          type: 'string',
+          enum: ['pending', 'paid', 'failed', 'cancelled', 'expired'],
+        },
         createdAt: { type: 'string', format: 'date-time' },
       },
       required: ['id', 'ticketId', 'status', 'paymentStatus', 'createdAt'],
@@ -245,7 +251,16 @@ export const ticketsListResponseSchema = {
 
 export const bookTicketBodySchema = {
   type: 'object',
-  required: ['trainScheduleId', 'fromStationId', 'toStationId', 'compartmentId', 'seatNumber', 'passengerName', 'passengerAge', 'passengerGender'],
+  required: [
+    'trainScheduleId',
+    'fromStationId',
+    'toStationId',
+    'compartmentId',
+    'seatNumber',
+    'passengerName',
+    'passengerAge',
+    'passengerGender',
+  ],
   properties: {
     trainScheduleId: { type: 'number' },
     fromStationId: { type: 'number' },

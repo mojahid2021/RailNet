@@ -92,7 +92,7 @@ export class SSLCommerzClient {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-        }
+        },
       );
 
       return response.data;
@@ -114,7 +114,7 @@ export class SSLCommerzClient {
             v: 1,
             format: 'json',
           },
-        }
+        },
       );
 
       return response.data;
@@ -141,7 +141,7 @@ export class SSLCommerzClient {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-        }
+        },
       );
 
       return response.data;

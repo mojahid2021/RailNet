@@ -509,6 +509,9 @@ Common HTTP status codes:
 | `npm run build` | Build the project |
 | `npm run start` | Start the production server |
 | `npm run dev` | Start the development server with hot reload |
+| `npm run lint` | Check code quality with ESLint |
+| `npm run lint:fix` | Automatically fix linting issues |
+| `npm run format` | Format code with Prettier |
 | `npm run prisma:generate` | Generate Prisma client |
 | `npm run prisma:migrate` | Run Prisma migrations |
 | `npm run prisma:studio` | Open Prisma Studio |
