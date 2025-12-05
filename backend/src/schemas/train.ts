@@ -67,3 +67,8 @@ export const createTrainBodySchema = {
     },
   },
 };
+
+export const trainsListResponseSchema = {
+  type: 'array',
+  items: trainWithTimestampsSchema,
+};

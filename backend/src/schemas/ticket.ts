@@ -97,6 +97,152 @@ export const ticketWithTimestampsSchema = {
   },
 };
 
+// Professional booking response schema - clean and organized
+export const ticketBookingResponseSchema = {
+  type: 'object',
+  properties: {
+    ticket: {
+      type: 'object',
+      properties: {
+        id: { type: 'number' },
+        ticketId: { type: 'string' },
+        status: { type: 'string' },
+        paymentStatus: { type: 'string', enum: ['pending', 'paid', 'failed', 'cancelled', 'expired'] },
+        expiresAt: { type: 'string', format: 'date-time' },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+      required: ['id', 'ticketId', 'status', 'paymentStatus', 'expiresAt', 'createdAt'],
+    },
+    passenger: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        age: { type: 'number' },
+        gender: { type: 'string' },
+      },
+      required: ['name', 'age', 'gender'],
+    },
+    journey: {
+      type: 'object',
+      properties: {
+        train: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            number: { type: 'string' },
+          },
+          required: ['name', 'number'],
+        },
+        route: {
+          type: 'object',
+          properties: {
+            from: { type: 'string' },
+            to: { type: 'string' },
+          },
+          required: ['from', 'to'],
+        },
+        schedule: {
+          type: 'object',
+          properties: {
+            date: { type: 'string', format: 'date' },
+            departureTime: { type: 'string' },
+          },
+          required: ['date', 'departureTime'],
+        },
+      },
+      required: ['train', 'route', 'schedule'],
+    },
+    seat: {
+      type: 'object',
+      properties: {
+        number: { type: 'string' },
+        compartment: { type: 'string' },
+        class: { type: 'string' },
+      },
+      required: ['number', 'compartment', 'class'],
+    },
+    pricing: {
+      type: 'object',
+      properties: {
+        amount: { type: 'number' },
+        currency: { type: 'string', default: 'BDT' },
+      },
+      required: ['amount', 'currency'],
+    },
+  },
+  required: ['ticket', 'passenger', 'journey', 'seat', 'pricing'],
+};
+
+// Simplified ticket list item schema for listings
+export const ticketListItemSchema = {
+  type: 'object',
+  properties: {
+    ticket: {
+      type: 'object',
+      properties: {
+        id: { type: 'number' },
+        ticketId: { type: 'string' },
+        status: { type: 'string' },
+        paymentStatus: { type: 'string', enum: ['pending', 'paid', 'failed', 'cancelled', 'expired'] },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+      required: ['id', 'ticketId', 'status', 'paymentStatus', 'createdAt'],
+    },
+    journey: {
+      type: 'object',
+      properties: {
+        train: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            number: { type: 'string' },
+          },
+          required: ['name', 'number'],
+        },
+        route: {
+          type: 'object',
+          properties: {
+            from: { type: 'string' },
+            to: { type: 'string' },
+          },
+          required: ['from', 'to'],
+        },
+        schedule: {
+          type: 'object',
+          properties: {
+            date: { type: 'string', format: 'date' },
+            departureTime: { type: 'string' },
+          },
+          required: ['date', 'departureTime'],
+        },
+      },
+      required: ['train', 'route', 'schedule'],
+    },
+    seat: {
+      type: 'object',
+      properties: {
+        number: { type: 'string' },
+        compartment: { type: 'string' },
+      },
+      required: ['number', 'compartment'],
+    },
+    pricing: {
+      type: 'object',
+      properties: {
+        amount: { type: 'number' },
+        currency: { type: 'string', default: 'BDT' },
+      },
+      required: ['amount', 'currency'],
+    },
+  },
+  required: ['ticket', 'journey', 'seat', 'pricing'],
+};
+
+export const ticketsListResponseSchema = {
+  type: 'array',
+  items: ticketListItemSchema,
+};
+
 export const bookTicketBodySchema = {
   type: 'object',
   required: ['trainScheduleId', 'fromStationId', 'toStationId', 'compartmentId', 'seatNumber', 'passengerName', 'passengerAge', 'passengerGender'],

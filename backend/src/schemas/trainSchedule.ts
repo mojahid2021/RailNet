@@ -73,3 +73,8 @@ export const createTrainScheduleBodySchema = {
     },
   },
 };
+
+export const trainSchedulesListResponseSchema = {
+  type: 'array',
+  items: trainScheduleWithTimestampsSchema,
+};

@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { PrismaClient } from '@prisma/client';
-import { errorResponseSchema, stationWithTimestampsSchema } from '../schemas/index.js';
+import { errorResponseSchema, stationWithTimestampsSchema, createStationBodySchema, stationsListResponseSchema } from '../schemas/index.js';
 
 const prisma = new PrismaClient();
 
@@ -12,16 +12,7 @@ export default async function stationRoutes(fastify: FastifyInstance) {
       description: 'Create a new station (Admin only)',
       tags: ['Stations'],
       security: [{ bearerAuth: [] }],
-      body: {
-        type: 'object',
-        required: ['name', 'city', 'latitude', 'longitude'],
-        properties: {
-          name: { type: 'string' },
-          city: { type: 'string' },
-          latitude: { type: 'number' },
-          longitude: { type: 'number' },
-        },
-      },
+      body: createStationBodySchema,
       response: {
         201: stationWithTimestampsSchema,
         401: errorResponseSchema,
@@ -51,10 +42,7 @@ export default async function stationRoutes(fastify: FastifyInstance) {
       tags: ['Stations'],
       security: [{ bearerAuth: [] }],
       response: {
-        200: {
-          type: 'array',
-          items: stationWithTimestampsSchema,
-        },
+        200: stationsListResponseSchema,
       },
     },
   }, async (request, reply) => {

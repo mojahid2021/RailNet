@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import { addMinutes } from 'date-fns';
-import { errorResponseSchema, ticketWithTimestampsSchema, bookTicketBodySchema } from '../schemas/index.js';
+import { errorResponseSchema, ticketWithTimestampsSchema, ticketBookingResponseSchema, ticketListItemSchema, bookTicketBodySchema, ticketsListResponseSchema } from '../schemas/index.js';
 
 const prisma = new PrismaClient();
 
@@ -53,7 +53,7 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
       security: [{ bearerAuth: [] }],
       body: bookTicketBodySchema,
       response: {
-        201: ticketWithTimestampsSchema,
+        201: ticketBookingResponseSchema,
         400: errorResponseSchema,
         401: errorResponseSchema,
         404: errorResponseSchema,
@@ -327,7 +327,47 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
 
       console.log('Complete ticket fetched successfully:', completeTicket.ticketId);
 
-      reply.code(201).send(completeTicket);
+      // Transform to clean response format
+      const bookingResponse = {
+        ticket: {
+          id: completeTicket.id,
+          ticketId: completeTicket.ticketId,
+          status: completeTicket.status,
+          paymentStatus: completeTicket.paymentStatus,
+          expiresAt: completeTicket.expiresAt,
+          createdAt: completeTicket.createdAt,
+        },
+        passenger: {
+          name: completeTicket.passengerName,
+          age: completeTicket.passengerAge,
+          gender: completeTicket.passengerGender,
+        },
+        journey: {
+          train: {
+            name: completeTicket.trainSchedule.train.name,
+            number: completeTicket.trainSchedule.train.number,
+          },
+          route: {
+            from: completeTicket.fromStation.name,
+            to: completeTicket.toStation.name,
+          },
+          schedule: {
+            date: completeTicket.trainSchedule.date.toISOString().split('T')[0], // YYYY-MM-DD format
+            departureTime: completeTicket.trainSchedule.time,
+          },
+        },
+        seat: {
+          number: completeTicket.seatNumber,
+          compartment: completeTicket.seat.trainCompartment.compartment.name,
+          class: completeTicket.seat.trainCompartment.compartment.class,
+        },
+        pricing: {
+          amount: completeTicket.price,
+          currency: 'BDT',
+        },
+      };
+
+      reply.code(201).send(bookingResponse);
     } catch (error: any) {
       if (error.code === 'P2002') {
         return reply.code(409).send({ error: 'Seat already booked' });
@@ -344,10 +384,7 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
       tags: ['Tickets'],
       security: [{ bearerAuth: [] }],
       response: {
-        200: {
-          type: 'array',
-          items: ticketWithTimestampsSchema,
-        },
+        200: ticketsListResponseSchema,
       },
     },
   }, async (request, reply) => {
@@ -394,7 +431,40 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
       ],
     });
 
-    reply.send(tickets);
+    // Transform to clean response format
+    const ticketList = tickets.map(ticket => ({
+      ticket: {
+        id: ticket.id,
+        ticketId: ticket.ticketId,
+        status: ticket.status,
+        paymentStatus: ticket.paymentStatus,
+        createdAt: ticket.createdAt,
+      },
+      journey: {
+        train: {
+          name: ticket.trainSchedule.train.name,
+          number: ticket.trainSchedule.train.number,
+        },
+        route: {
+          from: ticket.fromStation.name,
+          to: ticket.toStation.name,
+        },
+        schedule: {
+          date: ticket.trainSchedule.date.toISOString().split('T')[0], // YYYY-MM-DD format
+          departureTime: ticket.trainSchedule.time,
+        },
+      },
+      seat: {
+        number: ticket.seatNumber,
+        compartment: ticket.seat.trainCompartment.compartment.name,
+      },
+      pricing: {
+        amount: ticket.price,
+        currency: 'BDT',
+      },
+    }));
+
+    reply.send(ticketList);
   });
 
   // Get ticket by ID - Authenticated users (only own tickets)
@@ -411,7 +481,7 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
         },
       },
       response: {
-        200: ticketWithTimestampsSchema,
+        200: ticketBookingResponseSchema,
         400: errorResponseSchema,
         403: errorResponseSchema,
         404: errorResponseSchema,
@@ -466,7 +536,47 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
       return reply.code(404).send({ error: 'Ticket not found' });
     }
 
-    reply.send(ticket);
+    // Transform to clean response format
+    const ticketResponse = {
+      ticket: {
+        id: ticket.id,
+        ticketId: ticket.ticketId,
+        status: ticket.status,
+        paymentStatus: ticket.paymentStatus,
+        expiresAt: ticket.expiresAt,
+        createdAt: ticket.createdAt,
+      },
+      passenger: {
+        name: ticket.passengerName,
+        age: ticket.passengerAge,
+        gender: ticket.passengerGender,
+      },
+      journey: {
+        train: {
+          name: ticket.trainSchedule.train.name,
+          number: ticket.trainSchedule.train.number,
+        },
+        route: {
+          from: ticket.fromStation.name,
+          to: ticket.toStation.name,
+        },
+        schedule: {
+          date: ticket.trainSchedule.date.toISOString().split('T')[0], // YYYY-MM-DD format
+          departureTime: ticket.trainSchedule.time,
+        },
+      },
+      seat: {
+        number: ticket.seatNumber,
+        compartment: ticket.seat.trainCompartment.compartment.name,
+        class: ticket.seat.trainCompartment.compartment.class,
+      },
+      pricing: {
+        amount: ticket.price,
+        currency: 'BDT',
+      },
+    };
+
+    reply.send(ticketResponse);
   });
 
   // Cancel ticket - Authenticated users (only own tickets)

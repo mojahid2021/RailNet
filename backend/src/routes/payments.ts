@@ -1,16 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { paymentService } from '../services/paymentService';
 import { bookingCleanupService } from '../services/cleanupService';
-
-export interface InitiatePaymentRequest {
-  ticketId: string;
-}
-
-export interface PaymentCallbackQuery {
-  tran_id?: string;
-  val_id?: string;
-  error?: string;
-}
+import { errorResponseSchema, initiatePaymentBodySchema, paymentInitiationResponseSchema, paymentCallbackQuerySchema, paymentSuccessResponseSchema } from '../schemas/index.js';
 
 async function paymentRoutes(fastify: FastifyInstance) {
   // Initiate payment - Authenticated users
@@ -20,38 +11,16 @@ async function paymentRoutes(fastify: FastifyInstance) {
       description: 'Initiate SSLCommerz payment for a ticket',
       tags: ['Payments'],
       security: [{ bearerAuth: [] }],
-      body: {
-        type: 'object',
-        required: ['ticketId'],
-        properties: {
-          ticketId: { type: 'string' },
-        },
-      },
+      body: initiatePaymentBodySchema,
       response: {
-        200: {
-          type: 'object',
-          properties: {
-            paymentUrl: { type: 'string' },
-            transactionId: { type: 'string' },
-          },
-        },
-        400: {
-          type: 'object',
-          properties: {
-            error: { type: 'string' },
-          },
-        },
-        404: {
-          type: 'object',
-          properties: {
-            error: { type: 'string' },
-          },
-        },
+        200: paymentInitiationResponseSchema,
+        400: errorResponseSchema,
+        404: errorResponseSchema,
       },
     },
   }, async (request, reply) => {
     const userId = (request.user as { id: number }).id;
-    const body = request.body as InitiatePaymentRequest;
+    const body = request.body as { ticketId: string };
 
     try {
       const result = await paymentService.initiatePayment({
@@ -74,26 +43,14 @@ async function paymentRoutes(fastify: FastifyInstance) {
     schema: {
       description: 'SSLCommerz success callback',
       tags: ['Payments'],
-      querystring: {
-        type: 'object',
-        properties: {
-          tran_id: { type: 'string' },
-          val_id: { type: 'string' },
-        },
-      },
+      querystring: paymentCallbackQuerySchema,
       response: {
-        200: {
-          type: 'string',
-          description: 'HTML success page',
-        },
-        400: {
-          type: 'string',
-          description: 'HTML error page',
-        },
+        200: paymentSuccessResponseSchema,
+        400: paymentSuccessResponseSchema,
       },
     },
   }, async (request, reply) => {
-    const query = request.query as PaymentCallbackQuery;
+    const query = request.query as { tran_id?: string; val_id?: string; error?: string };
 
     if (!query.tran_id || !query.val_id) {
       const errorHtml = `
@@ -163,7 +120,7 @@ async function paymentRoutes(fastify: FastifyInstance) {
       },
     },
   }, async (request, reply) => {
-    const query = request.query as PaymentCallbackQuery;
+    const query = request.query as { tran_id?: string; val_id?: string; error?: string };
 
     if (query.tran_id) {
       try {
@@ -206,7 +163,7 @@ async function paymentRoutes(fastify: FastifyInstance) {
       },
     },
   }, async (request, reply) => {
-    const query = request.query as PaymentCallbackQuery;
+    const query = request.query as { tran_id?: string; val_id?: string; error?: string };
 
     if (query.tran_id) {
       try {

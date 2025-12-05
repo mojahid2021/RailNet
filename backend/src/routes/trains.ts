@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { PrismaClient } from '@prisma/client';
-import { errorResponseSchema, trainWithTimestampsSchema, createTrainBodySchema } from '../schemas/index.js';
+import { errorResponseSchema, trainWithTimestampsSchema, createTrainBodySchema, trainsListResponseSchema } from '../schemas/index.js';
 
 const prisma = new PrismaClient();
 
@@ -87,10 +87,7 @@ export default async function trainRoutes(fastify: FastifyInstance) {
       tags: ['Trains'],
       security: [{ bearerAuth: [] }],
       response: {
-        200: {
-          type: 'array',
-          items: trainWithTimestampsSchema,
-        },
+        200: trainsListResponseSchema,
       },
     },
   }, async (request, reply) => {

@@ -7,6 +7,7 @@ import {
   routeStationWithDetailsSchema,
   trainRouteSchema,
   trainRouteWithDetailsSchema,
+  createTrainRouteBodySchema,
 } from '../schemas/index.js';
 
 const prisma = new PrismaClient();
@@ -18,25 +19,7 @@ export default async function trainRouteRoutes(fastify: FastifyInstance) {
       description: 'Create a new train route with stations',
       tags: ['Train Routes'],
       security: [{ bearerAuth: [] }],
-      body: {
-        type: 'object',
-        required: ['name', 'stations'],
-        properties: {
-          name: { type: 'string' },
-          stations: {
-            type: 'array',
-            minItems: 2,
-            items: {
-              type: 'object',
-              required: ['stationId', 'distance'],
-              properties: {
-                stationId: { type: 'number' },
-                distance: { type: 'number', minimum: 0 },
-              },
-            },
-          },
-        },
-      },
+      body: createTrainRouteBodySchema,
       response: {
         201: trainRouteSchema,
         400: errorResponseSchema,

@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { PrismaClient } from '@prisma/client';
-import { errorResponseSchema, compartmentWithTimestampsSchema, createCompartmentBodySchema } from '../schemas/index.js';
+import { errorResponseSchema, compartmentWithTimestampsSchema, createCompartmentBodySchema, compartmentsListResponseSchema } from '../schemas/index.js';
 
 const prisma = new PrismaClient();
 
@@ -50,10 +50,7 @@ export default async function compartmentRoutes(fastify: FastifyInstance) {
       tags: ['Compartments'],
       security: [{ bearerAuth: [] }],
       response: {
-        200: {
-          type: 'array',
-          items: compartmentWithTimestampsSchema,
-        },
+        200: compartmentsListResponseSchema,
       },
     },
   }, async (request, reply) => {

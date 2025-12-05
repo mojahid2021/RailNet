@@ -1,9 +1,10 @@
 export { errorResponseSchema } from './errorResponse.js';
-export { stationSchema, stationWithTimestampsSchema } from './station.js';
+export { stationSchema, stationWithTimestampsSchema, createStationBodySchema, stationsListResponseSchema } from './station.js';
 export { routeStationSchema, routeStationWithDetailsSchema } from './routeStation.js';
-export { trainRouteSchema, trainRouteWithDetailsSchema } from './trainRoute.js';
+export { trainRouteSchema, trainRouteWithDetailsSchema, createTrainRouteBodySchema } from './trainRoute.js';
 export { userSchema, authResponseSchema, registerBodySchema, loginBodySchema } from './auth.js';
-export { compartmentSchema, compartmentWithTimestampsSchema, createCompartmentBodySchema } from './compartment.js';
-export { trainSchema, trainWithTimestampsSchema, createTrainBodySchema, trainCompartmentSchema } from './train.js';
-export { trainScheduleSchema, trainScheduleWithTimestampsSchema, createTrainScheduleBodySchema, scheduleStationSchema } from './trainSchedule.js';
-export { ticketSchema, ticketWithTimestampsSchema, bookTicketBodySchema } from './ticket.js';
+export { compartmentSchema, compartmentWithTimestampsSchema, createCompartmentBodySchema, compartmentsListResponseSchema } from './compartment.js';
+export { trainSchema, trainWithTimestampsSchema, createTrainBodySchema, trainCompartmentSchema, trainsListResponseSchema } from './train.js';
+export { trainScheduleSchema, trainScheduleWithTimestampsSchema, createTrainScheduleBodySchema, scheduleStationSchema, trainSchedulesListResponseSchema } from './trainSchedule.js';
+export { ticketSchema, ticketWithTimestampsSchema, ticketBookingResponseSchema, ticketListItemSchema, bookTicketBodySchema, ticketsListResponseSchema } from './ticket.js';
+export { initiatePaymentBodySchema, paymentInitiationResponseSchema, paymentCallbackQuerySchema, paymentSuccessResponseSchema, paymentTransactionSchema } from './payment.js';

@@ -35,3 +35,8 @@ export const createCompartmentBodySchema = {
     totalSeats: { type: 'number', minimum: 1 },
   },
 };
+
+export const compartmentsListResponseSchema = {
+  type: 'array',
+  items: compartmentWithTimestampsSchema,
+};
