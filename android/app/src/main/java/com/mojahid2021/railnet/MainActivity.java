@@ -2,6 +2,8 @@ package com.mojahid2021.railnet;
 
 import static android.content.ContentValues.TAG;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,6 +22,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
+import com.mojahid2021.railnet.auth.LoginActivity;
 import com.mojahid2021.railnet.home.HomeFragment;
 import com.mojahid2021.railnet.map.MapFragment;
 import com.mojahid2021.railnet.profile.ProfileFragment;
@@ -38,6 +41,14 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
+        SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        String token = sharedPreferences.getString("auth_token", null);
+        if (token == null) {
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Set status bar icons to black (dark icons)

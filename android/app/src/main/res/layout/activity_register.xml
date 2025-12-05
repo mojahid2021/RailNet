@@ -39,6 +39,7 @@
                 android:layout_height="wrap_content">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/firstName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="First Name"
@@ -50,6 +51,7 @@
                 android:layout_height="wrap_content">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/lastName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Last Name"
@@ -61,6 +63,7 @@
                 android:layout_height="wrap_content">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/email"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Email"
@@ -73,6 +76,7 @@
                 app:passwordToggleEnabled="true">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/password"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Password"
@@ -89,6 +93,7 @@
             android:padding="10dp">
 
             <LinearLayout
+                android:id="@+id/registerButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/main_button"
@@ -101,7 +106,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Login"
+                    android:text="Register"
                     android:textColor="@color/white"
                     android:textSize="16dp"
                     android:textStyle="bold" />
@@ -121,6 +126,7 @@
                 android:textColor="@color/black" />
 
             <TextView
+                android:id="@+id/loginButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingLeft="5dp"
