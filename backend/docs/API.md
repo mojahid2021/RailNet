@@ -822,7 +822,56 @@ Authorization: Bearer <jwt_token>
 **Example:** `GET /train-schedules/search?fromStationId=1&toStationId=2&date=2025-11-30`
 
 **Response (200):**
-Returns an array of train schedules matching the search criteria (same structure as Get All Train Schedules).
+```json
+[
+  {
+    "id": 1,
+    "trainId": 1,
+    "trainRouteId": 1,
+    "train": {
+      "id": 1,
+      "name": "Express Train 101",
+      "number": "EXP101",
+      "trainRouteId": 1,
+      "createdAt": "2025-11-29T10:00:00.000Z",
+      "updatedAt": "2025-11-29T10:00:00.000Z"
+    },
+    "trainRoute": {
+      "id": 1,
+      "name": "NYC to Boston Express",
+      "startStationId": 1,
+      "endStationId": 2,
+      "createdAt": "2025-11-29T10:00:00.000Z",
+      "updatedAt": "2025-11-29T10:00:00.000Z"
+    },
+    "date": "2025-11-30T00:00:00.000Z",
+    "time": "08:00",
+    "stationTimes": [
+      {
+        "id": 1,
+        "trainScheduleId": 1,
+        "stationId": 1,
+        "station": {
+          "id": 1,
+          "name": "Central Station",
+          "city": "New York",
+          "latitude": 40.7128,
+          "longitude": -74.0060,
+          "createdAt": "2025-11-29T10:00:00.000Z",
+          "updatedAt": "2025-11-29T10:00:00.000Z"
+        },
+        "arrivalTime": null,
+        "departureTime": "08:00",
+        "sequence": 1,
+        "createdAt": "2025-11-29T10:00:00.000Z",
+        "updatedAt": "2025-11-29T10:00:00.000Z"
+      }
+    ],
+    "createdAt": "2025-11-29T10:00:00.000Z",
+    "updatedAt": "2025-11-29T10:00:00.000Z"
+  }
+]
+```
 
 ### Get Seat Availability for Schedule
 
@@ -975,75 +1024,52 @@ Authorization: Bearer <jwt_token>
 **Response (201):**
 ```json
 {
-  "id": 1,
-  "userId": 1,
-  "user": {
+  "ticket": {
     "id": 1,
-    "email": "user@example.com",
-    "firstName": "John",
-    "lastName": "Doe",
-    "role": "user"
+    "ticketId": "EXPR-20241205-1-042",
+    "status": "pending",
+    "paymentStatus": "pending",
+    "expiresAt": "2025-11-29T10:10:00.000Z",
+    "createdAt": "2025-11-29T10:00:00.000Z"
   },
-  "trainScheduleId": 1,
-  "trainSchedule": {
-    "id": 1,
-    "trainId": 1,
-    "date": "2025-11-30T08:00:00.000Z",
-    "time": "08:00",
+  "passenger": {
+    "name": "John Doe",
+    "age": 30,
+    "gender": "Male"
+  },
+  "journey": {
     "train": {
-      "id": 1,
       "name": "Express Train 101",
       "number": "EXP101"
+    },
+    "route": {
+      "from": "Central Station",
+      "to": "South Station"
+    },
+    "schedule": {
+      "date": "2025-11-30",
+      "departureTime": "08:00"
     }
   },
-  "fromStationId": 1,
-  "fromStation": {
-    "id": 1,
-    "name": "Central Station",
-    "city": "New York"
-  },
-  "toStationId": 2,
-  "toStation": {
-    "id": 2,
-    "name": "South Station",
-    "city": "Boston"
-  },
-  "seatId": 1,
-  "trainCompartmentId": 1,
-  "seatNumber": "1",
   "seat": {
-    "id": 1,
-    "seatNumber": "1",
-    "seatType": "Standard",
-    "row": 1,
-    "column": "A",
-    "trainCompartment": {
-      "id": 1,
-      "compartment": {
-        "id": 1,
-        "name": "First Class AC",
-        "class": "First",
-        "type": "AC",
-        "price": 1.50,
-        "totalSeats": 50
-      }
-    }
+    "number": "1",
+    "compartment": "First Class AC",
+    "class": "First"
   },
-  "passengerName": "John Doe",
-  "passengerAge": 30,
-  "passengerGender": "Male",
-  "price": 150.00,
-  "status": "booked",
-  "bookedAt": "2025-11-29T10:00:00.000Z",
-  "createdAt": "2025-11-29T10:00:00.000Z",
-  "updatedAt": "2025-11-29T10:00:00.000Z"
+  "pricing": {
+    "amount": 150.00,
+    "currency": "BDT"
+  }
 }
 ```
 
 **Notes:**
 - Seat numbers are simple sequential numbers like "1", "2", "3", etc.
 - Seats are created on-demand when first booked (should be pre-populated in production)
-- Ticket IDs are now human-readable strings in format: `TRAIN-DATE-SEAT-RANDOM` (e.g., `EXPR-20241205-1-042`)
+- Ticket IDs are human-readable strings in format: `TRAIN-DATE-SEAT-RANDOM` (e.g., `EXPR-20241205-1-042`)
+- Tickets are created with `status: "pending"` and `paymentStatus: "pending"`
+- Tickets expire after 10 minutes if payment is not completed
+- Response is structured for clean API consumption with separate sections for ticket, passenger, journey, seat, and pricing information
 
 ### Get User's Tickets
 
@@ -1057,7 +1083,41 @@ Authorization: Bearer <jwt_token>
 ```
 
 **Response (200):**
-Returns an array of tickets (same structure as Book Ticket response).
+```json
+[
+  {
+    "ticket": {
+      "id": 1,
+      "ticketId": "EXPR-20241205-1-042",
+      "status": "confirmed",
+      "paymentStatus": "paid",
+      "createdAt": "2025-11-29T10:00:00.000Z"
+    },
+    "journey": {
+      "train": {
+        "name": "Express Train 101",
+        "number": "EXP101"
+      },
+      "route": {
+        "from": "Central Station",
+        "to": "South Station"
+      },
+      "schedule": {
+        "date": "2025-11-30",
+        "departureTime": "08:00"
+      }
+    },
+    "seat": {
+      "number": "1",
+      "compartment": "First Class AC"
+    },
+    "pricing": {
+      "amount": 150.00,
+      "currency": "BDT"
+    }
+  }
+]
+```
 
 ### Get Ticket by ID
 
