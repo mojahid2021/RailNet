@@ -77,3 +77,21 @@
     <string name="trains_available_8">8 Trains Available</string>
     <string name="price_from_450">From ৳450</string>
     <string name="price_from_520">From ৳520</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="email">Email</string>
+    <string name="enter_your_email">Enter your email</string>
+    <string name="password">Password</string>
+    <string name="enter_your_password">Enter your password</string>
+    <string name="login_as_admin">Login as Admin</string>
+    <string name="app_icon_desc">App icon</string>
+    <string name="cover_image_desc">cover image</string>
+
+    <!-- Login -->
+    <string name="login_title">RailNet Login</string>
+    <string name="email_hint">Email or Username</string>
+    <string name="password_hint">Password</string>
+    <string name="login_button">Login</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="signup_text">Don\'t have an account? Sign up</string>
+</resources>
