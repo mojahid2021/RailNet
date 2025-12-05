@@ -11,6 +11,8 @@ import compartmentRoutes from './routes/compartments';
 import trainRoutes from './routes/trains';
 import trainScheduleRoutes from './routes/trainSchedules';
 import ticketRoutes from './routes/tickets';
+import paymentRoutes from './routes/payments';
+import { cleanupJobs } from './services/cleanupJobs';
 
 const start = async () => {
   const app = Fastify({
@@ -41,25 +43,30 @@ const start = async () => {
         openapi: '3.0.0',
         info: {
           title: 'RailNet Backend API',
-          description: `A comprehensive railway management system API built with Fastify and TypeScript.
-
-## Features
-- **Authentication**: JWT-based user authentication with role-based access control
-- **Station Management**: CRUD operations for railway stations
-- **Train Route Management**: Create and manage train routes with station sequences
-- **Compartment Management**: Manage different train compartments with pricing
-- **Train Assembly**: Build trains by combining routes and compartments
-- **Schedule Management**: Create train schedules with station-specific timing
-- **Train Search**: Search for available trains between stations
-- **Ticket Booking**: Complete ticket booking system with seat management
-
-## Authentication
-All endpoints except authentication require a valid JWT token in the Authorization header:
-\`Authorization: Bearer <your-jwt-token>\`
-
-## Data Models
-The API uses PostgreSQL with Prisma ORM and includes comprehensive relationships between:
-- Users, Stations, Train Routes, Compartments, Trains, Schedules, and Tickets`,
+          description: 'A comprehensive railway management system API built with Fastify and TypeScript.\n\n' +
+            '## Features\n' +
+            '- **Authentication**: JWT-based user authentication with role-based access control\n' +
+            '- **Station Management**: CRUD operations for railway stations\n' +
+            '- **Train Route Management**: Create and manage train routes with station sequences\n' +
+            '- **Compartment Management**: Manage different train compartments with pricing\n' +
+            '- **Train Assembly**: Build trains by combining routes and compartments\n' +
+            '- **Schedule Management**: Create train schedules with station-specific timing\n' +
+            '- **Train Search**: Search for available trains between stations\n' +
+            '- **Ticket Booking**: Complete ticket booking system with seat management and distance-based pricing\n' +
+            '- **Payment Processing**: SSLCommerz integration with automatic booking expiration and cleanup\n\n' +
+            '## Authentication\n' +
+            'All endpoints except authentication and payment callbacks require a valid JWT token in the Authorization header:\n' +
+            '`Authorization: Bearer <your-jwt-token>`\n\n' +
+            '## Payment System\n' +
+            'The API includes a complete payment processing system using SSLCommerz:\n' +
+            '- Secure payment initiation with customer details\n' +
+            '- Automatic booking expiration after 10 minutes\n' +
+            '- Real-time payment status updates via callbacks\n' +
+            '- Scheduled cleanup of expired bookings\n' +
+            '- Admin tools for monitoring and manual cleanup\n\n' +
+            '## Data Models\n' +
+            'The API uses PostgreSQL with Prisma ORM and includes comprehensive relationships between:\n' +
+            '- Users, Stations, Train Routes, Compartments, Trains, Schedules, and Tickets',
           version: '1.0.0',
           contact: {
             name: 'RailNet Support',
@@ -134,6 +141,36 @@ The API uses PostgreSQL with Prisma ORM and includes comprehensive relationships
                 updatedAt: { type: 'string', format: 'date-time' },
               },
             },
+            PaymentTransaction: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                ticketId: { type: 'number' },
+                transactionId: { type: 'string' },
+                amount: { type: 'number' },
+                currency: { type: 'string' },
+                status: { type: 'string', enum: ['INITIATED', 'COMPLETED', 'FAILED', 'CANCELLED'] },
+                paymentMethod: { type: 'string' },
+                bankTransactionId: { type: 'string' },
+                valId: { type: 'string' },
+                cardType: { type: 'string' },
+                completedAt: { type: 'string', format: 'date-time' },
+                gatewayUrl: { type: 'string' },
+                errorMessage: { type: 'string' },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+              },
+            },
+            PaymentLog: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                transactionId: { type: 'string' },
+                action: { type: 'string', enum: ['INITIATED', 'COMPLETED', 'FAILED', 'CANCELLED', 'EXPIRED'] },
+                details: { type: 'object' },
+                createdAt: { type: 'string', format: 'date-time' },
+              },
+            },
           },
         },
         tags: [
@@ -144,6 +181,7 @@ The API uses PostgreSQL with Prisma ORM and includes comprehensive relationships
           { name: 'Trains', description: 'Train assembly and management' },
           { name: 'Train Schedules', description: 'Train schedule creation and search' },
           { name: 'Tickets', description: 'Ticket booking and management' },
+          { name: 'Payments', description: 'SSLCommerz payment processing and booking cleanup' },
           { name: 'General', description: 'General API endpoints' },
         ],
       },
@@ -208,6 +246,7 @@ The API uses PostgreSQL with Prisma ORM and includes comprehensive relationships
     app.register(trainRoutes);
     app.register(trainScheduleRoutes);
     app.register(ticketRoutes);
+    app.register(paymentRoutes);
 
     // Root route
     app.get('/', {
@@ -229,6 +268,10 @@ The API uses PostgreSQL with Prisma ORM and includes comprehensive relationships
     await app.listen({ port: parseInt(process.env.PORT || '3000'), host: '0.0.0.0' });
     app.log.info(`Server running on http://localhost:${process.env.PORT || '3000'}`);
     app.log.info(`API documentation available at http://localhost:${process.env.PORT || '3000'}/documentation`);
+
+    // Start cleanup jobs
+    cleanupJobs.start();
+    app.log.info('Cleanup jobs started');
   } catch (err) {
     app.log.error(err);
     process.exit(1);

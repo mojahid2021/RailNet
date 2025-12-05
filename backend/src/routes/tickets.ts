@@ -1,8 +1,47 @@
 import { FastifyInstance } from 'fastify';
 import { PrismaClient } from '@prisma/client';
+import { addMinutes } from 'date-fns';
 import { errorResponseSchema, ticketWithTimestampsSchema, bookTicketBodySchema } from '../schemas/index.js';
 
 const prisma = new PrismaClient();
+
+// Generate a unique ticket ID
+function generateTicketId(trainName: string, date: Date, seatNumber: string): string {
+  // Clean train name (remove spaces, special chars, take first 3-4 chars)
+  const cleanTrainName = trainName.replace(/[^A-Za-z0-9]/g, '').substring(0, 4).toUpperCase();
+
+  // Format date as YYYYMMDD
+  const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+
+  // Clean seat number
+  const cleanSeatNumber = seatNumber.replace(/[^A-Za-z0-9]/g, '');
+
+  // Generate a random 3-digit suffix for uniqueness
+  const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+
+  return `${cleanTrainName}-${dateStr}-${cleanSeatNumber}-${randomSuffix}`;
+}
+
+// Populate seats for a train compartment (should be called when compartment is created)
+async function populateSeatsForCompartment(trainCompartmentId: number, totalSeats: number) {
+  const seats = [];
+
+  // Generate simple seat numbers like 1, 2, 3, 4, etc.
+  for (let i = 1; i <= totalSeats; i++) {
+    seats.push({
+      trainCompartmentId,
+      seatNumber: i.toString(),
+      isAvailable: true,
+    });
+  }
+
+  // Create seats in database
+  for (const seatData of seats) {
+    await prisma.seat.create({ data: seatData });
+  }
+
+  return seats.length;
+}
 
 export default async function ticketRoutes(fastify: FastifyInstance) {
   // Book a ticket - Authenticated users
@@ -99,7 +138,9 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
         },
         trainCompartmentId: trainCompartment.id,
         seatNumber,
-        status: 'booked',
+        status: {
+          in: ['booked', 'confirmed'] // Include confirmed tickets as well
+        },
       },
     });
 
@@ -139,21 +180,63 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
       const journeyDistance = toStationInRoute.distanceFromStart - fromStationInRoute.distanceFromStart;
       const price = journeyDistance * trainCompartment.compartment.price;
 
-      const ticket = await prisma.$transaction(async (tx) => {
-        // Create the seat record
-        const seat = await tx.seat.create({
-          data: {
-            trainCompartmentId: trainCompartment.id,
-            seatNumber,
-            seatType: 'Standard', // Simplified seat type
-            row: 1,
-            column: 'A',
-            isAvailable: false,
-          },
-        });
+      // Generate unique ticket ID outside transaction for better performance
+      const ticketId = generateTicketId(trainSchedule.train.name, trainSchedule.date, seatNumber);
 
-        // Update compartment booking count
-        await tx.compartmentBooking.update({
+      console.log('Creating ticket with ID:', ticketId, 'for user:', userId);
+
+      const ticket = await prisma.$transaction(
+        async (tx) => {
+          // Find or create the seat record
+          let seat = await tx.seat.findUnique({
+            where: {
+              trainCompartmentId_seatNumber: {
+                trainCompartmentId: trainCompartment.id,
+                seatNumber,
+              },
+            },
+          });
+
+          if (!seat) {
+            // Seat doesn't exist, create it with just the seat number
+            seat = await tx.seat.create({
+              data: {
+                trainCompartmentId: trainCompartment.id,
+                seatNumber,
+                isAvailable: false, // Mark as unavailable immediately since we're booking it
+              },
+            });
+          } else {
+            // Seat exists, mark as unavailable (we already checked for existing tickets above)
+            seat = await tx.seat.update({
+              where: { id: seat.id },
+              data: { isAvailable: false },
+            });
+          }
+
+          // Create the ticket (simplified includes for transaction performance)
+          return await tx.ticket.create({
+            data: {
+              ticketId,
+              userId,
+              trainScheduleId,
+              fromStationId,
+              toStationId,
+              seatId: seat.id,
+              trainCompartmentId: seat.trainCompartmentId,
+              seatNumber: seat.seatNumber,
+              passengerName,
+              passengerAge,
+              passengerGender,
+              price,
+              expiresAt: addMinutes(new Date(), parseInt(process.env.BOOKING_EXPIRY_MINUTES || '10')),
+            },
+          });
+      });
+
+      // Update compartment booking count outside transaction for better performance
+      try {
+        await prisma.compartmentBooking.update({
           where: {
             trainScheduleId_trainCompartmentId: {
               trainScheduleId: trainScheduleId,
@@ -166,65 +249,85 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
             },
           },
         });
+        console.log('Compartment booking updated successfully');
+      } catch (compartmentError) {
+        console.error('Failed to update compartment booking:', compartmentError);
+        // Don't throw here - ticket is still valid, just log the error
+      }
 
-        // Create the ticket
-        return await tx.ticket.create({
-          data: {
-            userId,
-            trainScheduleId,
-            fromStationId,
-            toStationId,
-            seatId: seat.id,
-            trainCompartmentId: seat.trainCompartmentId,
-            seatNumber: seat.seatNumber,
-            passengerName,
-            passengerAge,
-            passengerGender,
-            price,
-          },
-          include: {
-            user: true,
-            trainSchedule: {
-              include: {
-                train: {
-                  include: {
-                    trainRoute: {
-                      include: {
-                        startStation: true,
-                        endStation: true,
-                      },
+      console.log('Ticket created successfully:', ticket.id, ticketId);
+
+      // Fetch complete ticket data with all includes (outside transaction for performance)
+      const completeTicket = await prisma.ticket.findUnique({
+        where: { id: ticket.id },
+        select: {
+          id: true,
+          ticketId: true,
+          userId: true,
+          trainScheduleId: true,
+          fromStationId: true,
+          toStationId: true,
+          seatId: true,
+          trainCompartmentId: true,
+          seatNumber: true,
+          passengerName: true,
+          passengerAge: true,
+          passengerGender: true,
+          price: true,
+          status: true,
+          paymentStatus: true,
+          expiresAt: true,
+          confirmedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          user: true,
+          trainSchedule: {
+            include: {
+              train: {
+                include: {
+                  trainRoute: {
+                    include: {
+                      startStation: true,
+                      endStation: true,
                     },
                   },
                 },
-                stationTimes: {
-                  include: {
-                    station: true,
-                  },
-                  orderBy: { sequence: 'asc' },
+              },
+              stationTimes: {
+                include: {
+                  station: true,
                 },
+                orderBy: { sequence: 'asc' },
               },
             },
-            fromStation: true,
-            toStation: true,
-            trainCompartment: {
-              include: {
-                compartment: true,
-              },
+          },
+          fromStation: true,
+          toStation: true,
+          trainCompartment: {
+            include: {
+              compartment: true,
             },
-            seat: {
-              include: {
-                trainCompartment: {
-                  include: {
-                    compartment: true,
-                  },
+          },
+          seat: {
+            include: {
+              trainCompartment: {
+                include: {
+                  compartment: true,
                 },
               },
             },
           },
-        });
+        },
       });
 
-      reply.code(201).send(ticket);
+      if (!completeTicket) {
+        console.error('Failed to fetch complete ticket data for ID:', ticket.id);
+        throw new Error('Ticket created but could not retrieve complete data');
+      }
+
+      console.log('Complete ticket fetched successfully:', completeTicket.ticketId);
+
+      reply.code(201).send(completeTicket);
     } catch (error: any) {
       if (error.code === 'P2002') {
         return reply.code(409).send({ error: 'Seat already booked' });
@@ -287,7 +390,7 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
         },
       },
       orderBy: [
-        { bookedAt: 'desc' },
+        { createdAt: 'desc' },
       ],
     });
 
@@ -316,16 +419,11 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
     },
   }, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const ticketId = parseInt(id);
     const userId = (request.user as { id: number }).id;
-
-    if (isNaN(ticketId)) {
-      return reply.code(400).send({ error: 'Invalid ticket ID' });
-    }
 
     const ticket = await prisma.ticket.findFirst({
       where: {
-        id: ticketId,
+        ticketId: id,
         userId, // Only allow users to see their own tickets
       },
       include: {
@@ -393,17 +491,12 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
     },
   }, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const ticketId = parseInt(id);
     const userId = (request.user as { id: number }).id;
-
-    if (isNaN(ticketId)) {
-      return reply.code(400).send({ error: 'Invalid ticket ID' });
-    }
 
     // Check if ticket exists and belongs to user
     const ticket = await prisma.ticket.findFirst({
       where: {
-        id: ticketId,
+        ticketId: id,
         userId,
       },
     });
@@ -463,7 +556,7 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
 
       // Update ticket status
       return await tx.ticket.update({
-        where: { id: ticketId },
+        where: { id: ticket.id },
         data: { status: 'cancelled' },
         include: {
           user: true,

@@ -691,9 +691,6 @@ export default async function trainScheduleRoutes(fastify: FastifyInstance) {
                       properties: {
                         seatId: { type: 'number' },
                         seatNumber: { type: 'string' },
-                        seatType: { type: 'string' },
-                        row: { type: 'number' },
-                        column: { type: 'string' },
                         isAvailable: { type: 'boolean' },
                         passengerName: { type: 'string' },
                         passengerAge: { type: 'number' },
@@ -736,10 +733,6 @@ export default async function trainScheduleRoutes(fastify: FastifyInstance) {
                       },
                     },
                   },
-                  orderBy: [
-                    { row: 'asc' },
-                    { column: 'asc' },
-                  ],
                 },
               },
             },
@@ -780,9 +773,6 @@ export default async function trainScheduleRoutes(fastify: FastifyInstance) {
         seats.push({
           seatId: seat.id,
           seatNumber: seat.seatNumber,
-          seatType: seat.seatType,
-          row: seat.row,
-          column: seat.column,
           isAvailable: seat.isAvailable,
           passengerName: seat.ticket?.passengerName || null,
           passengerAge: seat.ticket?.passengerAge || null,
@@ -795,9 +785,6 @@ export default async function trainScheduleRoutes(fastify: FastifyInstance) {
         seats.push({
           seatId: null,
           seatNumber: `Seat-${bookedCount + i + 1}`,
-          seatType: 'Standard',
-          row: 1,
-          column: 'A',
           isAvailable: true,
           passengerName: null,
           passengerAge: null,

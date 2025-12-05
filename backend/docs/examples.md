@@ -270,7 +270,7 @@ curl -X POST $BASE_URL/tickets \
     "fromStationId": 1,
     "toStationId": 2,
     "compartmentId": 1,
-    "seatNumber": "1A",
+    "seatNumber": "1",
     "passengerName": "John Doe",
     "passengerAge": 30,
     "passengerGender": "Male"
@@ -440,13 +440,13 @@ TICKET_RESPONSE=$(curl -s -X POST $BASE_URL/tickets \
     "fromStationId": 1,
     "toStationId": 2,
     "compartmentId": 1,
-    "seatNumber": "1A",
+    "seatNumber": "1",
     "passengerName": "John Doe",
     "passengerAge": 30,
     "passengerGender": "Male"
   }')
 
-TICKET_ID=$(echo $TICKET_RESPONSE | jq '.id')
+TICKET_ID=$(echo $TICKET_RESPONSE | jq -r '.ticketId')
 echo "Ticket booked with ID: $TICKET_ID"
 
 # 11. View user's tickets
@@ -486,7 +486,93 @@ Error response format:
 }
 ```
 
+## Payment Processing Examples
+
+### Book a ticket (as user)
+
+First, book a ticket to get a ticket ID for payment:
+
+```bash
+# Book a ticket
+TICKET_RESPONSE=$(curl -s -X POST $BASE_URL/tickets \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "trainScheduleId": 1,
+    "fromStationId": 1,
+    "toStationId": 3,
+    "compartmentId": 1,
+    "seatNumber": "A1",
+    "passengerName": "John Doe",
+    "passengerAge": 30,
+    "passengerGender": "Male"
+  }')
+
+# Extract ticket ID
+TICKET_ID=$(echo $TICKET_RESPONSE | jq -r '.ticketId')
+echo "Booked ticket ID: $TICKET_ID"
+```
+
+### Initiate payment for a ticket
+
+```bash
+# Initiate payment
+PAYMENT_RESPONSE=$(curl -s -X POST $BASE_URL/payments/initiate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"ticketId\": $TICKET_ID
+  }")
+
+# Extract payment URL
+PAYMENT_URL=$(echo $PAYMENT_RESPONSE | jq -r '.paymentUrl')
+TRANSACTION_ID=$(echo $PAYMENT_RESPONSE | jq -r '.transactionId')
+
+echo "Payment URL: $PAYMENT_URL"
+echo "Transaction ID: $TRANSACTION_ID"
+```
+
+### Check ticket status after payment
+
+```bash
+# Check ticket status
+curl -X GET $BASE_URL/tickets/$TICKET_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+### Admin: Manual cleanup of expired bookings
+
+```bash
+# Run manual cleanup (admin only)
+curl -X POST $BASE_URL/payments/cleanup \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+### Admin: Get cleanup statistics
+
+```bash
+# Get pending booking statistics (admin only)
+curl -X GET $BASE_URL/payments/cleanup/stats \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
 ## Notes
+
+- Replace `$TOKEN` with your actual JWT token
+- All admin operations require admin role (set during registration)
+- Dates should be in YYYY-MM-DD format
+- Times should be in HH:MM format (24-hour)
+- The search endpoint validates station order and returns empty array if no valid routes found
+- Seat numbers must be unique per train/date/compartment
+- Tickets can only be cancelled up to 2 hours before departure
+- **Ticket IDs**: Now use human-readable format `TRAIN-DATE-SEAT-RANDOM` (e.g., `EXPR-20241205-1A-042`)
+- **Payment Flow**: Book ticket → Initiate payment → Complete payment on SSLCommerz → Ticket confirmed
+- **Auto-Expiration**: Unpaid bookings expire after 10 minutes automatically
+- **SSLCommerz**: Use sandbox mode for testing, production credentials for live payments
+
 
 - Replace `$TOKEN` with your actual JWT token
 - All admin operations require admin role (set during registration)

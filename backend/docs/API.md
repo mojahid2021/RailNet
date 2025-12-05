@@ -854,7 +854,7 @@ Authorization: Bearer <jwt_token>
       "seats": [
         {
           "seatId": 1,
-          "seatNumber": "1A",
+          "seatNumber": "1",
           "seatType": "Window",
           "row": 1,
           "column": "A",
@@ -948,7 +948,7 @@ Authorization: Bearer <jwt_token>
   "fromStationId": 1,
   "toStationId": 2,
   "compartmentId": 1,
-  "seatNumber": "1A",
+  "seatNumber": "1",
   "passengerName": "John Doe",
   "passengerAge": 30,
   "passengerGender": "Male"
@@ -961,7 +961,7 @@ Authorization: Bearer <jwt_token>
 | fromStationId | number | Yes | Departure station ID |
 | toStationId | number | Yes | Arrival station ID |
 | compartmentId | number | Yes | ID of the compartment type |
-| seatNumber | string | Yes | Seat number (e.g., "1A", "2B") |
+| seatNumber | string | Yes | Seat number (e.g., "1", "2", "3") |
 | passengerName | string | Yes | Passenger's full name |
 | passengerAge | number | Yes | Passenger's age (1-120) |
 | passengerGender | string | Yes | One of: "Male", "Female", "Other" |
@@ -1010,10 +1010,10 @@ Authorization: Bearer <jwt_token>
   },
   "seatId": 1,
   "trainCompartmentId": 1,
-  "seatNumber": "1A",
+  "seatNumber": "1",
   "seat": {
     "id": 1,
-    "seatNumber": "1A",
+    "seatNumber": "1",
     "seatType": "Standard",
     "row": 1,
     "column": "A",
@@ -1040,6 +1040,11 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
+**Notes:**
+- Seat numbers are simple sequential numbers like "1", "2", "3", etc.
+- Seats are created on-demand when first booked (should be pre-populated in production)
+- Ticket IDs are now human-readable strings in format: `TRAIN-DATE-SEAT-RANDOM` (e.g., `EXPR-20241205-1-042`)
+
 ### Get User's Tickets
 
 **GET** `/tickets`
@@ -1060,6 +1065,9 @@ Returns an array of tickets (same structure as Book Ticket response).
 
 Retrieve a specific ticket by ID. Users can only view their own tickets.
 
+**Parameters:**
+- `id` (string) - Ticket ID in format: `TRAIN-DATE-SEAT-RANDOM` (e.g., `EXPR-20241205-1-042`)
+
 **Headers:**
 ```
 Authorization: Bearer <jwt_token>
@@ -1073,6 +1081,9 @@ Same structure as Book Ticket response.
 **PUT** `/tickets/{id}/cancel`
 
 Cancel a booked ticket. Tickets can only be cancelled up to 2 hours before departure.
+
+**Parameters:**
+- `id` (string) - Ticket ID in format: `TRAIN-DATE-SEAT-RANDOM` (e.g., `EXPR-20241205-1-042`)
 
 **Headers:**
 ```
@@ -1262,10 +1273,10 @@ All endpoints may return the following error responses:
 {
   "id": "number",
   "trainCompartmentId": "number",
-  "seatNumber": "string (e.g., 1A, 2B)",
-  "seatType": "string (Window | Aisle | Middle)",
-  "row": "number",
-  "column": "string (A, B, C, etc.)",
+  "seatNumber": "string (e.g., 1, 2, 3)",
+  "seatType": "string (optional)",
+  "row": "number (optional)",
+  "column": "string (optional)",
   "isAvailable": "boolean",
   "trainCompartment": "TrainCompartment",
   "createdAt": "string (ISO 8601)",
@@ -1352,7 +1363,169 @@ All endpoints may return the following error responses:
 8. **Book tickets (as user):**
    - Search for trains → Check available seats → Book ticket
 
+## Payment Processing
+
+The API includes a complete SSLCommerz payment integration with automatic booking expiration and cleanup.
+
+### Initiate Payment
+
+**POST** `/payments/initiate`
+
+Initiate a payment for a booked ticket. Creates a payment transaction and returns SSLCommerz gateway URL.
+
+**Authentication:** Required (ticket owner)
+
+**Request Body:**
+```json
+{
+  "ticketId": 1
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| ticketId | number | Yes | ID of the ticket to pay for |
+
+**Notes:**
+- Customer details are automatically fetched from the authenticated user's profile
+- Default values are used for missing profile information (phone, address, etc.)
+
+**Response (200):**
+```json
+{
+  "paymentUrl": "https://sandbox.sslcommerz.com/gwprocess/...",
+  "transactionId": "TXN_1734953100030_1"
+}
+```
+
+**Error Responses:**
+- `400` - Invalid ticket or ticket not in pending status
+- `403` - User not authorized to pay for this ticket
+- `404` - Ticket not found
+
+### Payment Callbacks
+
+The following endpoints handle SSLCommerz payment callbacks and do not require authentication:
+
+#### Payment Success
+
+**GET** `/payments/success`
+
+Handles successful payment completion. Updates ticket status to paid and confirmed.
+
+**Query Parameters:**
+- `tran_id` (string) - Transaction ID
+- `val_id` (string) - Validation ID
+
+**Response:** HTML success page
+
+#### Payment Failure
+
+**GET** `/payments/fail`
+
+Handles payment failure. Updates transaction status to failed.
+
+**Query Parameters:**
+- `tran_id` (string) - Transaction ID
+- `error` (string) - Error message
+
+**Response:** HTML failure page
+
+#### Payment Cancelled
+
+**GET** `/payments/cancel`
+
+Handles payment cancellation by user.
+
+**Query Parameters:**
+- `tran_id` (string) - Transaction ID
+
+**Response:** HTML cancellation page
+
+#### Instant Payment Notification
+
+**POST** `/payments/ipn`
+
+Server-to-server callback for payment status updates.
+
+**Request Body:**
+```json
+{
+  "val_id": "validation_id_here"
+}
+```
+
+**Response:**
+```json
+{
+  "status": "SUCCESS"
+}
+```
+
+### Admin Payment Management
+
+#### Manual Cleanup
+
+**POST** `/payments/cleanup`
+
+Manually trigger cleanup of expired bookings.
+
+**Authentication:** Required (admin only)
+
+**Response (200):**
+```json
+{
+  "expiredTickets": 5,
+  "cancelledTransactions": 5,
+  "errors": []
+}
+```
+
+#### Get Cleanup Statistics
+
+**GET** `/payments/cleanup/stats`
+
+Get statistics about pending bookings and cleanup status.
+
+**Authentication:** Required (admin only)
+
+**Response (200):**
+```json
+{
+  "totalPending": 12,
+  "expiringSoon": 3,
+  "expired": 2
+}
+```
+
+## Payment Flow
+
+1. **Book Ticket**: User books a ticket (status: `pending`, paymentStatus: `pending`)
+2. **Initiate Payment**: User calls `/payments/initiate` with customer details
+3. **Redirect to Gateway**: User is redirected to SSLCommerz payment page
+4. **Payment Processing**: User completes payment on SSLCommerz
+5. **Callback Handling**: SSLCommerz sends success/failure callbacks
+6. **Status Update**: Ticket status updated to `confirmed`, paymentStatus to `paid`
+7. **Auto-Expiration**: Unpaid bookings automatically expire after 10 minutes
+8. **Cleanup**: Expired bookings are cleaned up, seats are freed
+
 ## Notes
+
+- **Authentication**: All endpoints except `/register`, `/login`, and payment callbacks require a valid JWT token
+- **Admin Access**: Create/Update/Delete operations on stations, routes, compartments, trains, and schedules require admin role
+- **Date Format**: All dates should be in ISO format (YYYY-MM-DD)
+- **Time Format**: Times should be in HH:MM format (24-hour)
+- **Unique Constraints**: Station names, train numbers, and route names must be unique
+- **Route Validation**: The search endpoint validates that the "to" station comes after the "from" station in the route
+- **Booking Validation**: Seat numbers are validated to prevent double bookings
+- **Cancellation Policy**: Tickets can only be cancelled up to 2 hours before departure
+- **Schedule Calculation**: Station times are provided manually when creating train schedules
+- **Compartment Booking System**: Uses date-based compartment booking records for fast seat availability checking
+- **Pricing Model**: Distance-based pricing (journey distance × compartment price)
+- **Rate Limiting**: API is rate-limited to 100 requests per minute per IP
+- **Payment Expiration**: Bookings automatically expire after 10 minutes if not paid
+- **SSLCommerz Integration**: Supports both sandbox and production modes
+- **Automatic Cleanup**: Scheduled jobs clean up expired bookings every 5 minutes
 
 - **Authentication**: All endpoints except `/register` and `/login` require a valid JWT token
 - **Admin Access**: Create/Update/Delete operations on stations, routes, compartments, trains, and schedules require admin role

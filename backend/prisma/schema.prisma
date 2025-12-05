@@ -203,12 +203,6 @@ model Seat {
 
   seatNumber        String          // e.g., "1A", "2B", "15C"
 
-  seatType          String          // "Window", "Aisle", "Middle"
-
-  row               Int
-
-  column            String          // "A", "B", "C", etc.
-
   isAvailable       Boolean         @default(true)
 
   ticket            Ticket?         // Nullable - seat can be unbooked
@@ -279,6 +273,8 @@ model Ticket {
 
   id                Int           @id @default(autoincrement())
 
+  ticketId          String        @unique // Human-readable ticket ID (e.g., "EXP123-20241205-001A")
+
   userId            Int
 
   user              User          @relation(fields: [userId], references: [id])
@@ -313,13 +309,86 @@ model Ticket {
 
   price             Float
 
-  status            String        @default("booked") // "booked", "cancelled", "used"
-
-  bookedAt          DateTime      @default(now())
+  status            String        @default("pending") // "pending", "confirmed", "cancelled", "expired"
+  paymentStatus     String        @default("pending") // "pending", "paid", "failed", "cancelled"
+  expiresAt         DateTime? // Auto-calculated: createdAt + 10 minutes
+  confirmedAt       DateTime?
 
   createdAt         DateTime      @default(now())
 
   updatedAt         DateTime      @updatedAt
+
+  paymentTransactions PaymentTransaction[]
+
+}
+
+model PaymentTransaction {
+
+  id                String   @id @default(cuid())
+
+  ticketId          Int      @unique
+
+  ticket            Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  
+
+  // SSLCommerz transaction details
+
+  transactionId     String   @unique // SSLCommerz transaction ID
+
+  sessionKey        String?  // SSLCommerz session key
+
+  amount            Float
+
+  currency          String   @default("BDT")
+
+  
+
+  // Payment status
+
+  status            String   // "pending", "completed", "failed", "cancelled", "refunded"
+
+  paymentMethod     String?  // Card, Mobile, etc.
+
+  bankTransactionId String?
+
+  valId             String?  // SSLCommerz validation ID
+
+  cardType          String?  // Card type (VISA, MASTER, etc.)
+
+  completedAt       DateTime? // When payment was completed
+
+  gatewayUrl        String?  // SSLCommerz gateway URL
+
+  errorMessage      String?  // Error message if payment failed
+
+  metadata          Json?    // Additional customer/payment metadata
+
+  
+
+  // SSLCommerz response data
+
+  sslcommerzData    Json?    // Store full SSLCommerz response
+
+  
+
+  createdAt         DateTime @default(now())
+
+  updatedAt         DateTime @updatedAt
+
+}
+
+model PaymentLog {
+
+  id            String   @id @default(cuid())
+
+  transactionId String
+
+  action        String   // "INITIATED", "COMPLETED", "FAILED", "CANCELLED"
+
+  details       Json     // Store webhook/callback data
+
+  createdAt     DateTime @default(now())
 
 }
 

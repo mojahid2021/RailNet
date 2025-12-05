@@ -12,6 +12,7 @@ A comprehensive railway management system API built with Fastify and TypeScript,
 - **Schedule Management**: Create train schedules with station-specific timing
 - **Train Search**: Search for available trains between stations with filters
 - **Ticket Booking**: Complete ticket booking system with seat management and validation
+- **Payment Processing**: SSLCommerz integration with automatic booking expiration and cleanup
 - **Security**: Rate limiting, CORS, password hashing with bcrypt
 - **Validation**: Request validation with JSON schemas
 - **Documentation**: Auto-generated OpenAPI/Swagger documentation
@@ -46,6 +47,15 @@ A comprehensive railway management system API built with Fastify and TypeScript,
 | `JWT_SECRET` | Secret key for JWT signing | Required |
 | `CORS_ORIGIN` | Allowed origin for CORS | `http://localhost:3000` |
 | `PORT` | Server port | `3000` |
+| `SSLCOMMERZ_STORE_ID` | SSLCommerz store ID | Required for payments |
+| `SSLCOMMERZ_STORE_PASSWORD` | SSLCommerz store password | Required for payments |
+| `SSLCOMMERZ_IS_SANDBOX` | Use SSLCommerz sandbox mode | `true` |
+| `SSLCOMMERZ_API_URL` | SSLCommerz API URL | `https://sandbox.sslcommerz.com` |
+| `SSLCOMMERZ_SUCCESS_URL` | Payment success callback URL | Required for payments |
+| `SSLCOMMERZ_FAIL_URL` | Payment failure callback URL | Required for payments |
+| `SSLCOMMERZ_CANCEL_URL` | Payment cancel callback URL | Required for payments |
+| `SSLCOMMERZ_IPN_URL` | Instant Payment Notification URL | Required for payments |
+| `BOOKING_EXPIRY_MINUTES` | Minutes before unpaid bookings expire | `10` |
 
 ## API Endpoints
 
@@ -370,6 +380,107 @@ Authorization: Bearer <token>
 
 **Note:** Tickets can only be cancelled up to 2 hours before departure.
 
+### Payment Processing
+
+The API includes a complete SSLCommerz payment integration with automatic booking expiration and cleanup.
+
+#### Initiate Payment (Authenticated Users)
+
+```http
+POST /payments/initiate
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "ticketId": 1,
+  "customerName": "John Doe",
+  "customerEmail": "john@example.com",
+  "customerPhone": "+8801712345678",
+  "customerAddress": "123 Main St",
+  "customerCity": "Dhaka",
+  "customerCountry": "Bangladesh"
+}
+```
+
+**Response:**
+
+```json
+{
+  "paymentUrl": "https://sandbox.sslcommerz.com/gwprocess/...",
+  "transactionId": "TXN_1734953100030_1"
+}
+```
+
+**Features:**
+
+- Creates payment transaction record
+- Initiates SSLCommerz payment session
+- Returns payment gateway URL for user redirection
+- Automatic booking expiration after 10 minutes if unpaid
+
+#### Payment Callbacks (Public Endpoints)
+
+The following endpoints handle SSLCommerz callbacks and do not require authentication:
+
+- `GET /payments/success` - Payment success callback
+- `GET /payments/fail` - Payment failure callback
+- `GET /payments/cancel` - Payment cancellation callback
+- `POST /payments/ipn` - Instant Payment Notification (server-to-server)
+
+#### Admin Payment Management
+
+##### Manual Cleanup (Admin Only)
+
+```http
+POST /payments/cleanup
+Authorization: Bearer <admin-token>
+```
+
+**Response:**
+
+```json
+{
+  "expiredTickets": 5,
+  "cancelledTransactions": 5,
+  "errors": []
+}
+```
+
+##### Get Cleanup Statistics (Admin Only)
+
+```http
+GET /payments/cleanup/stats
+Authorization: Bearer <admin-token>
+```
+
+**Response:**
+
+```json
+{
+  "totalPending": 12,
+  "expiringSoon": 3,
+  "expired": 2
+}
+```
+
+#### Automatic Cleanup System
+
+- **Scheduled Jobs**: Runs every 5 minutes to clean up expired bookings
+- **Statistics Logging**: Logs pending booking statistics every 10 minutes
+- **Resource Management**: Automatically frees up seats when bookings expire
+- **Transaction Cleanup**: Cancels associated payment transactions for expired bookings
+
+#### Payment Flow
+
+1. **Booking**: User books a ticket (status: `pending`, paymentStatus: `pending`)
+2. **Payment Initiation**: User initiates payment with customer details
+3. **Gateway Redirect**: User is redirected to SSLCommerz payment gateway
+4. **Payment Processing**: User completes payment on SSLCommerz
+5. **Callback Handling**: SSLCommerz sends success/failure callbacks
+6. **Confirmation**: Ticket status updated to `confirmed`, paymentStatus to `paid`
+7. **Auto-Expiration**: Unpaid bookings automatically expire after 10 minutes
+8. **Cleanup**: Expired bookings are cleaned up, seats are freed
+
 ## Error Responses
 
 All errors follow a consistent format:
@@ -415,7 +526,14 @@ src/
 │   ├── compartments.ts  # Compartment management
 │   ├── trains.ts        # Train assembly
 │   ├── trainSchedules.ts # Schedule management
-│   └── tickets.ts       # Ticket booking
+│   ├── tickets.ts       # Ticket booking
+│   └── payments.ts      # Payment processing and cleanup
+├── services/            # Business logic services
+│   ├── paymentService.ts # Payment processing logic
+│   ├── cleanupService.ts # Booking cleanup utilities
+│   └── cleanupJobs.ts   # Scheduled cleanup jobs
+├── utils/               # Utility functions
+│   └── sslcommerz.ts    # SSLCommerz HTTP client
 ├── schemas/             # JSON schema validations
 ├── decorators/          # Custom Fastify decorators
 └── plugins/             # Fastify plugins
@@ -433,6 +551,40 @@ prisma/
 5. Create stations, routes, compartments, and trains (admin required)
 6. Create schedules and search for trains
 7. Book tickets and manage bookings
+8. **Test Payment Flow**:
+   - Book a ticket (remains in `pending` status)
+   - Initiate payment with customer details
+   - Use the returned payment URL for testing (sandbox mode)
+   - Observe automatic expiration after 10 minutes if unpaid
+   - Check admin cleanup endpoints for monitoring
+
+## SSLCommerz Integration
+
+### Sandbox Testing
+
+For testing payments without real money:
+
+1. Set `SSLCOMMERZ_IS_SANDBOX=true` in your `.env` file
+2. Use test card details provided by SSLCommerz
+3. All transactions will be simulated
+
+### Production Setup
+
+For live payments:
+
+1. Set `SSLCOMMERZ_IS_SANDBOX=false`
+2. Update all callback URLs to your production domain
+3. Use your live SSLCommerz store credentials
+4. Ensure HTTPS is enabled for all callback endpoints
+
+### Callback URLs
+
+Configure the following URLs in your SSLCommerz store settings:
+
+- **Success URL**: `https://yourdomain.com/payments/success`
+- **Fail URL**: `https://yourdomain.com/payments/fail`
+- **Cancel URL**: `https://yourdomain.com/payments/cancel`
+- **IPN URL**: `https://yourdomain.com/payments/ipn`
 
 ## Contributing
 
