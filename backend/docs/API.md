@@ -377,7 +377,7 @@ Authorization: Bearer <jwt_token>
   "name": "First Class AC",
   "class": "First",
   "type": "AC",
-  "price": 150.00,
+  "price": 1.50,
   "totalSeats": 50
 }
 ```
@@ -387,7 +387,7 @@ Authorization: Bearer <jwt_token>
 | name | string | Yes | Compartment name |
 | class | string | Yes | Compartment class (e.g., "First", "Second", "Third") |
 | type | string | Yes | Compartment type (e.g., "AC", "Non-AC", "Sleeper") |
-| price | number | Yes | Base price per ticket (minimum 0) |
+| price | number | Yes | Price per kilometer (minimum 0) |
 | totalSeats | number | Yes | Total number of seats (minimum 1) |
 
 **Response (201):**
@@ -397,7 +397,7 @@ Authorization: Bearer <jwt_token>
   "name": "First Class AC",
   "class": "First",
   "type": "AC",
-  "price": 150.00,
+  "price": 1.50,
   "totalSeats": 50,
   "createdAt": "2025-11-29T10:00:00.000Z",
   "updatedAt": "2025-11-29T10:00:00.000Z"
@@ -423,7 +423,7 @@ Authorization: Bearer <jwt_token>
     "name": "First Class AC",
     "class": "First",
     "type": "AC",
-    "price": 150.00,
+    "price": 1.50,
     "totalSeats": 50,
     "createdAt": "2025-11-29T10:00:00.000Z",
     "updatedAt": "2025-11-29T10:00:00.000Z"
@@ -449,7 +449,7 @@ Authorization: Bearer <jwt_token>
   "name": "First Class AC",
   "class": "First",
   "type": "AC",
-  "price": 150.00,
+  "price": 1.50,
   "totalSeats": 50,
   "createdAt": "2025-11-29T10:00:00.000Z",
   "updatedAt": "2025-11-29T10:00:00.000Z"
@@ -537,7 +537,7 @@ Authorization: Bearer <jwt_token>
         "name": "First Class AC",
         "class": "First",
         "type": "AC",
-        "price": 150.00,
+        "price": 1.50,
         "totalSeats": 50
       },
       "createdAt": "2025-11-29T10:00:00.000Z",
@@ -700,7 +700,7 @@ Authorization: Bearer <jwt_token>
           "name": "First Class AC",
           "class": "First",
           "type": "AC",
-          "price": 150.00,
+          "price": 1.50,
           "totalSeats": 50
         }
       }
@@ -917,7 +917,7 @@ Authorization: Bearer <jwt_token>
       "compartmentName": "First Class AC",
       "class": "First",
       "type": "AC",
-      "price": 150.00,
+      "price": 1.50,
       "totalSeats": 50,
       "bookedSeats": 2,
       "availableSeats": 48
@@ -970,7 +970,7 @@ Authorization: Bearer <jwt_token>
 - Validates that the journey segment is valid for the route
 - Checks that seat number isn't already booked for this train/date
 - Uses database transactions to prevent race conditions
-- Price is calculated based on compartment pricing
+- Price is calculated based on journey distance × compartment pricing
 
 **Response (201):**
 ```json
@@ -1024,7 +1024,7 @@ Authorization: Bearer <jwt_token>
         "name": "First Class AC",
         "class": "First",
         "type": "AC",
-        "price": 150.00,
+        "price": 1.50,
         "totalSeats": 50
       }
     }
@@ -1192,7 +1192,7 @@ All endpoints may return the following error responses:
   "name": "string",
   "class": "string (First | Second | Third)",
   "type": "string (AC | Non-AC | Sleeper)",
-  "price": "number",
+  "price": "number - price per kilometer",
   "totalSeats": "number",
   "createdAt": "string (ISO 8601)",
   "updatedAt": "string (ISO 8601)"
@@ -1273,6 +1273,21 @@ All endpoints may return the following error responses:
 }
 ```
 
+### CompartmentBooking
+```json
+{
+  "id": "number",
+  "trainScheduleId": "number",
+  "trainSchedule": "TrainSchedule",
+  "trainCompartmentId": "number",
+  "trainCompartment": "TrainCompartment",
+  "bookedSeats": "number",
+  "totalSeats": "number",
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}
+```
+
 ### Ticket
 ```json
 {
@@ -1348,4 +1363,6 @@ All endpoints may return the following error responses:
 - **Booking Validation**: Seat numbers are validated to prevent double bookings
 - **Cancellation Policy**: Tickets can only be cancelled up to 2 hours before departure
 - **Schedule Calculation**: Station times are provided manually when creating train schedules
+- **Compartment Booking System**: Uses date-based compartment booking records for fast seat availability checking
+- **Pricing Model**: Distance-based pricing (journey distance × compartment price)
 - **Rate Limiting**: API is rate-limited to 100 requests per minute per IP

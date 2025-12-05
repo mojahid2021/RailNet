@@ -107,41 +107,67 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
       return reply.code(409).send({ error: 'Seat number already booked for this train and date' });
     }
 
-    // Check total booked seats for this train compartment on this date
-    const totalBookedSeats = await prisma.ticket.count({
+    // Get or create compartment booking record for faster availability checking
+    let compartmentBooking = await prisma.compartmentBooking.findUnique({
       where: {
-        trainSchedule: {
-          trainId: trainSchedule.trainId,
-          date: trainSchedule.date,
+        trainScheduleId_trainCompartmentId: {
+          trainScheduleId: trainScheduleId,
+          trainCompartmentId: trainCompartment.id,
         },
-        trainCompartmentId: trainCompartment.id,
-        status: 'booked',
       },
     });
 
-    if (totalBookedSeats >= trainCompartment.compartment.totalSeats) {
+    if (!compartmentBooking) {
+      compartmentBooking = await prisma.compartmentBooking.create({
+        data: {
+          trainScheduleId: trainScheduleId,
+          trainCompartmentId: trainCompartment.id,
+          bookedSeats: 0,
+          totalSeats: trainCompartment.compartment.totalSeats,
+        },
+      });
+    }
+
+    // Check if compartment has available seats
+    if (compartmentBooking.bookedSeats >= compartmentBooking.totalSeats) {
       return reply.code(409).send({ error: 'No seats available in this compartment for this train and date' });
     }
 
-    // Create the seat record
-    const seat = await prisma.seat.create({
-      data: {
-        trainCompartmentId: trainCompartment.id,
-        seatNumber,
-        seatType: 'Standard', // Simplified seat type
-        row: 1,
-        column: 'A',
-        isAvailable: false,
-      },
-    });
-
-    // Calculate price (could be enhanced with distance-based pricing)
-    const price = trainCompartment.compartment.price;
-
     // Use a transaction to ensure atomicity
     try {
+      // Calculate distance-based price
+      const journeyDistance = toStationInRoute.distanceFromStart - fromStationInRoute.distanceFromStart;
+      const price = journeyDistance * trainCompartment.compartment.price;
+
       const ticket = await prisma.$transaction(async (tx) => {
-        // Create the ticket (seat is already created and marked as unavailable)
+        // Create the seat record
+        const seat = await tx.seat.create({
+          data: {
+            trainCompartmentId: trainCompartment.id,
+            seatNumber,
+            seatType: 'Standard', // Simplified seat type
+            row: 1,
+            column: 'A',
+            isAvailable: false,
+          },
+        });
+
+        // Update compartment booking count
+        await tx.compartmentBooking.update({
+          where: {
+            trainScheduleId_trainCompartmentId: {
+              trainScheduleId: trainScheduleId,
+              trainCompartmentId: trainCompartment.id,
+            },
+          },
+          data: {
+            bookedSeats: {
+              increment: 1,
+            },
+          },
+        });
+
+        // Create the ticket
         return await tx.ticket.create({
           data: {
             userId,
@@ -418,6 +444,21 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
       await tx.seat.update({
         where: { id: ticket.seatId },
         data: { isAvailable: true },
+      });
+
+      // Decrement compartment booking count
+      await tx.compartmentBooking.update({
+        where: {
+          trainScheduleId_trainCompartmentId: {
+            trainScheduleId: ticket.trainScheduleId,
+            trainCompartmentId: ticket.trainCompartmentId,
+          },
+        },
+        data: {
+          bookedSeats: {
+            decrement: 1,
+          },
+        },
       });
 
       // Update ticket status

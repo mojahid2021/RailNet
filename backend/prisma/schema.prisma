@@ -133,7 +133,7 @@ model Compartment {
 
   type      String   // e.g., "AC", "Non-AC", "Sleeper"
 
-  price     Float    // Price per ticket
+  price     Float    // Price per kilometer
 
   totalSeats Int     // Total number of seats in this compartment type
 
@@ -184,6 +184,8 @@ model TrainCompartment {
   seats         Seat[]
 
   tickets       Ticket[]    // Tickets booked in this compartment
+
+  compartmentBookings CompartmentBooking[]
 
   createdAt     DateTime    @default(now())
 
@@ -238,6 +240,8 @@ model TrainSchedule {
   stationTimes  ScheduleStation[]
 
   tickets       Ticket[]
+
+  compartmentBookings CompartmentBooking[]
 
   createdAt     DateTime  @default(now())
 
@@ -316,5 +320,29 @@ model Ticket {
   createdAt         DateTime      @default(now())
 
   updatedAt         DateTime      @updatedAt
+
+}
+
+model CompartmentBooking {
+
+  id                Int             @id @default(autoincrement())
+
+  trainScheduleId   Int
+
+  trainSchedule     TrainSchedule   @relation(fields: [trainScheduleId], references: [id], onDelete: Cascade)
+
+  trainCompartmentId Int
+
+  trainCompartment  TrainCompartment @relation(fields: [trainCompartmentId], references: [id], onDelete: Cascade)
+
+  bookedSeats       Int             @default(0) // Number of seats currently booked
+
+  totalSeats        Int             // Total seats in this compartment type
+
+  createdAt         DateTime        @default(now())
+
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([trainScheduleId, trainCompartmentId]) // One record per compartment per schedule
 
 }

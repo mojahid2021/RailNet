@@ -752,11 +752,25 @@ export default async function trainScheduleRoutes(fastify: FastifyInstance) {
       return reply.code(404).send({ error: 'Train schedule not found' });
     }
 
+    // Get compartment booking data for fast availability checking
+    const compartmentBookings = await prisma.compartmentBooking.findMany({
+      where: {
+        trainScheduleId: scheduleId,
+      },
+    });
+
+    // Create a map for quick lookup
+    const bookingMap = new Map<number, typeof compartmentBookings[0]>();
+    compartmentBookings.forEach(booking => {
+      bookingMap.set(booking.trainCompartmentId, booking);
+    });
+
     // Build response with seat availability
     const compartments = trainSchedule.train.compartments.map((trainComp) => {
       const existingSeats = trainComp.seats;
-      const bookedCount = existingSeats.filter(seat => !seat.isAvailable).length;
-      const availableCount = trainComp.compartment.totalSeats - bookedCount;
+      const booking = bookingMap.get(trainComp.id);
+      const bookedCount = booking?.bookedSeats || 0;
+      const availableCount = Math.max(0, trainComp.compartment.totalSeats - bookedCount);
 
       // Generate seats list from existing records plus available slots
       const seats = [];
@@ -928,58 +942,30 @@ export default async function trainScheduleRoutes(fastify: FastifyInstance) {
       return reply.code(400).send({ error: 'To station must come after from station in the route' });
     }
 
-    // Get all booked tickets for this schedule
-    const allTickets = await prisma.ticket.findMany({
+    // Get compartment booking data for fast availability checking
+    const compartmentBookings = await prisma.compartmentBooking.findMany({
       where: {
         trainScheduleId: scheduleId,
-        status: 'booked',
       },
       include: {
-        fromStation: {
+        trainCompartment: {
           include: {
-            currentStations: {
-              where: { trainRouteId: trainSchedule.trainRouteId },
-              select: { distanceFromStart: true },
-            },
-          },
-        },
-        toStation: {
-          include: {
-            currentStations: {
-              where: { trainRouteId: trainSchedule.trainRouteId },
-              select: { distanceFromStart: true },
-            },
+            compartment: true,
           },
         },
       },
     });
 
-    // Filter tickets that overlap with the requested journey segment
-    const overlappingTickets = allTickets.filter(ticket => {
-      const ticketFromDistance = ticket.fromStation.currentStations[0]?.distanceFromStart || 0;
-      const ticketToDistance = ticket.toStation.currentStations[0]?.distanceFromStart || 0;
-      const requestedFromDistance = fromStationInRoute.distanceFromStart;
-      const requestedToDistance = toStationInRoute.distanceFromStart;
-
-      // Check if ticket overlaps with requested journey
-      return (
-        // Ticket starts before or at requested fromStation and ends after requested fromStation
-        (ticketFromDistance <= requestedFromDistance && ticketToDistance > requestedFromDistance) ||
-        // Ticket starts after requested fromStation and before or at requested toStation
-        (ticketFromDistance > requestedFromDistance && ticketFromDistance <= requestedToDistance)
-      );
-    });
-
-    // Count booked seats per compartment for overlapping journeys
-    const bookedSeatsByCompartment = new Map<number, number>();
-    overlappingTickets.forEach(ticket => {
-      const count = bookedSeatsByCompartment.get(ticket.trainCompartmentId) || 0;
-      bookedSeatsByCompartment.set(ticket.trainCompartmentId, count + 1);
+    // Create a map for quick lookup
+    const bookingMap = new Map<number, typeof compartmentBookings[0]>();
+    compartmentBookings.forEach(booking => {
+      bookingMap.set(booking.trainCompartmentId, booking);
     });
 
     // Build response with available seats for the journey segment
     const compartments = trainSchedule.train.compartments.map((trainComp) => {
-      const bookedCount = bookedSeatsByCompartment.get(trainComp.id) || 0;
+      const booking = bookingMap.get(trainComp.id);
+      const bookedCount = booking?.bookedSeats || 0;
       const availableCount = Math.max(0, trainComp.compartment.totalSeats - bookedCount);
 
       return {
