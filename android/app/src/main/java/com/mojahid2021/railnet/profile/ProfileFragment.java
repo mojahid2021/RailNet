@@ -88,8 +88,6 @@ public class ProfileFragment extends Fragment {
 
         // Menu items
         btnMyTickets = view.findViewById(R.id.btnMyTickets);
-        btnMyBookings = view.findViewById(R.id.btnMyBookings);
-        btnSavedRoutes = view.findViewById(R.id.btnSavedRoutes);
         btnSettings = view.findViewById(R.id.btnSettings);
     }
 
@@ -107,8 +105,6 @@ public class ProfileFragment extends Fragment {
 
         // Menu items
         btnMyTickets.setOnClickListener(v -> onMyTicketsClick());
-        btnMyBookings.setOnClickListener(v -> onMyBookingsClick());
-        btnSavedRoutes.setOnClickListener(v -> onSavedRoutesClick());
         btnSettings.setOnClickListener(v -> onSettingsClick());
     }
 
@@ -186,15 +182,6 @@ public class ProfileFragment extends Fragment {
         // Navigate to tickets screen
     }
 
-    private void onMyBookingsClick() {
-        showToast("My Bookings clicked");
-        // Navigate to bookings screen
-    }
-
-    private void onSavedRoutesClick() {
-        showToast("Saved Routes clicked");
-        // Navigate to saved routes screen
-    }
 
     private void onSettingsClick() {
         showToast("Settings clicked");

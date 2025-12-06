@@ -27,7 +27,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class RegisterActivity extends AppCompatActivity {
-    private TextInputEditText firstName, lastName, emailEditText, passwordEditText;
+    private TextInputEditText firstName, lastName, emailEditText, phone, address, passwordEditText;
     private LinearLayout registerButton;
     private TextView loginLink;
 
@@ -46,6 +46,8 @@ public class RegisterActivity extends AppCompatActivity {
         firstName = findViewById(R.id.firstName);
         lastName = findViewById(R.id.lastName);
         emailEditText = findViewById(R.id.email);
+        phone = findViewById(R.id.phone);
+        address = findViewById(R.id.address);
         passwordEditText = findViewById(R.id.password);
         registerButton = findViewById(R.id.registerButton);
         loginLink = findViewById(R.id.loginButton);
@@ -56,13 +58,15 @@ public class RegisterActivity extends AppCompatActivity {
                 String firstNameStr = firstName.getText().toString().trim();
                 String lastNameStr = lastName.getText().toString().trim();
                 String email = emailEditText.getText().toString().trim();
+                String phoneStr = phone.getText().toString().trim();
+                String addressStr = address.getText().toString().trim();
                 String password = passwordEditText.getText().toString().trim();
                 // Implement registration logic here
-                if (firstNameStr.isEmpty() || lastNameStr.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                if (firstNameStr.isEmpty() || lastNameStr.isEmpty() || email.isEmpty() || password.isEmpty() || phoneStr.isEmpty() || addressStr.isEmpty()) {
                     Toast.makeText(RegisterActivity.this, "Please fill all fields", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                register(firstNameStr, lastNameStr, email, password);
+                register(firstNameStr, lastNameStr, email, phoneStr, addressStr, password);
             }
         });
 
@@ -77,13 +81,15 @@ public class RegisterActivity extends AppCompatActivity {
 
     }
 
-    private void register(String firstNameStr, String lastNameStr, String email, String password) {
+    private void register(String firstNameStr, String lastNameStr, String email, String phone, String address, String password) {
 
         // Implement registration logic here
         Map<String, String> userDetails = new HashMap<>();
         userDetails.put("firstName", firstNameStr);
         userDetails.put("lastName", lastNameStr);
         userDetails.put("email", email);
+        userDetails.put("phone", phone);
+        userDetails.put("address", address);
         userDetails.put("password", password);
 
         ApiService apiService = ApiClient.getRetrofit(RegisterActivity.this).create(ApiService.class);

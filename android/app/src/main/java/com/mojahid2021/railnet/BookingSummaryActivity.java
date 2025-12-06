@@ -88,6 +88,9 @@ public class BookingSummaryActivity extends AppCompatActivity {
                 return;
             }
 
+            // Log the request details
+            Log.d("Booking", "Sending booking request: name=" + passengerName + ", age=" + passengerAge + ", gender=" + passengerGender + ", trainScheduleId=" + trainScheduleId + ", compartmentId=" + compartmentId + ", seatNumber=" + seatNumber);
+
             // build JSON body
             Gson g = new Gson();
             String jsonReq = g.toJson(new TicketRequest(trainScheduleId, fromIdInt, toIdInt, compartmentId, seatNumber, passengerName, passengerAge, passengerGender));
@@ -101,6 +104,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
             call.enqueue(new Callback<ResponseBody>() {
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    Log.d("Booking", "onResponse called, isSuccessful: " + response.isSuccessful() + ", code: " + response.code());
                     if (response.isSuccessful()) {
                         ResponseBody rb = response.body();
                         if (rb == null) {
@@ -109,6 +113,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
                         }
                         try (ResponseBody bodyRes = rb) {
                             String resp = bodyRes.string();
+                            Log.d("Booking", "Response body: " + resp);
                             // parse booking response JSON into BookingResponse (use instance parser for older Gson)
                             JsonElement je = new JsonParser().parse(resp);
                             BookingResponse br = g.fromJson(je, BookingResponse.class);
@@ -146,6 +151,15 @@ public class BookingSummaryActivity extends AppCompatActivity {
                             btnConfirm.setEnabled(true);
                         }
                     } else {
+                        Log.d("Booking", "Response not successful, code: " + response.code());
+                        try {
+                            if (response.errorBody() != null) {
+                                String errorBody = response.errorBody().string();
+                                Log.d("Booking", "Error body: " + errorBody);
+                            }
+                        } catch (Exception e) {
+                            Log.e("Booking", "Failed to read error body", e);
+                        }
                         tvSummary.setText(getString(R.string.booking_failed_code, response.code()));
                         progressBooking.setVisibility(android.view.View.GONE);
                         btnConfirm.setEnabled(true);
