@@ -55,7 +55,7 @@ async function paymentRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // Payment success callback - Public endpoint
+  // Payment success callback - Public endpoint (GET)
   fastify.get(
     '/payments/success',
     {
@@ -136,7 +136,88 @@ async function paymentRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // Payment failure callback - Public endpoint
+  // Payment success callback - Public endpoint (POST) - for cases where SSLCommerz sends POST
+  fastify.post(
+    '/payments/success',
+    {
+      schema: {
+        description: 'SSLCommerz success callback (POST)',
+        tags: ['Payments'],
+        body: paymentCallbackQuerySchema,
+        response: {
+          200: paymentSuccessResponseSchema,
+          400: paymentSuccessResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const body = request.body as { tran_id?: string; val_id?: string; error?: string };
+
+      if (!body.tran_id) {
+        const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Payment Error</title></head>
+        <body>
+          <h1>Payment Error</h1>
+          <p>Invalid payment callback parameters. Transaction ID is missing.</p>
+          <a href="/">Go back to home</a>
+        </body>
+        </html>
+      `;
+        return reply.code(400).type('text/html').send(errorHtml);
+      }
+
+      try {
+        // If val_id is not provided, try to get it from the transaction
+        let valId = body.val_id;
+        if (!valId) {
+          // Get val_id from transaction record if available
+          const transaction = await prisma.paymentTransaction.findUnique({
+            where: { id: body.tran_id },
+            select: { valId: true },
+          });
+          valId = transaction?.valId || undefined;
+        }
+
+        if (!valId) {
+          throw new Error('Validation ID not found. Payment may not be completed yet.');
+        }
+
+        await paymentService.handlePaymentSuccess(body.tran_id, valId);
+
+        const successHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Payment Successful</title></head>
+        <body>
+          <h1>Payment Successful!</h1>
+          <p>Your ticket has been confirmed. You will receive a confirmation email shortly.</p>
+          <a href="/">Go back to home</a>
+        </body>
+        </html>
+      `;
+        reply.type('text/html').send(successHtml);
+      } catch (error) {
+        console.error('Payment success handling error:', error);
+
+        const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Payment Processing Error</title></head>
+        <body>
+          <h1>Payment Processing Error</h1>
+          <p>There was an error processing your payment: ${error instanceof Error ? error.message : 'Unknown error'}. Please contact support.</p>
+          <a href="/">Go back to home</a>
+        </body>
+        </html>
+      `;
+        reply.code(400).type('text/html').send(errorHtml);
+      }
+    },
+  );
+
+  // Payment failure callback - Public endpoint (GET)
   fastify.get(
     '/payments/fail',
     {
@@ -184,7 +265,55 @@ async function paymentRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // Payment cancel callback - Public endpoint
+  // Payment failure callback - Public endpoint (POST)
+  fastify.post(
+    '/payments/fail',
+    {
+      schema: {
+        description: 'SSLCommerz failure callback (POST)',
+        tags: ['Payments'],
+        body: {
+          type: 'object',
+          properties: {
+            tran_id: { type: 'string' },
+            error: { type: 'string' },
+          },
+        },
+        response: {
+          200: {
+            type: 'string',
+            description: 'HTML failure page',
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const body = request.body as { tran_id?: string; val_id?: string; error?: string };
+
+      if (body.tran_id) {
+        try {
+          await paymentService.handlePaymentFailure(body.tran_id, body.error);
+        } catch (error) {
+          console.error('Payment failure handling error:', error);
+        }
+      }
+
+      const failureHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head><title>Payment Failed</title></head>
+      <body>
+        <h1>Payment Failed</h1>
+        <p>Your payment was not successful. Please try again.</p>
+        <a href="/">Go back to home</a>
+      </body>
+      </html>
+    `;
+      reply.type('text/html').send(failureHtml);
+    },
+  );
+
+  // Payment cancel callback - Public endpoint (GET)
   fastify.get(
     '/payments/cancel',
     {
@@ -211,6 +340,53 @@ async function paymentRoutes(fastify: FastifyInstance) {
       if (query.tran_id) {
         try {
           await paymentService.handlePaymentCancel(query.tran_id);
+        } catch (error) {
+          console.error('Payment cancel handling error:', error);
+        }
+      }
+
+      const cancelHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head><title>Payment Cancelled</title></head>
+      <body>
+        <h1>Payment Cancelled</h1>
+        <p>You have cancelled the payment process.</p>
+        <a href="/">Go back to home</a>
+      </body>
+      </html>
+    `;
+      reply.type('text/html').send(cancelHtml);
+    },
+  );
+
+  // Payment cancel callback - Public endpoint (POST)
+  fastify.post(
+    '/payments/cancel',
+    {
+      schema: {
+        description: 'SSLCommerz cancel callback (POST)',
+        tags: ['Payments'],
+        body: {
+          type: 'object',
+          properties: {
+            tran_id: { type: 'string' },
+          },
+        },
+        response: {
+          200: {
+            type: 'string',
+            description: 'HTML cancel page',
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const body = request.body as { tran_id?: string; val_id?: string; error?: string };
+
+      if (body.tran_id) {
+        try {
+          await paymentService.handlePaymentCancel(body.tran_id);
         } catch (error) {
           console.error('Payment cancel handling error:', error);
         }
