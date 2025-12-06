@@ -21,7 +21,11 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mojahid2021.railnet.R;
 import com.mojahid2021.railnet.network.ApiService;
-import com.mojahid2021.railnet.network.RetrofitClient;
+import com.mojahid2021.railnet.network.ApiClient;
+
+import org.json.JSONObject;
+
+import java.io.IOException;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -112,20 +116,36 @@ public class ProfileFragment extends Fragment {
      * Load user data (can be replaced with actual data from API/Database)
      */
     private void loadUserData() {
-        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
+        ApiService apiService = ApiClient.getRetrofit(requireActivity()).create(ApiService.class);
         Call<ResponseBody> call = apiService.getProfile();
         // Implement API call and populate UI with user data
 
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+
                 if (response.isSuccessful() && response.body() != null) {
-                    // Parse response and update UI
-                    showToast("User data loaded successfully");
+                   try {
+                          String responseBody = response.body().string();
+                       JSONObject jsonObject = new JSONObject(responseBody);
+                       String firstName = jsonObject.getString("firstName");
+                       String lastName = jsonObject.getString("lastName");
+                       String email = jsonObject.getString("email");
+//                       String phone = jsonObject.getString("phone");
+//                       String location = jsonObject.getString("location");
+                       String memberSince = jsonObject.getString("createdAt");
+
+                          tvUserName.setText(firstName + " " + lastName);
+                          tvUserEmail.setText(email);
+                          tvMemberDate.setText("Member since: " + memberSince);
+
+                   } catch (Exception e) {
+                       e.printStackTrace();
+                   }
                 } else {
                     showToast("Failed to load user data");
 
-                    Log.d(TAG, "onResponse: " + response.code() + " " + response.message());
+                    Log.d(TAG, "onResponse: " + response.code() + " " + response.message() + " " + response.body() );
                 }
             }
 

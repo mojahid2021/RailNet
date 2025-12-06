@@ -16,7 +16,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.textfield.TextInputEditText;
 import com.mojahid2021.railnet.R;
 import com.mojahid2021.railnet.network.ApiService;
-import com.mojahid2021.railnet.network.RetrofitClient;
+import com.mojahid2021.railnet.network.ApiClient;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -86,7 +86,7 @@ public class RegisterActivity extends AppCompatActivity {
         userDetails.put("email", email);
         userDetails.put("password", password);
 
-        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
+        ApiService apiService = ApiClient.getRetrofit(RegisterActivity.this).create(ApiService.class);
         Call<ResponseBody> call = apiService.register(userDetails);
 
         call.enqueue(new Callback<ResponseBody>() {

@@ -18,7 +18,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.mojahid2021.railnet.MainActivity;
 import com.mojahid2021.railnet.R;
 import com.mojahid2021.railnet.network.ApiService;
-import com.mojahid2021.railnet.network.RetrofitClient;
+import com.mojahid2021.railnet.network.ApiClient;
 
 import org.json.JSONObject;
 
@@ -51,7 +51,7 @@ public class LoginActivity extends AppCompatActivity {
         passwordEditText = findViewById(R.id.passwordEditText);
         loginButton = findViewById(R.id.loginButton);
         registerLink = findViewById(R.id.signUpButton);
-        sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("UserPreferences", MODE_PRIVATE);
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -81,7 +81,7 @@ public class LoginActivity extends AppCompatActivity {
         credentials.put("email", email);
         credentials.put("password", password);
 
-        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
+        ApiService apiService = ApiClient.getRetrofit(LoginActivity.this).create(ApiService.class);
         Call<ResponseBody> call = apiService.login(credentials);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
@@ -92,9 +92,9 @@ public class LoginActivity extends AppCompatActivity {
                         JSONObject jsonObject = new JSONObject(responseBody);
                         String token = jsonObject.getString("token");
                         SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString("auth_token", token);
+                        editor.putString("token", token);
                         editor.apply();
-                        Toast.makeText(LoginActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LoginActivity.this, token, Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                         startActivity(intent);
                         finish();
