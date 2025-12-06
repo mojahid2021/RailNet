@@ -22,6 +22,10 @@ model User {
 
   lastName  String?
 
+  phone     String?
+
+  address   String?
+
   password  String
 
   role      String   @default("user")

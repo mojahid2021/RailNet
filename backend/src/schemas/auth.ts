@@ -5,6 +5,8 @@ export const userSchema = {
     email: { type: 'string' },
     firstName: { type: 'string' },
     lastName: { type: 'string' },
+    phone: { type: 'string' },
+    address: { type: 'string' },
     role: { type: 'string' },
     createdAt: { type: 'string', format: 'date-time' },
     updatedAt: { type: 'string', format: 'date-time' },
@@ -27,6 +29,8 @@ export const registerBodySchema = {
     password: { type: 'string', minLength: 6 },
     firstName: { type: 'string' },
     lastName: { type: 'string' },
+    phone: { type: 'string' },
+    address: { type: 'string' },
     role: { type: 'string', enum: ['user', 'admin'] },
   },
 };

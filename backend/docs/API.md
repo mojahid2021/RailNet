@@ -31,6 +31,8 @@ Register a new user account.
   "password": "securepassword123",
   "firstName": "John",
   "lastName": "Doe",
+  "phone": "+1234567890",
+  "address": "123 Main St, City, Country",
   "role": "user"
 }
 ```
@@ -41,6 +43,8 @@ Register a new user account.
 | password | string | Yes | Minimum 6 characters |
 | firstName | string | No | User's first name |
 | lastName | string | No | User's last name |
+| phone | string | No | User's phone number |
+| address | string | No | User's address |
 | role | string | No | `user` or `admin` (defaults to `user`) |
 
 **Response (200):**
@@ -51,6 +55,8 @@ Register a new user account.
     "email": "user@example.com",
     "firstName": "John",
     "lastName": "Doe",
+    "phone": "+1234567890",
+    "address": "123 Main St, City, Country",
     "role": "user"
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -84,6 +90,8 @@ Authenticate user and receive JWT token.
     "email": "user@example.com",
     "firstName": "John",
     "lastName": "Doe",
+    "phone": "+1234567890",
+    "address": "123 Main St, City, Country",
     "role": "user"
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -108,6 +116,8 @@ Authorization: Bearer <jwt_token>
   "email": "user@example.com",
   "firstName": "John",
   "lastName": "Doe",
+  "phone": "+1234567890",
+  "address": "123 Main St, City, Country",
   "role": "user",
   "createdAt": "2025-11-29T10:00:00.000Z",
   "updatedAt": "2025-11-29T10:00:00.000Z"
@@ -1230,6 +1240,8 @@ All endpoints may return the following error responses:
   "email": "string",
   "firstName": "string (nullable)",
   "lastName": "string (nullable)",
+  "phone": "string (nullable)",
+  "address": "string (nullable)",
   "role": "string (user | admin)",
   "createdAt": "string (ISO 8601)",
   "updatedAt": "string (ISO 8601)"
@@ -1472,7 +1484,7 @@ Initiate a payment for a booked ticket. Creates a payment transaction and return
 
 **Notes:**
 - Customer details are automatically fetched from the authenticated user's profile
-- Default values are used for missing profile information (phone, address, etc.)
+- User's phone and address are used if provided during registration, otherwise default values are used
 
 **Response (200):**
 ```json
@@ -1495,11 +1507,11 @@ The following endpoints handle SSLCommerz payment callbacks and do not require a
 
 **GET** `/payments/success`
 
-Handles successful payment completion. Updates ticket status to paid and confirmed.
+Handles successful payment completion. Updates ticket status to confirmed and paymentStatus to paid.
 
 **Query Parameters:**
 - `tran_id` (string) - Transaction ID
-- `val_id` (string) - Validation ID
+- `val_id` (string) - Validation ID (optional - will be retrieved from transaction if not provided)
 
 **Response:** HTML success page
 
@@ -1507,7 +1519,7 @@ Handles successful payment completion. Updates ticket status to paid and confirm
 
 **GET** `/payments/fail`
 
-Handles payment failure. Updates transaction status to failed.
+Handles payment failure. Updates transaction status to failed and ticket paymentStatus to failed.
 
 **Query Parameters:**
 - `tran_id` (string) - Transaction ID
@@ -1519,7 +1531,7 @@ Handles payment failure. Updates transaction status to failed.
 
 **GET** `/payments/cancel`
 
-Handles payment cancellation by user.
+Handles payment cancellation by user. Updates transaction status to cancelled and ticket paymentStatus to cancelled.
 
 **Query Parameters:**
 - `tran_id` (string) - Transaction ID
@@ -1530,12 +1542,16 @@ Handles payment cancellation by user.
 
 **POST** `/payments/ipn`
 
-Server-to-server callback for payment status updates.
+Server-to-server callback for payment status updates. Accepts various parameters sent by SSLCommerz.
 
 **Request Body:**
 ```json
 {
-  "val_id": "validation_id_here"
+  "val_id": "validation_id_here",
+  "tran_id": "transaction_id",
+  "amount": "100.00",
+  "status": "VALID",
+  "bank_tran_id": "bank_transaction_id"
 }
 ```
 

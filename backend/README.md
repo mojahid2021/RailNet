@@ -51,10 +51,7 @@ A comprehensive railway management system API built with Fastify and TypeScript,
 | `SSLCOMMERZ_STORE_PASSWORD` | SSLCommerz store password | Required for payments |
 | `SSLCOMMERZ_IS_SANDBOX` | Use SSLCommerz sandbox mode | `true` |
 | `SSLCOMMERZ_API_URL` | SSLCommerz API URL | `https://sandbox.sslcommerz.com` |
-| `SSLCOMMERZ_SUCCESS_URL` | Payment success callback URL | Required for payments |
-| `SSLCOMMERZ_FAIL_URL` | Payment failure callback URL | Required for payments |
-| `SSLCOMMERZ_CANCEL_URL` | Payment cancel callback URL | Required for payments |
-| `SSLCOMMERZ_IPN_URL` | Instant Payment Notification URL | Required for payments |
+| `BASE_URL` | Base URL for callback construction | `http://localhost:3000` |
 | `BOOKING_EXPIRY_MINUTES` | Minutes before unpaid bookings expire | `10` |
 
 ## API Endpoints
@@ -383,6 +380,9 @@ Authorization: Bearer <token>
 ### Payment Processing
 
 The API includes a complete SSLCommerz payment integration with automatic booking expiration and cleanup.
+
+**Callback URL Configuration:**
+Callback URLs are constructed dynamically based on the request's protocol and host, ensuring compatibility across different environments (development, staging, production). The `BASE_URL` environment variable provides a fallback for development.
 
 #### Initiate Payment (Authenticated Users)
 

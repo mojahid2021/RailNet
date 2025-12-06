@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import prisma from '../lib/prisma';
 import { paymentService } from '../services/paymentService';
 import { bookingCleanupService } from '../services/cleanupService';
 import {
@@ -31,11 +32,17 @@ async function paymentRoutes(fastify: FastifyInstance) {
       const userId = (request.user as { id: number }).id;
       const body = request.body as { ticketId: string };
 
+      // Construct base URL from request
+      const protocol = request.protocol;
+      const host = request.headers.host;
+      const baseUrl = `${protocol}://${host}`;
+
       try {
         const result = await paymentService.initiatePayment({
           ticketId: body.ticketId,
           userId,
           currency: 'BDT',
+          baseUrl,
         });
 
         reply.send(result);
@@ -65,14 +72,14 @@ async function paymentRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const query = request.query as { tran_id?: string; val_id?: string; error?: string };
 
-      if (!query.tran_id || !query.val_id) {
+      if (!query.tran_id) {
         const errorHtml = `
         <!DOCTYPE html>
         <html>
         <head><title>Payment Error</title></head>
         <body>
           <h1>Payment Error</h1>
-          <p>Invalid payment callback parameters.</p>
+          <p>Invalid payment callback parameters. Transaction ID is missing.</p>
           <a href="/">Go back to home</a>
         </body>
         </html>
@@ -81,7 +88,22 @@ async function paymentRoutes(fastify: FastifyInstance) {
       }
 
       try {
-        await paymentService.handlePaymentSuccess(query.tran_id, query.val_id);
+        // If val_id is not provided, try to get it from the transaction
+        let valId = query.val_id;
+        if (!valId) {
+          // Get val_id from transaction record if available
+          const transaction = await prisma.paymentTransaction.findUnique({
+            where: { id: query.tran_id },
+            select: { valId: true },
+          });
+          valId = transaction?.valId || undefined;
+        }
+
+        if (!valId) {
+          throw new Error('Validation ID not found. Payment may not be completed yet.');
+        }
+
+        await paymentService.handlePaymentSuccess(query.tran_id, valId);
 
         const successHtml = `
         <!DOCTYPE html>
@@ -104,7 +126,7 @@ async function paymentRoutes(fastify: FastifyInstance) {
         <head><title>Payment Processing Error</title></head>
         <body>
           <h1>Payment Processing Error</h1>
-          <p>There was an error processing your payment. Please contact support.</p>
+          <p>There was an error processing your payment: ${error instanceof Error ? error.message : 'Unknown error'}. Please contact support.</p>
           <a href="/">Go back to home</a>
         </body>
         </html>
@@ -220,6 +242,23 @@ async function paymentRoutes(fastify: FastifyInstance) {
           type: 'object',
           properties: {
             val_id: { type: 'string' },
+            tran_id: { type: 'string' },
+            amount: { type: 'string' },
+            card_type: { type: 'string' },
+            store_amount: { type: 'string' },
+            bank_tran_id: { type: 'string' },
+            status: { type: 'string' },
+            tran_date: { type: 'string' },
+            currency: { type: 'string' },
+            card_issuer: { type: 'string' },
+            card_brand: { type: 'string' },
+            card_issuer_country: { type: 'string' },
+            card_issuer_country_code: { type: 'string' },
+            store_id: { type: 'string' },
+            verify_sign: { type: 'string' },
+            verify_key: { type: 'string' },
+            risk_level: { type: 'string' },
+            risk_title: { type: 'string' },
           },
         },
         response: {
@@ -240,7 +279,7 @@ async function paymentRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const body = request.body as { val_id?: string };
+      const body = request.body as { val_id?: string; tran_id?: string; [key: string]: any };
 
       if (!body.val_id) {
         return reply.code(400).send({ status: 'FAILED', message: 'Missing val_id' });

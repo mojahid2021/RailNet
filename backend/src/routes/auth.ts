@@ -31,11 +31,13 @@ export default async function authRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const { email, password, firstName, lastName, role } = request.body as {
+      const { email, password, firstName, lastName, phone, address, role } = request.body as {
         email: string;
         password: string;
         firstName?: string;
         lastName?: string;
+        phone?: string;
+        address?: string;
         role?: string;
       };
 
@@ -55,6 +57,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
           password: hashedPassword,
           firstName,
           lastName,
+          phone,
+          address,
           role: role || 'user', // Default to 'user' if not provided
         },
       });
@@ -68,6 +72,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          phone: user.phone,
+          address: user.address,
           role: user.role,
         },
         token,
@@ -113,6 +119,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          phone: user.phone,
+          address: user.address,
           role: user.role,
         },
         token,
@@ -147,6 +155,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
           email: true,
           firstName: true,
           lastName: true,
+          phone: true,
+          address: true,
           role: true,
           createdAt: true,
           updatedAt: true,
