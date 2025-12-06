@@ -22,4 +22,7 @@ public interface ApiService {
 
     @POST("register")
     Call<ResponseBody> register(@Body Map<String, String> userDetails);
+
+    @GET("profile")
+    Call<ResponseBody> getProfile();
 }

@@ -1,11 +1,14 @@
 package com.mojahid2021.railnet.profile;
 
+import static android.content.ContentValues.TAG;
+
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +20,13 @@ import android.widget.Toast;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mojahid2021.railnet.R;
+import com.mojahid2021.railnet.network.ApiService;
+import com.mojahid2021.railnet.network.RetrofitClient;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Profile Fragment showing user information, stats, and menu options
@@ -102,12 +112,31 @@ public class ProfileFragment extends Fragment {
      * Load user data (can be replaced with actual data from API/Database)
      */
     private void loadUserData() {
-        // User data is currently loaded from strings.xml
-        // In a real app, you would fetch this from a database or API
-        // Example:
-        // tvUserName.setText(userProfile.getName());
-        // tvUserEmail.setText(userProfile.getEmail());
-        // etc.
+        ApiService apiService = RetrofitClient.getClient().create(ApiService.class);
+        Call<ResponseBody> call = apiService.getProfile();
+        // Implement API call and populate UI with user data
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Parse response and update UI
+                    showToast("User data loaded successfully");
+                } else {
+                    showToast("Failed to load user data");
+
+                    Log.d(TAG, "onResponse: " + response.code() + " " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                showToast("Error loading user data");
+                Log.e(TAG, "onFailure: ", t);
+
+            }
+        });
     }
 
     // Click handler methods
