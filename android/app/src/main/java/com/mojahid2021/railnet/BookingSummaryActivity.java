@@ -176,38 +176,29 @@ public class BookingSummaryActivity extends AppCompatActivity {
             ApiService api = ApiClient.getRetrofit(this).create(ApiService.class);
             // Debug: log request body and base URL to help diagnose failures
             try { Log.d("Payment", "initiatePayment request json=" + json + ", baseUrl=" + ApiClient.getRetrofit(BookingSummaryActivity.this).baseUrl()); } catch (Exception _e) { /* ignore */ }
-            Call<ResponseBody> call = api.initiatePayment(body);
-            call.enqueue(new Callback<ResponseBody>() {
+            java.util.Map<String, String> map = new java.util.HashMap<>();
+            map.put("ticketId", ticketIdToPay);
+            Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call = api.initiatePayment(map);
+            call.enqueue(new Callback<com.mojahid2021.railnet.network.PaymentInitiateResponse>() {
                 @Override
-                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                public void onResponse(Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call, retrofit2.Response<com.mojahid2021.railnet.network.PaymentInitiateResponse> response) {
                     progressBooking.setVisibility(android.view.View.GONE);
                     if (response.isSuccessful()) {
-                        ResponseBody rb = response.body();
-                        if (rb == null) {
-                            Log.e("Payment", "initiatePayment: empty response body (200)");
+                        com.mojahid2021.railnet.network.PaymentInitiateResponse pr = response.body();
+                        if (pr == null) {
+                            Log.e("Payment", "initiatePayment: parsed response is null");
                             tvSummary.setText(getString(R.string.booking_failed_empty));
                             btnPay.setEnabled(true);
                             return;
                         }
-                        try (ResponseBody bodyRes = rb) {
-                            String resp = bodyRes.string();
-                            Log.d("Payment", "initiatePayment response raw: " + resp);
-                            com.google.gson.JsonObject obj = new JsonParser().parse(resp).getAsJsonObject();
-                            String paymentUrl = obj.has("paymentUrl") ? obj.get("paymentUrl").getAsString() : null;
-                            String transactionId = obj.has("transactionId") ? obj.get("transactionId").getAsString() : null;
-                            Log.d("Payment", "parsed initiatePayment: paymentUrl=" + paymentUrl + ", transactionId=" + transactionId);
-                            if (paymentUrl != null) {
-                                android.content.Intent intent = new android.content.Intent(BookingSummaryActivity.this, WebviewActivity.class);
-                                intent.putExtra("url", paymentUrl);
-                                startActivity(intent);
-                            } else {
-                                Log.e("Payment", "initiatePayment: missing paymentUrl in response: " + resp);
-                                tvSummary.setText("Payment initiation failed");
-                                btnPay.setEnabled(true);
-                            }
-                        } catch (Exception ex) {
-                            Log.e("Payment", "parse error while handling initiatePayment response", ex);
-                            tvSummary.setText("Payment initiation error");
+                        Log.d("Payment", "parsed initiatePayment: paymentUrl=" + pr.paymentUrl + ", transactionId=" + pr.transactionId);
+                        if (pr.paymentUrl != null && !pr.paymentUrl.isEmpty()) {
+                            android.content.Intent intent = new android.content.Intent(BookingSummaryActivity.this, WebviewActivity.class);
+                            intent.putExtra("url", pr.paymentUrl);
+                            startActivity(intent);
+                        } else {
+                            Log.e("Payment", "initiatePayment: missing paymentUrl in parsed response");
+                            tvSummary.setText("Payment initiation failed");
                             btnPay.setEnabled(true);
                         }
                     } else {
@@ -225,7 +216,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                public void onFailure(Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call, Throwable t) {
                     progressBooking.setVisibility(android.view.View.GONE);
                     Log.e("Payment", "initiatePayment network error", t);
                     tvSummary.setText(getString(R.string.network_error_booking, t.getMessage()));
