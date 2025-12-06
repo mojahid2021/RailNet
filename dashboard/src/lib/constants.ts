@@ -8,7 +8,7 @@ export const API_CONFIG = {
     TRAIN_ROUTES: "/train-routes",
     COMPARTMENTS: "/compartments",
     TRAINS: "/trains",
-    SCHEDULES: "/schedules",
+    SCHEDULES: "/train-schedules",
   },
 } as const;
 

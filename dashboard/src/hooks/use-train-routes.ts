@@ -35,13 +35,22 @@ export function useTrainRoute(id: string) {
 // Helper for imperative fetching (e.g. in event handlers)
 export async function fetchTrainRoute(id: string): Promise<TrainRoute | null> {
   try {
-    const { data } = await api.get<ApiResponse<TrainRoute>>(`/train-routes/${id}`);
+    const { data } = await api.get<any>(`/train-routes/${id}`);
+    
+    // Handle wrapped response
     if (data.success && data.data) {
-      return data.data;
+      return data.data as TrainRoute;
     }
+    
+    // Handle unwrapped response (direct object)
+    // Relaxed check to include name or startStationId in case id is somehow missing or 0
+    if (data && (data.id || data.name || data.startStationId)) {
+      return data as TrainRoute;
+    }
+
     return null;
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching train route:", error);
     return null;
   }
 }

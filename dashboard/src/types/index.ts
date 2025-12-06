@@ -119,7 +119,6 @@ export interface Train {
   id: number;
   name: string;
   number: string;
-  type: string;
   trainRouteId?: number;
   trainRoute?: {
     id: number;
@@ -143,7 +142,6 @@ export interface Train {
 export interface CreateTrainRequest {
   name: string;
   number: string;
-  type: string;
   trainRouteId: number;
   compartments: {
     compartmentId: number;
@@ -154,7 +152,6 @@ export interface CreateTrainRequest {
 export interface UpdateTrainRequest {
   name?: string;
   number?: string;
-  type?: string;
   trainRouteId?: number;
   compartments?: {
     compartmentId: number;
@@ -173,13 +170,15 @@ export interface RouteStation {
 }
 
 export interface TrainRoute {
-  id: string;
+  id: number;
   name: string;
   startStationId: string;
   endStationId: string;
   startStation?: Station;
   endStation?: Station;
   routeStations: RouteStation[];
+  // Adding stations alias if the API returns it, or we map it
+  stations?: RouteStation[]; 
   createdAt: string;
   updatedAt: string;
 }
@@ -208,29 +207,32 @@ export interface UpdateTrainRouteRequest {
 }
 
 // Schedule Types
-export interface StationSchedule {
-  id: string;
-  stationId: string;
-  sequenceOrder: number;
-  estimatedArrival: string;
-  estimatedDeparture: string;
-  durationFromPrevious: number;
-  waitingTime: number;
-  status: string;
-  platformNumber: string;
-  remarks: string;
-  station?: Station;
+export interface StationTime {
+  id: number;
+  trainScheduleId: number;
+  stationId: number;
+  station: Station;
+  arrivalTime: string;
+  departureTime: string;
+  sequence: number;
 }
 
 export interface Schedule {
-  id: string;
-  trainId: string;
-  routeId: string;
-  departureTime: string;
-  status: string;
+  id: number;
+  trainId: number;
+  trainRouteId: number;
+  date: string;
+  time: string;
   train?: Train;
-  route?: TrainRoute;
-  stationSchedules: StationSchedule[];
+  trainRoute?: TrainRoute; // Note: API response has trainRoute nested in train as well, but also at top level
+  stationTimes: StationTime[];
+  status?: string; // API response doesn't show status, but UI uses it. Keeping optional.
+  departureTime?: string; // API has 'time' and 'date', but UI uses departureTime. Might need to derive or check if API provides it.
+  // Actually, looking at the response, 'time' is "02:56" and 'date' is ISO.
+  // The UI currently expects 'departureTime'. I might need to map it or update UI.
+  // For now, I'll keep the type flexible to avoid breaking existing code too much, 
+  // but I should probably map 'date' + 'time' to 'departureTime' or update UI to use 'date'/'time'.
+  // Let's stick to the response structure for the main fields.
 }
 
 export interface CreateStationScheduleRequest {
@@ -242,7 +244,12 @@ export interface CreateStationScheduleRequest {
 }
 
 export interface CreateScheduleRequest {
-  trainId: string;
-  departureTime: string;
-  stationSchedules: CreateStationScheduleRequest[];
+  trainId: number;
+  date: string;
+  time: string;
+  stationTimes: {
+    stationId: number;
+    arrivalTime: string;
+    departureTime: string;
+  }[];
 }

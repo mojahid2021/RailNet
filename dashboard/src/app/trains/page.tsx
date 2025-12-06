@@ -101,7 +101,6 @@ export default function TrainsPage() {
                 <TableRow className="hover:bg-muted/50">
                   <TableHead>Name</TableHead>
                   <TableHead>Number</TableHead>
-                  <TableHead>Type</TableHead>
                   <TableHead>Route</TableHead>
                   <TableHead>Compartments</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -110,13 +109,13 @@ export default function TrainsPage() {
               <TableBody>
                 {isLoading && trains.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       Loading trains...
                     </TableCell>
                   </TableRow>
                 ) : trains.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       No trains found. Add one to get started.
                     </TableCell>
                   </TableRow>
@@ -130,9 +129,6 @@ export default function TrainsPage() {
                         </div>
                       </TableCell>
                       <TableCell>{train.number}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{train.type}</Badge>
-                      </TableCell>
                       <TableCell>
                         {train.trainRoute ? train.trainRoute.name : <span className="text-muted-foreground italic">Unassigned</span>}
                       </TableCell>

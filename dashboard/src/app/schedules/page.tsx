@@ -15,17 +15,25 @@ import { Plus, Calendar, Clock, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSchedules, useCreateSchedule } from "@/hooks/use-schedules";
 import { ScheduleForm } from "@/components/schedules/schedule-form";
-import { CreateScheduleRequest } from "@/types";
+import { CreateScheduleRequest, Schedule } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { ScheduleDetailsDialog } from "@/components/schedules/schedule-details-dialog";
 
 export default function SchedulesPage() {
   const { data: schedules = [], isLoading, error } = useSchedules();
   const createScheduleMutation = useCreateSchedule();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const handleCreate = () => {
     setIsFormOpen(true);
+  };
+
+  const handleView = (scheduleId: string) => {
+    setSelectedScheduleId(scheduleId);
+    setIsDetailsOpen(true);
   };
 
   const handleFormSubmit = async (data: CreateScheduleRequest) => {
@@ -97,7 +105,7 @@ export default function SchedulesPage() {
                       <TableCell>
                         <div className="flex items-center text-sm">
                           <MapPin className="mr-1 h-3 w-3 text-muted-foreground" />
-                          {schedule.route?.name || "Unknown Route"}
+                          {schedule.trainRoute?.name || "Unknown Route"}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -108,14 +116,14 @@ export default function SchedulesPage() {
                       </TableCell>
                       <TableCell>
                         <Badge variant={schedule.status === "scheduled" ? "default" : "secondary"}>
-                          {schedule.status}
+                          {schedule.status || "Scheduled"}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{schedule.stationSchedules?.length || 0} Stations</Badge>
+                        <Badge variant="outline">{schedule.stationTimes?.length || 0} Stations</Badge>
                       </TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm" onClick={() => window.location.href = `/schedules/${schedule.id}`}>
+                        <Button variant="outline" size="sm" onClick={() => handleView(schedule.id.toString())}>
                           View
                         </Button>
                       </TableCell>
@@ -132,6 +140,12 @@ export default function SchedulesPage() {
           onOpenChange={setIsFormOpen}
           onSubmit={handleFormSubmit}
           mode="create"
+        />
+
+        <ScheduleDetailsDialog
+          open={isDetailsOpen}
+          onOpenChange={setIsDetailsOpen}
+          scheduleId={selectedScheduleId}
         />
       </div>
     </AdminLayout>

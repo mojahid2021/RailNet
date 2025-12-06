@@ -41,56 +41,83 @@ export function ScheduleForm({
 }: ScheduleFormProps) {
   const { data: trains = [] } = useTrains();
   const [loading, setLoading] = useState(false);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [routeError, setRouteError] = useState<string | null>(null);
 
   const [selectedTrainId, setSelectedTrainId] = useState<string>("");
-  const [departureTime, setDepartureTime] = useState<string>(""); // New field for API
+  const [date, setDate] = useState<string>("");
+  const [time, setTime] = useState<string>("");
   const [selectedRoute, setSelectedRoute] = useState<TrainRoute | null>(null);
-  const [stationSchedules, setStationSchedules] = useState<CreateStationScheduleRequest[]>([]);
+  const [stationTimes, setStationTimes] = useState<{
+    stationId: string;
+    arrivalTime: string;
+    departureTime: string;
+  }[]>([]);
 
   useEffect(() => {
     if (open) {
       // Reset form
       setSelectedTrainId("");
-      setDepartureTime("");
+      setDate("");
+      setTime("");
       setSelectedRoute(null);
-      setStationSchedules([]);
+      setStationTimes([]);
+      setRouteError(null);
     }
   }, [open]);
 
-  const handleTrainChange = async (trainId: string) => {
-    setSelectedTrainId(trainId);
+  const handleTrainChange = async (trainIdStr: string) => {
+    setSelectedTrainId(trainIdStr);
+    setRouteError(null);
+    setSelectedRoute(null);
+    setStationTimes([]);
+    
+    const trainId = parseInt(trainIdStr);
     const train = trains.find((t) => t.id === trainId);
-    if (train && train.trainRouteId) {
-      const route = await fetchTrainRoute(train.trainRouteId);
-      if (route) {
-        setSelectedRoute(route);
-        // Initialize station schedules based on route stations
-        const initialSchedules: CreateStationScheduleRequest[] = route.stations.map((s) => ({
-          stationId: s.currentStation?.id || s.currentStationId,
-          estimatedArrival: "",
-          estimatedDeparture: "",
-          platformNumber: "",
-          remarks: "",
-        }));
-        setStationSchedules(initialSchedules);
-      } else {
-        setSelectedRoute(null);
-        setStationSchedules([]);
+    
+    const routeId = train?.trainRouteId || train?.trainRoute?.id;
+
+    if (routeId) {
+      setRouteLoading(true);
+      try {
+        const route = await fetchTrainRoute(routeId.toString());
+        if (route) {
+          setSelectedRoute(route);
+          // Initialize station times based on route stations
+          const stationsData = route.stations || route.routeStations;
+          const stations = Array.isArray(stationsData) ? stationsData : [];
+          
+          if (stations.length === 0) {
+            setRouteError("Selected train's route has no stations assigned.");
+          }
+
+          const initialTimes = stations.map((s) => ({
+            stationId: s.currentStation?.id || s.currentStationId,
+            arrivalTime: "",
+            departureTime: "",
+          }));
+          setStationTimes(initialTimes);
+        } else {
+          setRouteError("Failed to load route details. Please try again.");
+        }
+      } catch (error) {
+        setRouteError("An error occurred while loading the route.");
+      } finally {
+        setRouteLoading(false);
       }
     } else {
-      setSelectedRoute(null);
-      setStationSchedules([]);
+      setRouteError("Selected train does not have a route assigned.");
     }
   };
 
-  const handleStationScheduleChange = (
+  const handleStationTimeChange = (
     index: number,
-    field: keyof CreateStationScheduleRequest,
+    field: "arrivalTime" | "departureTime",
     value: string
   ) => {
-    const newSchedules = [...stationSchedules];
-    newSchedules[index] = { ...newSchedules[index], [field]: value };
-    setStationSchedules(newSchedules);
+    const newTimes = [...stationTimes];
+    newTimes[index] = { ...newTimes[index], [field]: value };
+    setStationTimes(newTimes);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,32 +125,34 @@ export function ScheduleForm({
     setLoading(true);
 
     // Basic validation
-    if (!selectedTrainId || !departureTime) {
-      alert("Please select a train and time.");
+    if (!selectedTrainId || !date || !time) {
+      alert("Please select a train, date, and time.");
       setLoading(false);
       return;
     }
 
-    // Ensure dates are in ISO format if they are just time strings or local dates
-    // The backend expects ISO strings. The inputs might be datetime-local.
-    // We need to make sure they are properly formatted.
-    
-    // For simplicity, assuming inputs are datetime-local which return "YYYY-MM-DDTHH:mm"
-    // We can append ":00.000Z" or convert to ISO string.
-    // Let's assume the user picks a valid date/time.
+    if (stationTimes.length === 0) {
+      alert("No stations found for this schedule.");
+      setLoading(false);
+      return;
+    }
 
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-
-    const formattedSchedules = stationSchedules.map(s => ({
-      ...s,
-      estimatedArrival: s.estimatedArrival ? new Date(`${today}T${s.estimatedArrival}`).toISOString() : new Date(`${today}T${departureTime}`).toISOString(),
-      estimatedDeparture: s.estimatedDeparture ? new Date(`${today}T${s.estimatedDeparture}`).toISOString() : new Date(`${today}T${departureTime}`).toISOString(),
-    }));
+    // Validate all times are filled
+    const allTimesFilled = stationTimes.every(st => st.arrivalTime && st.departureTime);
+    if (!allTimesFilled) {
+      alert("Please fill in arrival and departure times for all stations.");
+      setLoading(false);
+      return;
+    }
 
     const payload: CreateScheduleRequest = {
-      trainId: selectedTrainId,
-      departureTime: departureTime,
-      stationSchedules: formattedSchedules,
+      trainId: parseInt(selectedTrainId),
+      date,
+      time,
+      stationTimes: stationTimes.map(st => ({
+        ...st,
+        stationId: parseInt(st.stationId)
+      })),
     };
 
     const success = await onSubmit(payload);
@@ -153,7 +182,7 @@ export function ScheduleForm({
                   </SelectTrigger>
                   <SelectContent>
                     {trains.map((train) => (
-                      <SelectItem key={train.id} value={train.id}>
+                      <SelectItem key={train.id} value={train.id.toString()}>
                         {train.name} ({train.number})
                       </SelectItem>
                     ))}
@@ -161,25 +190,48 @@ export function ScheduleForm({
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="departureTime">Departure Time</Label>
+                <Label htmlFor="date">Date</Label>
                 <Input
-                  id="departureTime"
+                  id="date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="time">Base Time</Label>
+                <Input
+                  id="time"
                   type="time"
-                  value={departureTime}
-                  onChange={(e) => setDepartureTime(e.target.value)}
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
                   required
                 />
               </div>
             </div>
 
-            {selectedRoute && (
+            {routeLoading && (
+              <div className="flex items-center justify-center py-4 text-muted-foreground">
+                <Clock className="mr-2 h-4 w-4 animate-spin" />
+                Loading route details...
+              </div>
+            )}
+
+            {routeError && (
+              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                {routeError}
+              </div>
+            )}
+
+            {selectedRoute && !routeLoading && !routeError && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label>Station Schedule ({selectedRoute.name})</Label>
                 </div>
                 <ScrollArea className="h-[400px] rounded-md border p-4">
                   <div className="space-y-6">
-                    {selectedRoute.stations.map((station, index) => (
+                    {(selectedRoute.stations || selectedRoute.routeStations || []).map((station, index) => (
                       <div key={station.id} className="relative">
                         {index > 0 && (
                           <div className="absolute left-4 -top-6 h-6 w-0.5 bg-border" />
@@ -192,7 +244,7 @@ export function ScheduleForm({
                             <div>
                               <div className="font-medium">{station.currentStation?.name || "Unknown Station"}</div>
                               <div className="text-xs text-muted-foreground">
-                                {index === 0 ? "Start" : index === selectedRoute.stations.length - 1 ? "End" : "Stop"} • {station.distanceFromStart} km
+                                {index === 0 ? "Start" : index === ((selectedRoute.stations || selectedRoute.routeStations || []).length - 1) ? "End" : "Stop"} • {station.distanceFromStart} km
                               </div>
                             </div>
                           </div>
@@ -203,8 +255,8 @@ export function ScheduleForm({
                               <Input
                                 type="time"
                                 className="h-8 text-xs"
-                                value={stationSchedules[index]?.estimatedArrival || ""}
-                                onChange={(e) => handleStationScheduleChange(index, "estimatedArrival", e.target.value)}
+                                value={stationTimes[index]?.arrivalTime || ""}
+                                onChange={(e) => handleStationTimeChange(index, "arrivalTime", e.target.value)}
                                 required
                               />
                             </div>
@@ -213,27 +265,9 @@ export function ScheduleForm({
                               <Input
                                 type="time"
                                 className="h-8 text-xs"
-                                value={stationSchedules[index]?.estimatedDeparture || ""}
-                                onChange={(e) => handleStationScheduleChange(index, "estimatedDeparture", e.target.value)}
+                                value={stationTimes[index]?.departureTime || ""}
+                                onChange={(e) => handleStationTimeChange(index, "departureTime", e.target.value)}
                                 required
-                              />
-                            </div>
-                            <div className="grid gap-1.5">
-                              <Label className="text-xs text-muted-foreground">Platform</Label>
-                              <Input
-                                className="h-8 text-xs"
-                                placeholder="e.g. 1"
-                                value={stationSchedules[index]?.platformNumber || ""}
-                                onChange={(e) => handleStationScheduleChange(index, "platformNumber", e.target.value)}
-                              />
-                            </div>
-                            <div className="grid gap-1.5">
-                              <Label className="text-xs text-muted-foreground">Remarks</Label>
-                              <Input
-                                className="h-8 text-xs"
-                                placeholder="Optional"
-                                value={stationSchedules[index]?.remarks || ""}
-                                onChange={(e) => handleStationScheduleChange(index, "remarks", e.target.value)}
                               />
                             </div>
                           </div>
@@ -246,7 +280,7 @@ export function ScheduleForm({
             )}
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !!routeError || !selectedRoute}>
               {loading ? "Creating..." : "Create Schedule"}
             </Button>
           </DialogFooter>

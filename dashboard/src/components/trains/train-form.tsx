@@ -32,14 +32,6 @@ interface TrainFormProps {
   mode: "create" | "edit";
 }
 
-const TRAIN_TYPES = [
-  { value: "INTERCITY", label: "Intercity" },
-  { value: "MAIL_EXPRESS", label: "Mail/Express" },
-  { value: "LOCAL", label: "Local" },
-  { value: "SPECIAL", label: "Special" },
-  { value: "FREIGHT", label: "Freight" },
-];
-
 export function TrainForm({
   open,
   onOpenChange,
@@ -54,7 +46,6 @@ export function TrainForm({
   const [formData, setFormData] = useState<CreateTrainRequest>({
     name: "",
     number: "",
-    type: "",
     trainRouteId: 0,
     compartments: [],
   });
@@ -64,7 +55,6 @@ export function TrainForm({
       setFormData({
         name: initialData.name,
         number: initialData.number,
-        type: initialData.type,
         trainRouteId: initialData.trainRouteId || 0,
         compartments: initialData.compartments.map((c) => ({
           compartmentId: parseInt(c.compartment.id),
@@ -75,7 +65,6 @@ export function TrainForm({
       setFormData({
         name: "",
         number: "",
-        type: "",
         trainRouteId: 0,
         compartments: [],
       });
@@ -162,24 +151,6 @@ export function TrainForm({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="type">Type</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) => handleChange("type", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TRAIN_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
                 <Label htmlFor="route">Route</Label>
                 <Select
                   value={formData.trainRouteId ? formData.trainRouteId.toString() : ""}
@@ -190,7 +161,7 @@ export function TrainForm({
                   </SelectTrigger>
                   <SelectContent>
                     {availableRoutes.map((route) => (
-                      <SelectItem key={route.id} value={route.id}>
+                      <SelectItem key={route.id} value={route.id.toString()}>
                         {route.name}
                       </SelectItem>
                     ))}

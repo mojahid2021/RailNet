@@ -36,7 +36,7 @@ export default function TrainRoutesPage() {
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRoute, setEditingRoute] = useState<TrainRoute | null>(null);
-  const [deletingRouteId, setDeletingRouteId] = useState<string | null>(null);
+  const [deletingRouteId, setDeletingRouteId] = useState<number | null>(null);
 
   const handleCreate = () => {
     setEditingRoute(null);
@@ -48,13 +48,13 @@ export default function TrainRoutesPage() {
     setIsFormOpen(true);
   };
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id: number) => {
     setDeletingRouteId(id);
   };
 
   const handleConfirmDelete = async () => {
     if (deletingRouteId) {
-      await deleteTrainRouteMutation.mutateAsync(deletingRouteId);
+      await deleteTrainRouteMutation.mutateAsync(deletingRouteId.toString());
       setDeletingRouteId(null);
     }
   };
@@ -62,7 +62,7 @@ export default function TrainRoutesPage() {
   const handleFormSubmit = async (data: CreateTrainRouteRequest | UpdateTrainRouteRequest) => {
     try {
       if (editingRoute) {
-        await updateTrainRouteMutation.mutateAsync({ id: editingRoute.id, data: data as UpdateTrainRouteRequest });
+        await updateTrainRouteMutation.mutateAsync({ id: editingRoute.id.toString(), data: data as UpdateTrainRouteRequest });
         return true;
       } else {
         await createTrainRouteMutation.mutateAsync(data as CreateTrainRouteRequest);

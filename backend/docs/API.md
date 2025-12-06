@@ -790,6 +790,75 @@ Retrieve all train schedules with complete information.
 ```
 Authorization: Bearer <jwt_token>
 ```
+**Response (201):**
+```json
+{
+  "id": 1,
+  "trainId": 1,
+  "trainRouteId": 1,
+  "date": "2025-11-30T08:00:00.000Z",
+  "time": "08:00",
+  "train": {
+    "id": 1,
+    "name": "Express Train 101",
+    "number": "EXP101",
+    "trainRoute": {
+      "id": 1,
+      "name": "NYC to Boston Express",
+      "startStation": { "id": 1, "name": "Central Station", "city": "New York" },
+      "endStation": { "id": 2, "name": "South Station", "city": "Boston" }
+    },
+    "compartments": [
+      {
+        "id": 1,
+        "compartmentId": 1,
+        "compartment": {
+          "id": 1,
+          "name": "First Class AC",
+          "class": "First",
+          "type": "AC",
+          "price": 1.50,
+          "totalSeats": 50
+        }
+      }
+    ]
+  },
+  "trainRoute": {
+    "id": 1,
+    "name": "NYC to Boston Express",
+    "startStation": { "id": 1, "name": "Central Station" },
+    "endStation": { "id": 2, "name": "South Station" }
+  },
+  "stationTimes": [
+    {
+      "id": 1,
+      "stationId": 1,
+      "station": { "id": 1, "name": "Central Station", "city": "New York" },
+      "arrivalTime": "2025-11-30T08:00:00.000Z",
+      "departureTime": "2025-11-30T08:05:00.000Z",
+      "sequence": 1
+    },
+    {
+      "id": 2,
+      "stationId": 3,
+      "station": { "id": 3, "name": "Intermediate Station", "city": "New Haven" },
+      "arrivalTime": "2025-11-30T08:55:00.000Z",
+      "departureTime": "2025-11-30T09:00:00.000Z",
+      "sequence": 2
+    },
+    {
+      "id": 3,
+      "stationId": 2,
+      "station": { "id": 2, "name": "South Station", "city": "Boston" },
+      "arrivalTime": "2025-11-30T10:00:00.000Z",
+      "departureTime": "2025-11-30T10:05:00.000Z",
+      "sequence": 3
+    }
+  ],
+  "createdAt": "2025-11-29T10:00:00.000Z",
+  "updatedAt": "2025-11-29T10:00:00.000Z"
+}
+```
 
 ### Get Train Schedule by ID
 
