@@ -169,6 +169,9 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
+**Error Responses:**
+- `409`: Station with this name already exists
+
 ### Get All Stations
 
 **GET** `/stations`

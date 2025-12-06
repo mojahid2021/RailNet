@@ -23,6 +23,7 @@ export default async function trainRoutes(fastify: FastifyInstance) {
           400: errorResponseSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
+          409: errorResponseSchema,
         },
       },
     },
@@ -55,34 +56,41 @@ export default async function trainRoutes(fastify: FastifyInstance) {
       }
 
       // Create train with compartments
-      const train = await prisma.train.create({
-        data: {
-          name,
-          number,
-          trainRouteId,
-          compartments: {
-            create: compartments.map((comp) => ({
-              compartmentId: comp.compartmentId,
-              quantity: comp.quantity || 1,
-            })),
-          },
-        },
-        include: {
-          trainRoute: {
-            include: {
-              startStation: true,
-              endStation: true,
+      try {
+        const train = await prisma.train.create({
+          data: {
+            name,
+            number,
+            trainRouteId,
+            compartments: {
+              create: compartments.map((comp) => ({
+                compartmentId: comp.compartmentId,
+                quantity: comp.quantity || 1,
+              })),
             },
           },
-          compartments: {
-            include: {
-              compartment: true,
+          include: {
+            trainRoute: {
+              include: {
+                startStation: true,
+                endStation: true,
+              },
+            },
+            compartments: {
+              include: {
+                compartment: true,
+              },
             },
           },
-        },
-      });
+        });
 
-      reply.code(201).send(train);
+        reply.code(201).send(train);
+      } catch (error: any) {
+        if (error.code === 'P2002') {
+          return reply.code(409).send({ error: 'Train with this number already exists' });
+        }
+        throw error;
+      }
     },
   );
 

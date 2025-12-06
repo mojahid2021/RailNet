@@ -22,6 +22,7 @@ export default async function stationRoutes(fastify: FastifyInstance) {
           201: stationWithTimestampsSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
+          409: errorResponseSchema,
         },
       },
     },
@@ -33,16 +34,23 @@ export default async function stationRoutes(fastify: FastifyInstance) {
         longitude: number;
       };
 
-      const station = await prisma.station.create({
-        data: {
-          name,
-          city,
-          latitude,
-          longitude,
-        },
-      });
+      try {
+        const station = await prisma.station.create({
+          data: {
+            name,
+            city,
+            latitude,
+            longitude,
+          },
+        });
 
-      reply.code(201).send(station);
+        reply.code(201).send(station);
+      } catch (error: any) {
+        if (error.code === 'P2002') {
+          return reply.code(409).send({ error: 'Station with this name already exists' });
+        }
+        throw error;
+      }
     },
   );
 

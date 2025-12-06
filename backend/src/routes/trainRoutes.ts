@@ -22,6 +22,7 @@ export default async function trainRouteRoutes(fastify: FastifyInstance) {
           400: errorResponseSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
+          409: errorResponseSchema,
         },
       },
     },
@@ -48,41 +49,48 @@ export default async function trainRouteRoutes(fastify: FastifyInstance) {
       }
 
       // Create train route with route stations
-      const trainRoute = await prisma.trainRoute.create({
-        data: {
-          name,
-          startStationId: stations[0].stationId,
-          endStationId: stations[stations.length - 1].stationId,
-          routeStations: {
-            create: stations.map((station, index) => ({
-              previousStationId: index > 0 ? stations[index - 1].stationId : null,
-              currentStationId: station.stationId,
-              nextStationId: index < stations.length - 1 ? stations[index + 1].stationId : null,
-              distance: index < stations.length - 1 ? station.distance : null,
-              distanceFromStart: stations
-                .slice(0, index + 1)
-                .reduce((sum, s) => sum + (s.distance || 0), 0),
-            })),
-          },
-        },
-        include: {
-          startStation: true,
-          endStation: true,
-          routeStations: {
-            select: {
-              id: true,
-              previousStationId: true,
-              currentStationId: true,
-              nextStationId: true,
-              distance: true,
-              distanceFromStart: true,
+      try {
+        const trainRoute = await prisma.trainRoute.create({
+          data: {
+            name,
+            startStationId: stations[0].stationId,
+            endStationId: stations[stations.length - 1].stationId,
+            routeStations: {
+              create: stations.map((station, index) => ({
+                previousStationId: index > 0 ? stations[index - 1].stationId : null,
+                currentStationId: station.stationId,
+                nextStationId: index < stations.length - 1 ? stations[index + 1].stationId : null,
+                distance: index < stations.length - 1 ? station.distance : null,
+                distanceFromStart: stations
+                  .slice(0, index + 1)
+                  .reduce((sum, s) => sum + (s.distance || 0), 0),
+              })),
             },
-            orderBy: { distanceFromStart: 'asc' },
           },
-        },
-      });
+          include: {
+            startStation: true,
+            endStation: true,
+            routeStations: {
+              select: {
+                id: true,
+                previousStationId: true,
+                currentStationId: true,
+                nextStationId: true,
+                distance: true,
+                distanceFromStart: true,
+              },
+              orderBy: { distanceFromStart: 'asc' },
+            },
+          },
+        });
 
-      reply.code(201).send(trainRoute);
+        reply.code(201).send(trainRoute);
+      } catch (error: any) {
+        if (error.code === 'P2002') {
+          return reply.code(409).send({ error: 'Train route with this name already exists' });
+        }
+        throw error;
+      }
     },
   );
 
