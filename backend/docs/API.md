@@ -90,6 +90,30 @@ Authenticate user and receive JWT token.
 }
 ```
 
+### Get User Profile
+
+**GET** `/profile`
+
+Retrieve the authenticated user's profile information.
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "email": "user@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "role": "user",
+  "createdAt": "2025-11-29T10:00:00.000Z",
+  "updatedAt": "2025-11-29T10:00:00.000Z"
+}
+```
+
 ## Stations
 
 Endpoints for managing railway stations.

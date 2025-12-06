@@ -6,7 +6,14 @@ import {
   authResponseSchema,
   registerBodySchema,
   loginBodySchema,
+  userSchema,
 } from '../schemas/index.js';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    authenticate: (request: any, reply: any) => Promise<void>;
+  }
+}
 
 export default async function authRoutes(fastify: FastifyInstance) {
   // Register route
@@ -110,6 +117,47 @@ export default async function authRoutes(fastify: FastifyInstance) {
         },
         token,
       });
+    },
+  );
+
+  // Profile route
+  fastify.get(
+    '/profile',
+    {
+      preHandler: fastify.authenticate,
+      schema: {
+        description: 'Get authenticated user profile',
+        tags: ['Authentication'],
+        security: [{ bearerAuth: [] }],
+        response: {
+          200: userSchema,
+          401: errorResponseSchema,
+          404: errorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.user as { id: number };
+
+      // Fetch the user from database
+      const user = await prisma.user.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      if (!user) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
+
+      reply.send(user);
     },
   );
 }

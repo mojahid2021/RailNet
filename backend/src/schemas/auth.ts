@@ -6,6 +6,8 @@ export const userSchema = {
     firstName: { type: 'string' },
     lastName: { type: 'string' },
     role: { type: 'string' },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
   },
 };
 
