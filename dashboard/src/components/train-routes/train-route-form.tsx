@@ -59,7 +59,7 @@ export function TrainRouteForm({
       // If the user wants to edit, they might need to recreate the sequence or we handle it carefully.
       // For now, let's populate it.
       setRouteStations(
-        initialData.stations.map((s) => ({
+        initialData.routeStations.map((s) => ({
           stationId: s.currentStationId,
           distance: s.distance,
         }))
@@ -111,37 +111,20 @@ export function TrainRouteForm({
 
     if (mode === "create") {
       // Build station sequence
-      let cumulativeDistance = 0;
-      const stationsPayload: CreateRouteStationRequest[] = routeStations.map((s, index) => {
-        cumulativeDistance += s.distance;
-        return {
-          currentStationId: s.stationId,
-          beforeStationId: index === 0 ? null : routeStations[index - 1].stationId,
-          nextStationId: index === routeStations.length - 1 ? null : routeStations[index + 1].stationId,
-          distance: s.distance,
-          distanceFromStart: cumulativeDistance,
-        };
-      });
+      const stationsPayload = routeStations.map((s) => ({
+        stationId: parseInt(s.stationId),
+        distance: s.distance,
+      }));
 
       payload = {
         name,
-        totalDistance: cumulativeDistance,
-        startStationId: routeStations[0].stationId,
-        endStationId: routeStations[routeStations.length - 1].stationId,
-        // stations: stationsPayload, // Temporarily removed to debug API issue
+        stations: stationsPayload,
       };
     } else {
-      // Update mode - simplified for now, maybe just name and compartments?
-      // The prompt said "Updating stations array requires more complex logic... Consider creating a new route".
-      // So for edit, we might only allow updating name and compartments.
-      // But let's send what we have. If the backend supports full update, great.
-      // The prompt's Update Request Body example only showed name, distance, start/end, compartments.
-      // It didn't show stations array. So let's stick to that for update.
+      // Update mode - currently only supporting name update as per previous implementation
+      // If full update is needed, we would need to update the backend to accept stations list for update as well
       payload = {
         name,
-        totalDistance: calculateTotalDistance(),
-        startStationId: routeStations[0].stationId,
-        endStationId: routeStations[routeStations.length - 1].stationId,
       };
     }
 

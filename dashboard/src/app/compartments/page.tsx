@@ -100,6 +100,7 @@ export default function CompartmentsPage() {
               <TableHeader>
                 <TableRow className="hover:bg-muted/50">
                   <TableHead>Name</TableHead>
+                  <TableHead>Class</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Total Seats</TableHead>
@@ -109,13 +110,13 @@ export default function CompartmentsPage() {
               <TableBody>
                 {isLoading && compartments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Loading compartments...
                     </TableCell>
                   </TableRow>
                 ) : compartments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       No compartments found. Add one to get started.
                     </TableCell>
                   </TableRow>
@@ -128,11 +129,12 @@ export default function CompartmentsPage() {
                           {compartment.name}
                         </div>
                       </TableCell>
+                      <TableCell>{compartment.class}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{compartment.type}</Badge>
                       </TableCell>
                       <TableCell>৳{compartment.price.toFixed(2)}</TableCell>
-                      <TableCell>{compartment.totalSeat}</TableCell>
+                      <TableCell>{compartment.totalSeats}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">
                           <Button

@@ -48,25 +48,28 @@ export function CompartmentForm({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CreateCompartmentRequest>({
     name: "",
+    class: "",
     type: "",
     price: 0,
-    totalSeat: 0,
+    totalSeats: 0,
   });
 
   useEffect(() => {
     if (initialData && mode === "edit") {
       setFormData({
         name: initialData.name,
+        class: initialData.class,
         type: initialData.type,
         price: initialData.price,
-        totalSeat: initialData.totalSeat,
+        totalSeats: initialData.totalSeats,
       });
     } else {
       setFormData({
         name: "",
+        class: "",
         type: "",
         price: 0,
-        totalSeat: 0,
+        totalSeats: 0,
       });
     }
   }, [initialData, mode, open]);
@@ -110,6 +113,16 @@ export function CompartmentForm({
               />
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="class">Class</Label>
+              <Input
+                id="class"
+                value={formData.class}
+                onChange={(e) => handleChange("class", e.target.value)}
+                placeholder="e.g., First, Second"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="type">Type</Label>
               <Select
                 value={formData.type}
@@ -141,13 +154,13 @@ export function CompartmentForm({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="totalSeat">Total Seats</Label>
+                <Label htmlFor="totalSeats">Total Seats</Label>
                 <Input
-                  id="totalSeat"
+                  id="totalSeats"
                   type="number"
                   min="0"
-                  value={formData.totalSeat}
-                  onChange={(e) => handleChange("totalSeat", parseInt(e.target.value) || 0)}
+                  value={formData.totalSeats}
+                  onChange={(e) => handleChange("totalSeats", parseInt(e.target.value) || 0)}
                   required
                 />
               </div>

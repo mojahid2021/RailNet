@@ -131,7 +131,12 @@ export default function TrainRoutesPage() {
                       </TableCell>
                       <TableCell>{route.startStation?.name || "Unknown"}</TableCell>
                       <TableCell>{route.endStation?.name || "Unknown"}</TableCell>
-                      <TableCell>{route.totalDistance.toFixed(1)} km</TableCell>
+                      <TableCell>
+                        {(
+                          route.routeStations?.reduce((acc, curr) => acc + (curr.distance || 0), 0) || 0
+                        ).toFixed(1)}{" "}
+                        km
+                      </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {/* Routes no longer have compartments - they are assigned to trains */}
