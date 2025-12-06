@@ -40,11 +40,14 @@ public class CompartmentActivity extends AppCompatActivity {
         final String[] selectedSeat = {null};
         final int[] selectedCompartmentId = {-1};
 
-        SeatAdapter seatAdapter = new SeatAdapter(new ArrayList<>(), seat -> {
+        final SeatAdapter[] adapterHolder = new SeatAdapter[1];
+        adapterHolder[0] = new SeatAdapter(new ArrayList<>(), seat -> {
             // handle seat click: store selection and show Go Next button
             selectedSeat[0] = seat;
+            adapterHolder[0].setSelectedSeat(seat);
             btnNext.setVisibility(View.VISIBLE);
         });
+        SeatAdapter seatAdapter = adapterHolder[0];
         rvSeats.setAdapter(seatAdapter);
 
         String json = getIntent().getStringExtra("scheduleJson");

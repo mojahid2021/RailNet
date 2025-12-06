@@ -5,16 +5,19 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/primaryBackground"
     tools:context=".TrainsActivity">
 
-    <!-- Modern header: back icon + title + subtitle -->
+    <!-- Modern header with gradient background -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/header_container"
         android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:background="@color/primary"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/header_bg"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -24,60 +27,79 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginStart="4dp"
-            android:contentDescription="Back"
+            android:contentDescription="@string/back_button_desc"
             android:padding="8dp"
             android:src="@android:drawable/ic_menu_revert"
-            android:tint="@android:color/white"
+            app:tint="@android:color/white"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/headerTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold"
             android:ellipsize="end"
-            android:maxLines="1"
+            android:maxLines="2"
             app:layout_constraintStart_toEndOf="@id/btnBack"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="6dp" />
+            android:layout_marginStart="12dp" />
 
         <TextView
             android:id="@+id/headerSubtitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textColor="#DDFFFFFF"
-            android:textSize="12sp"
+            android:textSize="14sp"
             android:ellipsize="end"
             android:maxLines="1"
             app:layout_constraintStart_toStartOf="@id/headerTitle"
             app:layout_constraintTop_toBottomOf="@id/headerTitle"
             app:layout_constraintEnd_toEndOf="@id/headerTitle"
-            android:layout_marginTop="0dp" />
+            android:layout_marginTop="4dp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Search bar card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/search_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="-16dp"
+        app:cardElevation="8dp"
+        app:cardCornerRadius="24dp"
+        app:layout_constraintTop_toBottomOf="@id/header_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+    </com.google.android.material.card.MaterialCardView>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvSchedules"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/header_container"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/search_card"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:visibility="gone" />
+        android:clipToPadding="false"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="16dp" />
 
     <ProgressBar
         android:id="@+id/progress"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        app:layout_constraintTop_toBottomOf="@id/header_container"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@id/rvSchedules"
+        app:layout_constraintBottom_toBottomOf="@id/rvSchedules"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -85,9 +107,15 @@
         android:id="@+id/tvEmpty"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No trains found"
+        android:text="@string/no_trains_found"
+        android:textColor="@color/darkIndigo"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:drawableTopCompat="@drawable/ic_train"
+        app:drawableTint="@color/primary"
+        android:gravity="center"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/header_container"
+        app:layout_constraintTop_toTopOf="@id/rvSchedules"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

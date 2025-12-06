@@ -16,6 +16,7 @@ import java.util.List;
 public class SeatAdapter extends RecyclerView.Adapter<SeatAdapter.VH> {
     private final List<String> items = new ArrayList<>();
     private final OnSeatClickListener listener;
+    private String selectedSeat = null;
 
     public interface OnSeatClickListener { void onSeatClick(String seat); }
 
@@ -26,7 +27,13 @@ public class SeatAdapter extends RecyclerView.Adapter<SeatAdapter.VH> {
 
     public void setItems(List<String> newItems) {
         this.items.clear();
+        this.selectedSeat = null;
         if (newItems != null) this.items.addAll(newItems);
+        notifyDataSetChanged();
+    }
+
+    public void setSelectedSeat(String seat) {
+        this.selectedSeat = seat;
         notifyDataSetChanged();
     }
 
@@ -41,7 +48,11 @@ public class SeatAdapter extends RecyclerView.Adapter<SeatAdapter.VH> {
     public void onBindViewHolder(@NonNull VH holder, int position) {
         String s = items.get(position);
         holder.tv.setText(s);
-        holder.itemView.setOnClickListener(v -> listener.onSeatClick(s));
+        holder.itemView.setSelected(s.equals(selectedSeat));
+        holder.itemView.setOnClickListener(v -> {
+            setSelectedSeat(s);
+            listener.onSeatClick(s);
+        });
     }
 
     @Override
@@ -52,4 +63,3 @@ public class SeatAdapter extends RecyclerView.Adapter<SeatAdapter.VH> {
         VH(@NonNull View itemView) { super(itemView); tv = itemView.findViewById(R.id.tvSeat); }
     }
 }
-

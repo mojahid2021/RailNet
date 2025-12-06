@@ -3,51 +3,83 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardElevation="4dp"
-    app:cardCornerRadius="8dp"
-    app:cardUseCompatPadding="true">
+    app:cardElevation="6dp"
+    app:cardCornerRadius="12dp"
+    app:cardUseCompatPadding="true"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:background="@color/white"
+        android:padding="16dp">
 
+        <!-- Train icon -->
+        <ImageView
+            android:id="@+id/ivTrainIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_train"
+            android:contentDescription="@string/train_route"
+            app:tint="@color/primary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Train name -->
         <TextView
             android:id="@+id/tvTrainName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textStyle="bold"
-            android:textSize="16sp"
-            android:textColor="@android:color/black"
-            app:layout_constraintStart_toStartOf="parent"
+            android:textSize="18sp"
+            android:textColor="@color/darkIndigo"
+            app:layout_constraintStart_toEndOf="@id/ivTrainIcon"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/tvPrice"
+            android:layout_marginStart="12dp"
             android:ellipsize="end"
             android:maxLines="1" />
 
+        <!-- Price -->
         <TextView
             android:id="@+id/tvPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="৳-"
-            android:textColor="#FF5722"
+            android:textColor="@color/primary"
             android:textStyle="bold"
+            android:textSize="16sp"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- Times and route -->
         <TextView
             android:id="@+id/tvTimes"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:textColor="#555555"
+            android:textColor="@color/lightGray"
             app:layout_constraintStart_toStartOf="@+id/tvTrainName"
             app:layout_constraintTop_toBottomOf="@+id/tvTrainName"
             app:layout_constraintEnd_toEndOf="parent"
             android:ellipsize="end"
             android:maxLines="2"
-            android:layout_marginTop="6dp" />
+            android:layout_marginTop="8dp" />
+
+        <!-- Arrow icon -->
+        <ImageView
+            android:id="@+id/ivArrow"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_chevron_right"
+            android:contentDescription="@string/arrow_icon"
+            app:tint="@color/primary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/tvTimes"
+            app:layout_constraintBottom_toBottomOf="@id/tvTimes" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

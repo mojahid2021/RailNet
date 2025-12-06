@@ -172,7 +172,9 @@ public class TrainScheduleAdapter extends RecyclerView.Adapter<TrainScheduleAdap
             }
         }
         if (price >= 0) priceText = String.format(java.util.Locale.getDefault(), "৳%.2f", price);
-        holder.tvPrice.setText(priceText);
+        if (holder.tvPrice != null) {
+            holder.tvPrice.setText(priceText);
+        }
         holder.itemView.setOnClickListener(v -> listener.onItemClick(ts));
     }
 

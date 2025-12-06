@@ -27,6 +27,10 @@ public class BookingSummaryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_booking_summary);
 
+        // Handle back button
+        android.view.View btnBack = findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> finish());
+
         TextView tvSummary = findViewById(R.id.tvSummary);
         Button btnConfirm = findViewById(R.id.btnConfirm);
         Button btnDone = findViewById(R.id.btnDone);
