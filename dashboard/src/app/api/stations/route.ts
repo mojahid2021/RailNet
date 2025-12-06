@@ -32,7 +32,9 @@ export async function GET() {
         );
       }
 
-      return NextResponse.json(data);
+      // The backend returns an array of stations directly: Station[]
+      // We want to return { success: true, data: Station[] } to the frontend
+      return NextResponse.json({ success: true, data: data });
     } catch (error) {
       console.error("Stations fetch error:", error);
       return NextResponse.json(
@@ -82,7 +84,9 @@ export async function POST(request: Request) {
         );
       }
 
-      return NextResponse.json(data);
+      // The backend returns the created station directly
+      // We want to return { success: true, data: Station } to the frontend
+      return NextResponse.json({ success: true, data: data });
     } catch (error) {
       console.error("Station creation error:", error);
       return NextResponse.json(

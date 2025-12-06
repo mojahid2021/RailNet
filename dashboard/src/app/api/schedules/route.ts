@@ -32,7 +32,9 @@ export async function GET() {
         );
       }
 
-      return NextResponse.json(data);
+      // The backend returns an array of schedules directly
+      // We want to return { success: true, data: Schedule[] } to the frontend
+      return NextResponse.json({ success: true, data: data });
     } catch (error) {
       console.error("Schedules fetch error:", error);
       return NextResponse.json(
@@ -82,7 +84,9 @@ export async function POST(request: Request) {
         );
       }
 
-      return NextResponse.json(data);
+      // The backend returns the created schedule directly
+      // We want to return { success: true, data: Schedule } to the frontend
+      return NextResponse.json({ success: true, data: data });
     } catch (error) {
       console.error("Schedule creation error:", error);
       return NextResponse.json(

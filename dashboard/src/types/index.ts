@@ -63,8 +63,6 @@ export interface Station {
   id: string;
   name: string;
   city: string;
-  district: string;
-  division: string;
   latitude: number;
   longitude: number;
   createdAt: string;
@@ -74,8 +72,6 @@ export interface Station {
 export interface CreateStationRequest {
   name: string;
   city: string;
-  district: string;
-  division: string;
   latitude: number;
   longitude: number;
 }
@@ -83,8 +79,6 @@ export interface CreateStationRequest {
 export interface UpdateStationRequest {
   name?: string;
   city?: string;
-  district?: string;
-  division?: string;
   latitude?: number;
   longitude?: number;
 }

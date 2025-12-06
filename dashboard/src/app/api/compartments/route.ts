@@ -32,7 +32,9 @@ export async function GET() {
         );
       }
 
-      return NextResponse.json(data);
+      // The backend returns an array of compartments directly
+      // We want to return { success: true, data: Compartment[] } to the frontend
+      return NextResponse.json({ success: true, data: data });
     } catch (error) {
       console.error("Compartments fetch error:", error);
       return NextResponse.json(
@@ -82,7 +84,9 @@ export async function POST(request: Request) {
         );
       }
 
-      return NextResponse.json(data);
+      // The backend returns the created compartment directly
+      // We want to return { success: true, data: Compartment } to the frontend
+      return NextResponse.json({ success: true, data: data });
     } catch (error) {
       console.error("Compartment creation error:", error);
       return NextResponse.json(

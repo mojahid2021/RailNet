@@ -42,9 +42,9 @@ export async function GET() {
         );
       }
 
-      // The backend returns { success: true, data: { ...profile } }
+      // The backend returns the user profile directly
       // We want to return { success: true, user: { ...profile } } to the frontend
-      return NextResponse.json({ success: true, user: data.data });
+      return NextResponse.json({ success: true, user: data });
     } catch (error) {
       console.error("Profile fetch error:", error);
       return NextResponse.json(

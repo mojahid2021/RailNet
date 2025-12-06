@@ -26,15 +26,22 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       return NextResponse.json(
-        { success: false, error: data.error || "Login failed" },
+        { success: false, error: data.message || "Login failed" },
         { status: response.status }
       );
     }
 
-    if (data.success && data.data?.token) {
+    if (data.token && data.user) {
+      if (data.user.role !== "admin") {
+        return NextResponse.json(
+          { success: false, error: "Access denied. Admin role required." },
+          { status: 403 }
+        );
+      }
+
       // Set HTTP-only cookie
       const cookieStore = await cookies();
-      cookieStore.set("auth_token", data.data.token, {
+      cookieStore.set("auth_token", data.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -45,7 +52,10 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         message: "Login successful",
-        data: { admin: data.data.admin },
+        data: { 
+          token: data.token,
+          user: data.user 
+        },
       });
     }
 

@@ -2,13 +2,13 @@
 export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
   ENDPOINTS: {
-    LOGIN: "/api/v1/admin/login",
-    PROFILE: "/api/v1/admin/profile",
-    STATIONS: "/api/v1/stations",
-    TRAIN_ROUTES: "/api/v1/train-routes",
-    COMPARTMENTS: "/api/v1/compartments",
-    TRAINS: "/api/v1/trains",
-    SCHEDULES: "/api/v1/schedules",
+    LOGIN: "/login",
+    PROFILE: "/profile",
+    STATIONS: "/stations",
+    TRAIN_ROUTES: "/train-routes",
+    COMPARTMENTS: "/compartments",
+    TRAINS: "/trains",
+    SCHEDULES: "/schedules",
   },
 } as const;
 

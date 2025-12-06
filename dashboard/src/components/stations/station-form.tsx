@@ -33,8 +33,6 @@ export function StationForm({
   const [formData, setFormData] = useState<CreateStationRequest>({
     name: "",
     city: "",
-    district: "",
-    division: "",
     latitude: 0,
     longitude: 0,
   });
@@ -44,8 +42,6 @@ export function StationForm({
       setFormData({
         name: initialData.name,
         city: initialData.city,
-        district: initialData.district,
-        division: initialData.division,
         latitude: initialData.latitude,
         longitude: initialData.longitude,
       });
@@ -53,8 +49,6 @@ export function StationForm({
       setFormData({
         name: "",
         city: "",
-        district: "",
-        division: "",
         latitude: 0,
         longitude: 0,
       });
@@ -113,32 +107,6 @@ export function StationForm({
                 id="city"
                 name="city"
                 value={formData.city}
-                onChange={handleChange}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="district" className="text-right">
-                District
-              </Label>
-              <Input
-                id="district"
-                name="district"
-                value={formData.district}
-                onChange={handleChange}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="division" className="text-right">
-                Division
-              </Label>
-              <Input
-                id="division"
-                name="division"
-                value={formData.division}
                 onChange={handleChange}
                 className="col-span-3"
                 required

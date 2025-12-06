@@ -32,7 +32,9 @@ export async function GET() {
         );
       }
 
-      return NextResponse.json(data);
+      // The backend returns an array of train routes directly
+      // We want to return { success: true, data: TrainRoute[] } to the frontend
+      return NextResponse.json({ success: true, data: data });
     } catch (error) {
       console.error("Train routes fetch error:", error);
       return NextResponse.json(
@@ -84,7 +86,9 @@ export async function POST(request: Request) {
         );
       }
 
-      return NextResponse.json(data);
+      // The backend returns the created train route directly
+      // We want to return { success: true, data: TrainRoute } to the frontend
+      return NextResponse.json({ success: true, data: data });
     } catch (error) {
       console.error("Train route creation error:", error);
       return NextResponse.json(

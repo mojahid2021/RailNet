@@ -127,7 +127,7 @@ export default function StationsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {station.city}, {station.district}, {station.division}
+                        {station.city}
                       </TableCell>
                       <TableCell className="font-mono text-xs">
                         {station.latitude.toFixed(4)}, {station.longitude.toFixed(4)}

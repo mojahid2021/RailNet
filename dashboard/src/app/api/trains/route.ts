@@ -32,7 +32,9 @@ export async function GET() {
         );
       }
 
-      return NextResponse.json(data);
+      // The backend returns an array of trains directly
+      // We want to return { success: true, data: Train[] } to the frontend
+      return NextResponse.json({ success: true, data: data });
     } catch (error) {
       console.error("Trains fetch error:", error);
       return NextResponse.json(
@@ -82,7 +84,9 @@ export async function POST(request: Request) {
         );
       }
 
-      return NextResponse.json(data);
+      // The backend returns the created train directly
+      // We want to return { success: true, data: Train } to the frontend
+      return NextResponse.json({ success: true, data: data });
     } catch (error) {
       console.error("Train creation error:", error);
       return NextResponse.json(
