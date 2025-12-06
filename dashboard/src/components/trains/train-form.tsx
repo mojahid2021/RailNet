@@ -55,8 +55,8 @@ export function TrainForm({
     name: "",
     number: "",
     type: "",
-    trainRouteId: "",
-    compartmentIds: [],
+    trainRouteId: 0,
+    compartments: [],
   });
 
   useEffect(() => {
@@ -65,31 +65,51 @@ export function TrainForm({
         name: initialData.name,
         number: initialData.number,
         type: initialData.type,
-        trainRouteId: initialData.trainRouteId || "",
-        compartmentIds: initialData.compartments.map((c) => c.compartment.id),
+        trainRouteId: initialData.trainRouteId || 0,
+        compartments: initialData.compartments.map((c) => ({
+          compartmentId: parseInt(c.compartment.id),
+          quantity: c.quantity || 1, // Assuming quantity might be available in future or default to 1
+        })),
       });
     } else {
       setFormData({
         name: "",
         number: "",
         type: "",
-        trainRouteId: "",
-        compartmentIds: [],
+        trainRouteId: 0,
+        compartments: [],
       });
     }
   }, [initialData, mode, open]);
 
-  const handleChange = (field: keyof CreateTrainRequest, value: string | string[]) => {
+  const handleChange = (field: keyof CreateTrainRequest, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleCompartmentToggle = (compartmentId: string) => {
+  const handleCompartmentToggle = (compartmentIdStr: string) => {
+    const compartmentId = parseInt(compartmentIdStr);
     setFormData((prev) => {
-      const currentIds = prev.compartmentIds || [];
-      const newIds = currentIds.includes(compartmentId)
-        ? currentIds.filter((id) => id !== compartmentId)
-        : [...currentIds, compartmentId];
-      return { ...prev, compartmentIds: newIds };
+      const currentCompartments = prev.compartments || [];
+      const exists = currentCompartments.some((c) => c.compartmentId === compartmentId);
+      
+      let newCompartments;
+      if (exists) {
+        newCompartments = currentCompartments.filter((c) => c.compartmentId !== compartmentId);
+      } else {
+        newCompartments = [...currentCompartments, { compartmentId, quantity: 1 }];
+      }
+      return { ...prev, compartments: newCompartments };
+    });
+  };
+
+  const handleQuantityChange = (compartmentIdStr: string, quantity: number) => {
+    const compartmentId = parseInt(compartmentIdStr);
+    setFormData((prev) => {
+      const currentCompartments = prev.compartments || [];
+      const newCompartments = currentCompartments.map((c) => 
+        c.compartmentId === compartmentId ? { ...c, quantity } : c
+      );
+      return { ...prev, compartments: newCompartments };
     });
   };
 
@@ -162,8 +182,8 @@ export function TrainForm({
               <div className="grid gap-2">
                 <Label htmlFor="route">Route</Label>
                 <Select
-                  value={formData.trainRouteId}
-                  onValueChange={(value) => handleChange("trainRouteId", value)}
+                  value={formData.trainRouteId ? formData.trainRouteId.toString() : ""}
+                  onValueChange={(value) => handleChange("trainRouteId", parseInt(value))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select route" />
@@ -181,22 +201,42 @@ export function TrainForm({
 
             <div className="grid gap-2">
               <Label>Compartments</Label>
-              <div className="flex flex-wrap gap-2 border p-3 rounded-md min-h-[60px]">
+              <div className="space-y-3 border p-3 rounded-md min-h-[60px]">
                 {availableCompartments.length === 0 ? (
                   <span className="text-sm text-muted-foreground">Loading compartments...</span>
                 ) : (
-                  availableCompartments.map((compartment) => (
-                    <div key={compartment.id} className="flex items-center space-x-2 bg-muted/50 px-3 py-1 rounded-full">
-                      <Checkbox
-                        id={`comp-${compartment.id}`}
-                        checked={formData.compartmentIds?.includes(compartment.id)}
-                        onCheckedChange={() => handleCompartmentToggle(compartment.id)}
-                      />
-                      <Label htmlFor={`comp-${compartment.id}`} className="cursor-pointer text-sm font-medium">
-                        {compartment.name}
-                      </Label>
-                    </div>
-                  ))
+                  availableCompartments.map((compartment) => {
+                    const isSelected = formData.compartments?.some(c => c.compartmentId === parseInt(compartment.id));
+                    const currentQty = formData.compartments?.find(c => c.compartmentId === parseInt(compartment.id))?.quantity || 1;
+
+                    return (
+                      <div key={compartment.id} className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`comp-${compartment.id}`}
+                            checked={isSelected}
+                            onCheckedChange={() => handleCompartmentToggle(compartment.id)}
+                          />
+                          <Label htmlFor={`comp-${compartment.id}`} className="cursor-pointer text-sm font-medium">
+                            {compartment.name} ({compartment.class})
+                          </Label>
+                        </div>
+                        {isSelected && (
+                          <div className="flex items-center gap-2">
+                            <Label htmlFor={`qty-${compartment.id}`} className="text-xs text-muted-foreground">Qty:</Label>
+                            <Input 
+                              id={`qty-${compartment.id}`}
+                              type="number" 
+                              min="1" 
+                              className="w-16 h-8"
+                              value={currentQty}
+                              onChange={(e) => handleQuantityChange(compartment.id, parseInt(e.target.value) || 1)}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>

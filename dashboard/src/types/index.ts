@@ -110,19 +110,30 @@ export interface UpdateCompartmentRequest {
 }
 
 export interface TrainCompartment {
-  id: string;
+  id: number;
   compartment: Compartment;
+  quantity: number;
 }
 
 export interface Train {
-  id: string;
+  id: number;
   name: string;
   number: string;
   type: string;
-  trainRouteId?: string;
+  trainRouteId?: number;
   trainRoute?: {
-    id: string;
+    id: number;
     name: string;
+    startStation?: {
+      id: string;
+      name: string;
+      city: string;
+    };
+    endStation?: {
+      id: string;
+      name: string;
+      city: string;
+    };
   };
   compartments: TrainCompartment[];
   createdAt: string;
@@ -133,16 +144,22 @@ export interface CreateTrainRequest {
   name: string;
   number: string;
   type: string;
-  trainRouteId?: string;
-  compartmentIds?: string[];
+  trainRouteId: number;
+  compartments: {
+    compartmentId: number;
+    quantity: number;
+  }[];
 }
 
 export interface UpdateTrainRequest {
   name?: string;
   number?: string;
   type?: string;
-  trainRouteId?: string;
-  compartmentIds?: string[];
+  trainRouteId?: number;
+  compartments?: {
+    compartmentId: number;
+    quantity: number;
+  }[];
 }
 
 export interface RouteStation {

@@ -36,7 +36,7 @@ export default function TrainsPage() {
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTrain, setEditingTrain] = useState<Train | null>(null);
-  const [deletingTrainId, setDeletingTrainId] = useState<string | null>(null);
+  const [deletingTrainId, setDeletingTrainId] = useState<number | null>(null);
 
   const handleCreate = () => {
     setEditingTrain(null);
@@ -48,13 +48,13 @@ export default function TrainsPage() {
     setIsFormOpen(true);
   };
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id: number) => {
     setDeletingTrainId(id);
   };
 
   const handleConfirmDelete = async () => {
     if (deletingTrainId) {
-      await deleteTrainMutation.mutateAsync(deletingTrainId);
+      await deleteTrainMutation.mutateAsync(deletingTrainId.toString());
       setDeletingTrainId(null);
     }
   };
@@ -62,7 +62,7 @@ export default function TrainsPage() {
   const handleFormSubmit = async (data: CreateTrainRequest | UpdateTrainRequest) => {
     try {
       if (editingTrain) {
-        await updateTrainMutation.mutateAsync({ id: editingTrain.id, data: data as UpdateTrainRequest });
+        await updateTrainMutation.mutateAsync({ id: editingTrain.id.toString(), data: data as UpdateTrainRequest });
         return true;
       } else {
         await createTrainMutation.mutateAsync(data as CreateTrainRequest);
@@ -141,7 +141,7 @@ export default function TrainsPage() {
                           {train.compartments && train.compartments.length > 0 ? (
                             train.compartments.map((tc) => (
                               <Badge key={tc.id} variant="secondary" className="text-xs">
-                                {tc.compartment.name}
+                                {tc.compartment.name} ({tc.quantity})
                               </Badge>
                             ))
                           ) : (
