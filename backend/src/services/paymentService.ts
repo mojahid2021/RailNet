@@ -7,6 +7,7 @@ export interface PaymentData {
   ticketId: string; // Now using ticketId instead of number
   userId: number;
   currency: string;
+  baseUrl?: string; // Base URL for callback construction
 }
 
 export class PaymentService {
@@ -28,8 +29,8 @@ export class PaymentService {
     // Use user details with defaults for missing fields
     const customerName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
     const customerEmail = user.email;
-    const customerPhone = '+880000000000'; // Default phone - should be added to user profile
-    const customerAddress = 'Not provided'; // Default address - should be added to user profile
+    const customerPhone = user.phone || '+880000000000'; // Use user's phone if available
+    const customerAddress = user.address || 'Not provided'; // Use user's address if available
     const customerCity = 'Dhaka'; // Default city
     const customerCountry = 'Bangladesh'; // Default country
 
@@ -80,14 +81,15 @@ export class PaymentService {
     });
 
     // Prepare SSLCommerz payment request
+    const baseUrl = paymentData.baseUrl || process.env.BASE_URL || 'http://localhost:3000';
     const sslPaymentData: PaymentRequest = {
       total_amount: paymentAmount,
       currency,
       tran_id: transactionId,
-      success_url: process.env.SSLCOMMERZ_SUCCESS_URL!,
-      fail_url: process.env.SSLCOMMERZ_FAIL_URL!,
-      cancel_url: process.env.SSLCOMMERZ_CANCEL_URL!,
-      ipn_url: process.env.SSLCOMMERZ_IPN_URL!,
+      success_url: `${baseUrl}/payments/success`,
+      fail_url: `${baseUrl}/payments/fail`,
+      cancel_url: `${baseUrl}/payments/cancel`,
+      ipn_url: `${baseUrl}/payments/ipn`,
       cus_name: customerName,
       cus_email: customerEmail,
       cus_phone: customerPhone,
@@ -196,7 +198,8 @@ export class PaymentService {
       await prisma.ticket.update({
         where: { id: transaction.ticketId },
         data: {
-          paymentStatus: 'PAID',
+          status: 'confirmed',
+          paymentStatus: 'paid',
           confirmedAt: new Date(),
         },
       });
@@ -222,6 +225,22 @@ export class PaymentService {
 
   async handlePaymentFailure(transactionId: string, errorMessage?: string): Promise<void> {
     try {
+      // Get transaction to find associated ticket
+      const transaction = await prisma.paymentTransaction.findUnique({
+        where: { id: transactionId },
+        select: { ticketId: true },
+      });
+
+      if (transaction) {
+        // Update ticket payment status
+        await prisma.ticket.update({
+          where: { id: transaction.ticketId },
+          data: {
+            paymentStatus: 'failed',
+          },
+        });
+      }
+
       // Update transaction status
       await prisma.paymentTransaction.update({
         where: { id: transactionId },
@@ -250,6 +269,22 @@ export class PaymentService {
 
   async handlePaymentCancel(transactionId: string): Promise<void> {
     try {
+      // Get transaction to find associated ticket
+      const transaction = await prisma.paymentTransaction.findUnique({
+        where: { id: transactionId },
+        select: { ticketId: true },
+      });
+
+      if (transaction) {
+        // Update ticket payment status
+        await prisma.ticket.update({
+          where: { id: transaction.ticketId },
+          data: {
+            paymentStatus: 'cancelled',
+          },
+        });
+      }
+
       // Update transaction status
       await prisma.paymentTransaction.update({
         where: { id: transactionId },
