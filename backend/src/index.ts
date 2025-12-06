@@ -39,6 +39,26 @@ const start = async () => {
       timeWindow: '1 minute',
     });
 
+    // Add content type parser for form data (needed for SSLCommerz callbacks)
+    app.addContentTypeParser('application/x-www-form-urlencoded', function (request, payload, done) {
+      let body = '';
+      payload.on('data', chunk => {
+        body += chunk;
+      });
+      payload.on('end', () => {
+        try {
+          const parsed = new URLSearchParams(body);
+          const result: any = {};
+          for (const [key, value] of parsed) {
+            result[key] = value;
+          }
+          done(null, result);
+        } catch (err) {
+          done(err as Error, null);
+        }
+      });
+    });
+
     await app.register(fastifySwagger, {
       openapi: {
         openapi: '3.0.0',

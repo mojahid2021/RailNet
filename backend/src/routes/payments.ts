@@ -55,7 +55,7 @@ async function paymentRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // Payment success callback - Public endpoint (GET)
+  // Payment success callback - Public endpoint
   fastify.get(
     '/payments/success',
     {
@@ -143,6 +143,7 @@ async function paymentRoutes(fastify: FastifyInstance) {
       schema: {
         description: 'SSLCommerz success callback (POST)',
         tags: ['Payments'],
+        consumes: ['application/x-www-form-urlencoded'],
         body: paymentCallbackQuerySchema,
         response: {
           200: paymentSuccessResponseSchema,
@@ -200,7 +201,6 @@ async function paymentRoutes(fastify: FastifyInstance) {
         reply.type('text/html').send(successHtml);
       } catch (error) {
         console.error('Payment success handling error:', error);
-
         const errorHtml = `
         <!DOCTYPE html>
         <html>
@@ -272,6 +272,7 @@ async function paymentRoutes(fastify: FastifyInstance) {
       schema: {
         description: 'SSLCommerz failure callback (POST)',
         tags: ['Payments'],
+        consumes: ['application/x-www-form-urlencoded'],
         body: {
           type: 'object',
           properties: {
@@ -367,6 +368,7 @@ async function paymentRoutes(fastify: FastifyInstance) {
       schema: {
         description: 'SSLCommerz cancel callback (POST)',
         tags: ['Payments'],
+        consumes: ['application/x-www-form-urlencoded'],
         body: {
           type: 'object',
           properties: {
