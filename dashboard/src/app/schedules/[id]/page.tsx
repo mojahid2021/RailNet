@@ -65,7 +65,7 @@ export default function ScheduleDetailsPage({ params }: { params: Promise<{ id: 
             <CardContent>
               <div className="text-2xl font-bold">{schedule.train?.name}</div>
               <p className="text-xs text-muted-foreground">
-                {schedule.train?.number} ({schedule.train?.type})
+                {schedule.train?.number}
               </p>
             </CardContent>
           </Card>
@@ -76,9 +76,9 @@ export default function ScheduleDetailsPage({ params }: { params: Promise<{ id: 
               <MapPin className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{schedule.route?.name}</div>
+              <div className="text-2xl font-bold">{schedule.trainRoute?.name}</div>
               <p className="text-xs text-muted-foreground">
-                {schedule.route?.startStation?.name} → {schedule.route?.endStation?.name}
+                {schedule.trainRoute?.startStation?.name} → {schedule.trainRoute?.endStation?.name}
               </p>
             </CardContent>
           </Card>
@@ -89,7 +89,13 @@ export default function ScheduleDetailsPage({ params }: { params: Promise<{ id: 
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{schedule.departureTime}</div>
+              <div className="text-2xl font-bold">
+                {schedule.date && schedule.time 
+                  ? `${format(new Date(schedule.date), "PP")} ${schedule.time}`
+                  : schedule.departureTime 
+                  ? format(new Date(schedule.departureTime), "PPp")
+                  : "N/A"}
+              </div>
               <p className="text-xs text-muted-foreground capitalize">
                 Status: {schedule.status}
               </p>
@@ -113,20 +119,20 @@ export default function ScheduleDetailsPage({ params }: { params: Promise<{ id: 
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {schedule.stationSchedules?.map((stationSchedule) => (
-                  <TableRow key={stationSchedule.id}>
+                {schedule.stationTimes?.map((stationTime) => (
+                  <TableRow key={stationTime.id}>
                     <TableCell className="font-medium">
-                      {stationSchedule.station?.name}
+                      {stationTime.station?.name}
                     </TableCell>
                     <TableCell>
-                      {format(new Date(stationSchedule.estimatedArrival), "HH:mm")}
+                      {format(new Date(stationTime.arrivalTime), "HH:mm")}
                     </TableCell>
                     <TableCell>
-                      {format(new Date(stationSchedule.estimatedDeparture), "HH:mm")}
+                      {format(new Date(stationTime.departureTime), "HH:mm")}
                     </TableCell>
-                    <TableCell>{stationSchedule.platformNumber || "-"}</TableCell>
+                    <TableCell>-</TableCell>
                     <TableCell className="capitalize">
-                      {stationSchedule.status}
+                      {schedule.status || "Scheduled"}
                     </TableCell>
                   </TableRow>
                 ))}
