@@ -111,7 +111,11 @@ export default function SchedulesPage() {
                       <TableCell>
                         <div className="flex items-center">
                           <Clock className="mr-2 h-3 w-3 text-muted-foreground" />
-                          {schedule.departureTime || "N/A"}
+                          {schedule.date && schedule.time 
+                            ? `${format(new Date(schedule.date), "PP")} ${schedule.time}`
+                            : schedule.departureTime 
+                            ? format(new Date(schedule.departureTime), "PPp")
+                            : "N/A"}
                         </div>
                       </TableCell>
                       <TableCell>
