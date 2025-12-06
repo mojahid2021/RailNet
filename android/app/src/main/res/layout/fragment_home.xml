@@ -89,25 +89,6 @@
                         android:layout_height="0dp"
                         android:layout_weight="1" />
 
-<!--                    &lt;!&ndash; Hero Title &ndash;&gt;-->
-<!--                    <TextView-->
-<!--                        android:layout_width="wrap_content"-->
-<!--                        android:layout_height="wrap_content"-->
-<!--                        android:letterSpacing="0.02"-->
-<!--                        android:lineSpacingExtra="4dp"-->
-<!--                        android:text="@string/where_to_today"-->
-<!--                        android:textColor="@color/white"-->
-<!--                        android:textSize="32sp"-->
-<!--                        android:textStyle="bold" />-->
-
-<!--                    <TextView-->
-<!--                        android:layout_width="wrap_content"-->
-<!--                        android:layout_height="wrap_content"-->
-<!--                        android:layout_marginTop="8dp"-->
-<!--                        android:alpha="0.85"-->
-<!--                        android:text="@string/explore_destinations"-->
-<!--                        android:textColor="@color/white"-->
-<!--                        android:textSize="16sp" />-->
                 </LinearLayout>
             </FrameLayout>
 
@@ -167,15 +148,19 @@
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
 
-                            <TextView
-                                android:id="@+id/tvFromStation"
-                                android:layout_width="wrap_content"
+                            <!-- Dropdown AutoCompleteTextView for From -->
+                            <AutoCompleteTextView
+                                android:id="@+id/actv_from"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="@string/dhaka"
+                                android:hint="@string/select_station"
                                 android:textColor="@color/darkIndigo"
                                 android:textSize="16sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:backgroundTint="@null"
+                                android:completionThreshold="1"
+                                android:inputType="text" />
                         </LinearLayout>
                     </LinearLayout>
                     <!-- To -->
@@ -183,6 +168,7 @@
                         android:id="@+id/toLocationLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
                         android:background="@drawable/search_bar_background"
                         android:clickable="true"
                         android:focusable="true"
@@ -213,15 +199,19 @@
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
 
-                            <TextView
-                                android:id="@+id/tvToStation"
-                                android:layout_width="wrap_content"
+                            <!-- Dropdown AutoCompleteTextView for To -->
+                            <AutoCompleteTextView
+                                android:id="@+id/actv_to"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="@string/chittagong"
+                                android:hint="@string/select_station"
                                 android:textColor="@color/darkIndigo"
                                 android:textSize="16sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:backgroundTint="@null"
+                                android:completionThreshold="1"
+                                android:inputType="text" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -241,7 +231,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:contentDescription="Date Selection"
+                            android:contentDescription="@string/date_selection"
                             android:src="@drawable/ic_calendar"
                             app:tint="@color/primary" />
 
@@ -251,7 +241,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
                             android:layout_weight="1"
-                            android:text="Today, Nov 12"
+                            android:text="@string/today_date"
                             android:textColor="@color/darkIndigo"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -259,7 +249,7 @@
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:contentDescription="Arrow Icon"
+                            android:contentDescription="@string/arrow_icon"
                             android:src="@drawable/ic_arrow_forward"
                             app:tint="@color/lightGray" />
                     </LinearLayout>
@@ -288,4 +278,3 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
