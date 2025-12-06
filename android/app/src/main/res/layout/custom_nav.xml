@@ -36,35 +36,6 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/trainLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:id="@+id/trainIconLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="5dp">
-
-            <ImageView
-                android:id="@+id/trainIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_train" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/trainText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Train" />
-    </LinearLayout>
-
-    <LinearLayout
         android:id="@+id/mapLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

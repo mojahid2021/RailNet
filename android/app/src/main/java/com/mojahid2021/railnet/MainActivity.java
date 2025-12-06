@@ -30,10 +30,10 @@ import com.mojahid2021.railnet.train.TrainFragment;
 
 
 public class MainActivity extends AppCompatActivity {
-    private LinearLayout homeLayout, trainLayout, mapLayout, profileLayout;
-    private LinearLayout homeIconLayout, trainIconLayout, mapIconLayout, profileIconLayout;
-    private ImageView homeIcon, trainIcon, mapIcon, profileIcon;
-    private TextView homeText, trainText, mapText, profileText;
+    private LinearLayout homeLayout, mapLayout, profileLayout;
+    private LinearLayout homeIconLayout, mapIconLayout, profileIconLayout;
+    private ImageView homeIcon, mapIcon, profileIcon;
+    private TextView homeText, mapText, profileText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,22 +68,18 @@ public class MainActivity extends AppCompatActivity {
         });
 
         homeLayout = findViewById(R.id.homeLayout);
-        trainLayout = findViewById(R.id.trainLayout);
         mapLayout = findViewById(R.id.mapLayout);
         profileLayout = findViewById(R.id.profileLayout);
 
         homeIconLayout = findViewById(R.id.homeIconLayout);
-        trainIconLayout = findViewById(R.id.trainIconLayout);
         mapIconLayout = findViewById(R.id.mapIconLayout);
         profileIconLayout = findViewById(R.id.profileIconLayout);
 
         homeIcon = findViewById(R.id.homeIcon);
-        trainIcon = findViewById(R.id.trainIcon);
         mapIcon = findViewById(R.id.mapIcon);
         profileIcon = findViewById(R.id.profileIcon);
 
         homeText = findViewById(R.id.homeText);
-        trainText = findViewById(R.id.trainText);
         mapText = findViewById(R.id.mapText);
         profileText = findViewById(R.id.profileText);
 
@@ -103,10 +99,6 @@ public class MainActivity extends AppCompatActivity {
             homeIconLayout.setBackgroundResource(R.drawable.selected_nav_background);
             homeIcon.setColorFilter(ContextCompat.getColor(this, R.color.white));
             homeText.setTextColor(ContextCompat.getColor(this, R.color.primary));
-        } else if (layout == trainLayout) {
-            trainIconLayout.setBackgroundResource(R.drawable.selected_nav_background);
-            trainIcon.setColorFilter(ContextCompat.getColor(this, R.color.white));
-            trainText.setTextColor(ContextCompat.getColor(this, R.color.primary));
         } else if (layout == mapLayout) {
             mapIconLayout.setBackgroundResource(R.drawable.selected_nav_background);
             mapIcon.setColorFilter(ContextCompat.getColor(this, R.color.white));
@@ -125,11 +117,6 @@ public class MainActivity extends AppCompatActivity {
             highLightNavigation(homeLayout);
         });
 
-        trainLayout.setOnClickListener(v -> {
-            loadFragment(new TrainFragment());
-            highLightNavigation(trainLayout);
-        });
-
         mapLayout.setOnClickListener(v -> {
             loadFragment(new MapFragment());
             highLightNavigation(mapLayout);
@@ -143,17 +130,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void resetNavigation() {
         homeIcon.setColorFilter(ContextCompat.getColor(this, R.color.darkPurple));
-        trainIcon.setColorFilter(ContextCompat.getColor(this, R.color.darkPurple));
         mapIcon.setColorFilter(ContextCompat.getColor(this, R.color.darkPurple));
         profileIcon.setColorFilter(ContextCompat.getColor(this, R.color.darkPurple));
 
         homeIconLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent));
-        trainIconLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent));
         mapIconLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent));
         profileIconLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.transparent));
 
         homeText.setTextColor(ContextCompat.getColor(this, R.color.darkPurple));
-        trainText.setTextColor(ContextCompat.getColor(this, R.color.darkPurple));
         mapText.setTextColor(ContextCompat.getColor(this, R.color.darkPurple));
         profileText.setTextColor(ContextCompat.getColor(this, R.color.darkPurple));
     }
