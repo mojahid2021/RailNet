@@ -253,3 +253,57 @@ export interface CreateScheduleRequest {
     departureTime: string;
   }[];
 }
+
+// Payment Transaction Types
+export type PaymentStatus = "INITIATED" | "COMPLETED" | "FAILED" | "CANCELLED" | "EXPIRED";
+
+export interface Ticket {
+  ticketId: string;
+  passengerName: string;
+  status: string;
+  paymentStatus: string;
+  price: number;
+  user: {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+  };
+}
+
+export interface PaymentTransaction {
+  id: string;
+  ticketId: number;
+  transactionId: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  paymentMethod: string;
+  valId: string;
+  bankTransactionId: string;
+  cardType: string;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string;
+  ticket: Ticket;
+}
+
+export interface TransactionsQueryParams {
+  page?: number;
+  limit?: number;
+  status?: PaymentStatus;
+  userId?: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface PaginatedTransactionsResponse {
+  transactions: PaymentTransaction[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+

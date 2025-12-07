@@ -9,6 +9,7 @@ export const API_CONFIG = {
     COMPARTMENTS: "/compartments",
     TRAINS: "/trains",
     SCHEDULES: "/train-schedules",
+    PAYMENTS: "/payments",
   },
 } as const;
 
