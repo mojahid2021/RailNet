@@ -354,13 +354,13 @@ export default function TicketsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading && (!data || data.tickets.length === 0) ? (
+                {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       Loading tickets...
                     </TableCell>
                   </TableRow>
-                ) : !data || data.tickets.length === 0 ? (
+                ) : !data || !data.tickets || data.tickets.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       No tickets found. Try adjusting your filters.
@@ -450,7 +450,7 @@ export default function TicketsPage() {
             </Table>
 
             {/* Pagination */}
-            {data && data.tickets.length > 0 && (
+            {data && data.tickets && data.tickets.length > 0 && (
               <div className="flex items-center justify-between mt-4 pt-4 border-t">
                 <div className="text-sm text-muted-foreground">
                   Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, data.total || 0)} of{" "}

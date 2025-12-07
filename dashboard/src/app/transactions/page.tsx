@@ -226,13 +226,13 @@ export default function TransactionsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading && (!data || data.transactions.length === 0) ? (
+                {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       Loading transactions...
                     </TableCell>
                   </TableRow>
-                ) : !data || data.transactions.length === 0 ? (
+                ) : !data || !data.transactions || data.transactions.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       No transactions found. Try adjusting your filters.

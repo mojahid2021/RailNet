@@ -11,6 +11,7 @@ export const API_CONFIG = {
     SCHEDULES: "/train-schedules",
     PAYMENTS: "/payments",
     TICKETS: "/admin/tickets",
+    USERS: "/admin/users",
   },
 } as const;
 

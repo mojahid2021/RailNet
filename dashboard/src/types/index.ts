@@ -15,6 +15,42 @@ export interface User {
   role: string;
 }
 
+export interface AdminUser {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  address: string;
+  role: "user" | "admin";
+  createdAt: string;
+  updatedAt: string;
+  _count: {
+    tickets: number;
+  };
+}
+
+export interface UsersQueryParams {
+  page?: number;
+  limit?: number;
+  role?: "user" | "admin";
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface PaginatedUsersResponse {
+  users: AdminUser[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+
 export interface AdminProfile {
   id: string;
   firstName: string;
