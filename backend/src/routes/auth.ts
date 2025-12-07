@@ -170,4 +170,197 @@ export default async function authRoutes(fastify: FastifyInstance) {
       reply.send(user);
     },
   );
+
+  // Get all users - Admin only
+  fastify.get(
+    '/admin/users',
+    {
+      preHandler: (fastify as any).requireAdmin,
+      schema: {
+        description: 'Get all users with filtering and pagination (Admin only)',
+        tags: ['Authentication'],
+        security: [{ bearerAuth: [] }],
+        querystring: {
+          type: 'object',
+          properties: {
+            page: { type: 'integer', minimum: 1, default: 1 },
+            limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+            role: {
+              type: 'string',
+              enum: ['user', 'admin']
+            },
+            email: { type: 'string' },
+            firstName: { type: 'string' },
+            lastName: { type: 'string' },
+            phone: { type: 'string' },
+            startDate: { type: 'string', format: 'date' },
+            endDate: { type: 'string', format: 'date' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              users: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'number' },
+                    email: { type: 'string' },
+                    firstName: { type: 'string' },
+                    lastName: { type: 'string' },
+                    phone: { type: 'string' },
+                    address: { type: 'string' },
+                    role: { type: 'string' },
+                    createdAt: { type: 'string', format: 'date-time' },
+                    updatedAt: { type: 'string', format: 'date-time' },
+                    _count: {
+                      type: 'object',
+                      properties: {
+                        tickets: { type: 'number' },
+                      },
+                    },
+                  },
+                },
+              },
+              page: { type: 'integer' },
+              limit: { type: 'integer' },
+              total: { type: 'integer' },
+              totalPages: { type: 'integer' },
+            },
+          },
+          403: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+          500: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const user = request.user as { role: string };
+
+      if (user.role !== 'admin') {
+        return reply.code(403).send({ error: 'Admin access required' });
+      }
+
+      const query = request.query as {
+        page?: number;
+        limit?: number;
+        role?: string;
+        email?: string;
+        firstName?: string;
+        lastName?: string;
+        phone?: string;
+        startDate?: string;
+        endDate?: string;
+      };
+
+      const page = query.page || 1;
+      const limit = Math.min(query.limit || 20, 100);
+      const offset = (page - 1) * limit;
+
+      const where: any = {};
+
+      // Role filter
+      if (query.role) {
+        where.role = query.role;
+      }
+
+      // Email filter (partial match)
+      if (query.email) {
+        where.email = {
+          contains: query.email,
+          mode: 'insensitive',
+        };
+      }
+
+      // Name filters (partial match)
+      if (query.firstName) {
+        where.firstName = {
+          contains: query.firstName,
+          mode: 'insensitive',
+        };
+      }
+
+      if (query.lastName) {
+        where.lastName = {
+          contains: query.lastName,
+          mode: 'insensitive',
+        };
+      }
+
+      // Phone filter (partial match)
+      if (query.phone) {
+        where.phone = {
+          contains: query.phone,
+          mode: 'insensitive',
+        };
+      }
+
+      // Date range filters
+      if (query.startDate || query.endDate) {
+        where.createdAt = {};
+        if (query.startDate) {
+          where.createdAt.gte = new Date(query.startDate);
+        }
+        if (query.endDate) {
+          where.createdAt.lte = new Date(query.endDate + 'T23:59:59.999Z');
+        }
+      }
+
+      try {
+        const [users, total] = await Promise.all([
+          prisma.user.findMany({
+            where,
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              phone: true,
+              address: true,
+              role: true,
+              createdAt: true,
+              updatedAt: true,
+              _count: {
+                select: {
+                  tickets: true,
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+            skip: offset,
+            take: limit,
+          }),
+          prisma.user.count({
+            where,
+          }),
+        ]);
+
+        const totalPages = Math.ceil(total / limit);
+
+        reply.send({
+          users,
+          page,
+          limit,
+          total,
+          totalPages,
+        });
+      } catch (error) {
+        console.error('Admin user retrieval error:', error);
+        reply.code(500).send({
+          error: error instanceof Error ? error.message : 'User retrieval failed',
+        });
+      }
+    },
+  );
 }

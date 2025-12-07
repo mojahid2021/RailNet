@@ -124,6 +124,55 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
+### Get All Users (Admin Only)
+
+**GET** `/admin/users`
+
+Retrieve all users with filtering and pagination options.
+
+**Authentication:** Required (admin only)
+
+**Query Parameters:**
+
+- `page` (integer, optional) - Page number (default: 1)
+- `limit` (integer, optional) - Items per page (default: 20, max: 100)
+- `role` (string, optional) - Filter by user role (`user`, `admin`)
+- `email` (string, optional) - Search by email (partial match)
+- `firstName` (string, optional) - Search by first name (partial match)
+- `lastName` (string, optional) - Search by last name (partial match)
+- `phone` (string, optional) - Search by phone number (partial match)
+- `startDate` (string, optional) - Filter users created from this date (YYYY-MM-DD)
+- `endDate` (string, optional) - Filter users created until this date (YYYY-MM-DD)
+
+**Example:** `GET /admin/users?page=1&limit=10&role=user&startDate=2025-12-01&endDate=2025-12-07`
+
+**Response (200):**
+
+```json
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "john.doe@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "phone": "+1234567890",
+      "address": "123 Main St, City, Country",
+      "role": "user",
+      "createdAt": "2025-11-29T10:00:00.000Z",
+      "updatedAt": "2025-11-29T10:00:00.000Z",
+      "_count": {
+        "tickets": 5
+      }
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 150,
+  "totalPages": 15
+}
+```
+
 ## Stations
 
 Endpoints for managing railway stations.
