@@ -189,7 +189,28 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
         // Calculate distance-based price
         const journeyDistance =
           toStationInRoute.distanceFromStart - fromStationInRoute.distanceFromStart;
-        const price = journeyDistance * trainCompartment.compartment.price;
+
+        console.log(`Price calculation: Distance from ${fromStationInRoute.distanceFromStart}km to ${toStationInRoute.distanceFromStart}km = ${journeyDistance}km`);
+        console.log(`Compartment price: ${trainCompartment.compartment.price} per km`);
+
+        // Validate distance is positive
+        if (journeyDistance <= 0) {
+          return reply.code(400).send({ error: 'Invalid journey distance calculation' });
+        }
+
+        // Validate compartment price exists and is positive
+        if (!trainCompartment.compartment.price || trainCompartment.compartment.price <= 0) {
+          return reply.code(400).send({ error: 'Invalid compartment price configuration' });
+        }
+
+        const price = Math.round((journeyDistance * trainCompartment.compartment.price) * 100) / 100; // Round to 2 decimal places
+
+        console.log(`Final price: ${journeyDistance}km * ${trainCompartment.compartment.price} = ${price}`);
+
+        // Validate final price is reasonable
+        if (price <= 0) {
+          return reply.code(400).send({ error: 'Calculated price is invalid' });
+        }
 
         // Generate unique ticket ID outside transaction for better performance
         const ticketId = generateTicketId(trainSchedule.train.name, trainSchedule.date, seatNumber);
