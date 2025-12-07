@@ -724,4 +724,309 @@ export default async function ticketRoutes(fastify: FastifyInstance) {
       reply.send(updatedTicket);
     },
   );
+
+  // Get all tickets - Admin only
+  fastify.get(
+    '/admin/tickets',
+    {
+      preHandler: (fastify as any).authenticate,
+      schema: {
+        description: 'Get all booked tickets with filtering (Admin only)',
+        tags: ['Tickets'],
+        security: [{ bearerAuth: [] }],
+        querystring: {
+          type: 'object',
+          properties: {
+            page: { type: 'integer', minimum: 1, default: 1 },
+            limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+            status: {
+              type: 'string',
+              enum: ['PENDING', 'CONFIRMED', 'CANCELLED', 'EXPIRED']
+            },
+            paymentStatus: {
+              type: 'string',
+              enum: ['PENDING', 'PAID', 'FAILED', 'REFUNDED']
+            },
+            userId: { type: 'integer' },
+            trainId: { type: 'integer' },
+            ticketId: { type: 'string' },
+            passengerName: { type: 'string' },
+            startDate: { type: 'string', format: 'date' },
+            endDate: { type: 'string', format: 'date' },
+            travelStartDate: { type: 'string', format: 'date' },
+            travelEndDate: { type: 'string', format: 'date' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              tickets: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'number' },
+                    ticketId: { type: 'string' },
+                    status: { type: 'string' },
+                    paymentStatus: { type: 'string' },
+                    passengerName: { type: 'string' },
+                    passengerAge: { type: 'number' },
+                    passengerGender: { type: 'string' },
+                    price: { type: 'number' },
+                    createdAt: { type: 'string', format: 'date-time' },
+                    updatedAt: { type: 'string', format: 'date-time' },
+                    user: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'number' },
+                        email: { type: 'string' },
+                        firstName: { type: 'string' },
+                        lastName: { type: 'string' },
+                        phone: { type: 'string' },
+                      },
+                    },
+                    trainSchedule: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'number' },
+                        date: { type: 'string', format: 'date-time' },
+                        time: { type: 'string' },
+                        train: {
+                          type: 'object',
+                          properties: {
+                            id: { type: 'number' },
+                            name: { type: 'string' },
+                            number: { type: 'string' },
+                          },
+                        },
+                      },
+                    },
+                    fromStation: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'number' },
+                        name: { type: 'string' },
+                        code: { type: 'string' },
+                      },
+                    },
+                    toStation: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'number' },
+                        name: { type: 'string' },
+                        code: { type: 'string' },
+                      },
+                    },
+                    seat: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'number' },
+                        seatNumber: { type: 'string' },
+                        trainCompartment: {
+                          type: 'object',
+                          properties: {
+                            id: { type: 'number' },
+                            compartment: {
+                              type: 'object',
+                              properties: {
+                                id: { type: 'number' },
+                                name: { type: 'string' },
+                                type: { type: 'string' },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              page: { type: 'integer' },
+              limit: { type: 'integer' },
+              total: { type: 'integer' },
+              totalPages: { type: 'integer' },
+            },
+          },
+          403: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+          500: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const user = request.user as { role: string };
+
+      if (user.role !== 'admin') {
+        return reply.code(403).send({ error: 'Admin access required' });
+      }
+
+      const query = request.query as {
+        page?: number;
+        limit?: number;
+        status?: string;
+        paymentStatus?: string;
+        userId?: number;
+        trainId?: number;
+        ticketId?: string;
+        passengerName?: string;
+        startDate?: string;
+        endDate?: string;
+        travelStartDate?: string;
+        travelEndDate?: string;
+      };
+
+      const page = query.page || 1;
+      const limit = Math.min(query.limit || 20, 100);
+      const offset = (page - 1) * limit;
+
+      const where: any = {};
+
+      // Status filters
+      if (query.status) {
+        where.status = query.status;
+      }
+      if (query.paymentStatus) {
+        where.paymentStatus = query.paymentStatus;
+      }
+
+      // User filter
+      if (query.userId) {
+        where.userId = query.userId;
+      }
+
+      // Train filter
+      if (query.trainId) {
+        where.trainSchedule = {
+          trainId: query.trainId,
+        };
+      }
+
+      // Ticket ID filter
+      if (query.ticketId) {
+        where.ticketId = {
+          contains: query.ticketId,
+          mode: 'insensitive',
+        };
+      }
+
+      // Passenger name filter
+      if (query.passengerName) {
+        where.passengerName = {
+          contains: query.passengerName,
+          mode: 'insensitive',
+        };
+      }
+
+      // Date range filters
+      if (query.startDate || query.endDate) {
+        where.createdAt = {};
+        if (query.startDate) {
+          where.createdAt.gte = new Date(query.startDate);
+        }
+        if (query.endDate) {
+          where.createdAt.lte = new Date(query.endDate + 'T23:59:59.999Z');
+        }
+      }
+
+      // Travel date filters
+      if (query.travelStartDate || query.travelEndDate) {
+        where.trainSchedule = where.trainSchedule || {};
+        where.trainSchedule.date = {};
+        if (query.travelStartDate) {
+          where.trainSchedule.date.gte = new Date(query.travelStartDate);
+        }
+        if (query.travelEndDate) {
+          where.trainSchedule.date.lte = new Date(query.travelEndDate + 'T23:59:59.999Z');
+        }
+      }
+
+      try {
+        const [tickets, total] = await Promise.all([
+          prisma.ticket.findMany({
+            where,
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  firstName: true,
+                  lastName: true,
+                  phone: true,
+                },
+              },
+              trainSchedule: {
+                include: {
+                  train: {
+                    select: {
+                      id: true,
+                      name: true,
+                      number: true,
+                    },
+                  },
+                },
+              },
+              fromStation: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              toStation: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              seat: {
+                include: {
+                  trainCompartment: {
+                    include: {
+                      compartment: {
+                        select: {
+                          id: true,
+                          name: true,
+                          type: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+            skip: offset,
+            take: limit,
+          }),
+          prisma.ticket.count({
+            where,
+          }),
+        ]);
+
+        const totalPages = Math.ceil(total / limit);
+
+        reply.send({
+          tickets,
+          page,
+          limit,
+          total,
+          totalPages,
+        });
+      } catch (error) {
+        console.error('Admin ticket retrieval error:', error);
+        reply.code(500).send({
+          error: error instanceof Error ? error.message : 'Ticket retrieval failed',
+        });
+      }
+    },
+  );
 }

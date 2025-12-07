@@ -1264,6 +1264,93 @@ Returns the cancelled ticket with `status: "cancelled"`.
 - `403` - Not authorized to cancel this ticket
 - `404` - Ticket not found
 
+### Get All Tickets (Admin Only)
+
+**GET** `/admin/tickets`
+
+Retrieve all booked tickets with comprehensive filtering and pagination options.
+
+**Authentication:** Required (admin only)
+
+**Query Parameters:**
+
+- `page` (integer, optional) - Page number (default: 1)
+- `limit` (integer, optional) - Items per page (default: 20, max: 100)
+- `status` (string, optional) - Filter by ticket status (`PENDING`, `CONFIRMED`, `CANCELLED`, `EXPIRED`)
+- `paymentStatus` (string, optional) - Filter by payment status (`PENDING`, `PAID`, `FAILED`, `REFUNDED`)
+- `userId` (integer, optional) - Filter by user ID
+- `trainId` (integer, optional) - Filter by train ID
+- `ticketId` (string, optional) - Search by ticket ID (partial match)
+- `passengerName` (string, optional) - Search by passenger name (partial match)
+- `startDate` (string, optional) - Filter tickets created from this date (YYYY-MM-DD)
+- `endDate` (string, optional) - Filter tickets created until this date (YYYY-MM-DD)
+- `travelStartDate` (string, optional) - Filter by travel date from (YYYY-MM-DD)
+- `travelEndDate` (string, optional) - Filter by travel date until (YYYY-MM-DD)
+
+**Example:** `GET /admin/tickets?page=1&limit=10&status=CONFIRMED&paymentStatus=PAID&startDate=2025-12-01&endDate=2025-12-07`
+
+**Response (200):**
+
+```json
+{
+  "tickets": [
+    {
+      "id": 1,
+      "ticketId": "EXPR-20241205-1-042",
+      "status": "CONFIRMED",
+      "paymentStatus": "PAID",
+      "passengerName": "John Doe",
+      "passengerAge": 30,
+      "passengerGender": "Male",
+      "price": 150.00,
+      "createdAt": "2025-12-05T10:30:00.000Z",
+      "updatedAt": "2025-12-05T10:35:00.000Z",
+      "user": {
+        "id": 1,
+        "email": "john.doe@example.com",
+        "firstName": "John",
+        "lastName": "Doe",
+        "phone": "+1234567890"
+      },
+      "trainSchedule": {
+        "id": 1,
+        "date": "2025-12-10T00:00:00.000Z",
+        "time": "08:00",
+        "train": {
+          "id": 1,
+          "name": "Express Train",
+          "number": "ET-001"
+        }
+      },
+      "fromStation": {
+        "id": 1,
+        "name": "Dhaka"
+      },
+      "toStation": {
+        "id": 2,
+        "name": "Chittagong"
+      },
+      "seat": {
+        "id": 1,
+        "seatNumber": "1A",
+        "trainCompartment": {
+          "id": 1,
+          "compartment": {
+            "id": 1,
+            "name": "First Class",
+            "type": "AC"
+          }
+        }
+      }
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 150,
+  "totalPages": 15
+}
+```
+
 ## Error Responses
 
 All endpoints may return the following error responses:
