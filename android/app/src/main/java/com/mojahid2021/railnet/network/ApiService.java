@@ -41,6 +41,8 @@ public interface ApiService {
 
     @POST("tickets")
     Call<ResponseBody> bookTicket(@Body okhttp3.RequestBody body);
+    @GET("tickets")
+    Call<ResponseBody> getTickets();
 
     @POST("payments/initiate")
     Call<PaymentInitiateResponse> initiatePayment(@Body java.util.Map<String, String> body);

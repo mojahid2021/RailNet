@@ -18,6 +18,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RailNet">
         <activity
+            android:name=".activity.myTickets.MyTicketsActivity"
+            android:exported="false" />
+        <activity
             android:name=".activity.TrainsActivity"
             android:exported="false" />
         <activity
@@ -43,8 +46,7 @@
         </activity>
         <activity
             android:name=".activity.WebviewActivity"
-            android:exported="false" />
-        <!-- Google Maps API key: moved inside the application element so the Maps SDK can read it -->
+            android:exported="false" /> <!-- Google Maps API key: moved inside the application element so the Maps SDK can read it -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />

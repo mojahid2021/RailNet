@@ -2,6 +2,7 @@ package com.mojahid2021.railnet.profile;
 
 import static android.content.ContentValues.TAG;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -20,6 +21,7 @@ import android.widget.Toast;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mojahid2021.railnet.R;
+import com.mojahid2021.railnet.activity.myTickets.MyTicketsActivity;
 import com.mojahid2021.railnet.network.ApiService;
 import com.mojahid2021.railnet.network.ApiClient;
 
@@ -180,8 +182,8 @@ public class ProfileFragment extends Fragment {
 
 
     private void onMyTicketsClick() {
-        showToast("My Tickets clicked");
-        // Navigate to tickets screen
+        Intent intent = new Intent(getContext(), MyTicketsActivity.class);
+        startActivity(intent);
     }
 
 
