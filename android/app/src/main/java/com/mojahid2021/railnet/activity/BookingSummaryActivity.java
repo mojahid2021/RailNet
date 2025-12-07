@@ -1,4 +1,4 @@
-package com.mojahid2021.railnet;
+package com.mojahid2021.railnet.activity;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.mojahid2021.railnet.R;
 import com.mojahid2021.railnet.network.ApiClient;
 import com.mojahid2021.railnet.network.ApiService;
 

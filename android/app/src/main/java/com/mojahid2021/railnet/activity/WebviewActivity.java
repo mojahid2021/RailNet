@@ -1,4 +1,4 @@
-package com.mojahid2021.railnet;
+package com.mojahid2021.railnet.activity;
 
 import android.os.Bundle;
 import android.webkit.WebView;
@@ -6,6 +6,8 @@ import android.webkit.WebViewClient;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.mojahid2021.railnet.R;
 
 public class WebviewActivity extends AppCompatActivity {
     @Override

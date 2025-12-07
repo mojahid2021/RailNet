@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/primaryBackground"
     android:orientation="vertical"
-    tools:context=".TrainsActivity">
+    tools:context=".activity.TrainsActivity">
 
     <!-- Modern header with gradient background -->
     <LinearLayout

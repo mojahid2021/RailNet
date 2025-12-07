@@ -1,4 +1,4 @@
-package com.mojahid2021.railnet;
+package com.mojahid2021.railnet.activity;
 
 import android.os.Build;
 import android.os.Bundle;
@@ -6,7 +6,6 @@ import android.util.Log;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -19,6 +18,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.mojahid2021.railnet.R;
 import com.mojahid2021.railnet.home.TrainScheduleAdapter;
 import com.mojahid2021.railnet.home.model.TrainSchedule;
 import com.mojahid2021.railnet.network.ApiClient;
@@ -81,7 +81,7 @@ public class TrainsActivity extends AppCompatActivity {
              // Start CompartmentActivity with schedule JSON
              Gson gson = new Gson();
              String json = gson.toJson(schedule);
-             android.content.Intent intent = new android.content.Intent(TrainsActivity.this, com.mojahid2021.railnet.CompartmentActivity.class);
+             android.content.Intent intent = new android.content.Intent(TrainsActivity.this, CompartmentActivity.class);
              intent.putExtra("scheduleJson", json);
              // pass through selected station ids
              intent.putExtra("fromStationId", fromId);

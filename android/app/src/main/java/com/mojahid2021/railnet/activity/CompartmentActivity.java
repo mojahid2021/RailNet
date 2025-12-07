@@ -1,4 +1,4 @@
-package com.mojahid2021.railnet;
+package com.mojahid2021.railnet.activity;
 
 import android.os.Bundle;
 
@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.gson.Gson;
+import com.mojahid2021.railnet.R;
 import com.mojahid2021.railnet.home.SeatAdapter;
 import com.mojahid2021.railnet.home.model.TrainSchedule;
 import com.mojahid2021.railnet.util.DateTimeUtils;

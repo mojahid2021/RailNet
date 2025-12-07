@@ -18,13 +18,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RailNet">
         <activity
-            android:name=".TrainsActivity"
+            android:name=".activity.TrainsActivity"
             android:exported="false" />
         <activity
-            android:name=".CompartmentActivity"
+            android:name=".activity.CompartmentActivity"
             android:exported="false" />
         <activity
-            android:name=".BookingSummaryActivity"
+            android:name=".activity.BookingSummaryActivity"
             android:exported="false" />
         <activity
             android:name=".auth.RegisterActivity"
@@ -42,7 +42,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".WebviewActivity"
+            android:name=".activity.WebviewActivity"
             android:exported="false" />
         <!-- Google Maps API key: moved inside the application element so the Maps SDK can read it -->
         <meta-data

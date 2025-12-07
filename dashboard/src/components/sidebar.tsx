@@ -51,12 +51,7 @@ const sidebarItems = [
     title: "Sold Tickets",
     href: "/tickets",
     icon: Ticket,
-  },
-  {
-    title: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
+  }
 ];
 
 export function Sidebar() {

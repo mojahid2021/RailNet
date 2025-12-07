@@ -121,27 +121,29 @@ public class ProfileFragment extends Fragment {
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
 
                 if (response.isSuccessful() && response.body() != null) {
-                   try {
-                          String responseBody = response.body().string();
-                       JSONObject jsonObject = new JSONObject(responseBody);
-                       String firstName = jsonObject.getString("firstName");
-                       String lastName = jsonObject.getString("lastName");
-                       String email = jsonObject.getString("email");
-//                       String phone = jsonObject.getString("phone");
-//                       String location = jsonObject.getString("location");
-                       String memberSince = jsonObject.getString("createdAt");
+                    try {
+                        String responseBody = response.body().string();
+                        JSONObject jsonObject = new JSONObject(responseBody);
+                        String firstName = jsonObject.getString("firstName");
+                        String lastName = jsonObject.getString("lastName");
+                        String email = jsonObject.getString("email");
+                        String phone = jsonObject.getString("phone");
+                        String location = jsonObject.getString("address");
+                        String memberSince = jsonObject.getString("createdAt");
 
-                          tvUserName.setText(firstName + " " + lastName);
-                          tvUserEmail.setText(email);
-                          tvMemberDate.setText("Member since: " + memberSince);
+                        tvUserName.setText(firstName + " " + lastName);
+                        tvUserEmail.setText(email);
+                        tvMemberDate.setText("Member since: " + memberSince);
+                        tvUserPhone.setText(phone);
+                        tvUserLocation.setText(location);
 
-                   } catch (Exception e) {
-                       e.printStackTrace();
-                   }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     showToast("Failed to load user data");
 
-                    Log.d(TAG, "onResponse: " + response.code() + " " + response.message() + " " + response.body() );
+                    Log.d(TAG, "onResponse: " + response.code() + " " + response.message() + " " + response.body());
                 }
             }
 
