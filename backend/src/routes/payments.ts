@@ -578,6 +578,358 @@ async function paymentRoutes(fastify: FastifyInstance) {
       }
     },
   );
+
+  // Get all payment transactions - Admin only
+  fastify.get(
+    '/payments/transactions',
+    {
+      preHandler: (fastify as any).authenticate,
+      schema: {
+        description: 'Get all payment transactions (Admin only)',
+        tags: ['Payments'],
+        security: [{ bearerAuth: [] }],
+        querystring: {
+          type: 'object',
+          properties: {
+            page: { type: 'integer', minimum: 1, default: 1 },
+            limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+            status: {
+              type: 'string',
+              enum: ['INITIATED', 'COMPLETED', 'FAILED', 'CANCELLED', 'EXPIRED']
+            },
+            userId: { type: 'integer' },
+            startDate: { type: 'string', format: 'date' },
+            endDate: { type: 'string', format: 'date' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              transactions: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    ticketId: { type: 'number' },
+                    transactionId: { type: 'string' },
+                    amount: { type: 'number' },
+                    currency: { type: 'string' },
+                    status: { type: 'string' },
+                    paymentMethod: { type: 'string' },
+                    valId: { type: 'string' },
+                    bankTransactionId: { type: 'string' },
+                    cardType: { type: 'string' },
+                    createdAt: { type: 'string', format: 'date-time' },
+                    updatedAt: { type: 'string', format: 'date-time' },
+                    completedAt: { type: 'string', format: 'date-time' },
+                    ticket: {
+                      type: 'object',
+                      properties: {
+                        ticketId: { type: 'string' },
+                        passengerName: { type: 'string' },
+                        status: { type: 'string' },
+                        paymentStatus: { type: 'string' },
+                        price: { type: 'number' },
+                        user: {
+                          type: 'object',
+                          properties: {
+                            id: { type: 'number' },
+                            email: { type: 'string' },
+                            firstName: { type: 'string' },
+                            lastName: { type: 'string' },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              pagination: {
+                type: 'object',
+                properties: {
+                  page: { type: 'integer' },
+                  limit: { type: 'integer' },
+                  total: { type: 'integer' },
+                  totalPages: { type: 'integer' },
+                },
+              },
+            },
+          },
+          403: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+          500: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const user = request.user as { role: string };
+
+      if (user.role !== 'admin') {
+        return reply.code(403).send({ error: 'Admin access required' });
+      }
+
+      const query = request.query as {
+        page?: number;
+        limit?: number;
+        status?: string;
+        userId?: number;
+        startDate?: string;
+        endDate?: string;
+      };
+
+      const page = query.page || 1;
+      const limit = query.limit || 20;
+      const offset = (page - 1) * limit;
+
+      try {
+        // Build where clause
+        const where: any = {};
+
+        if (query.status) {
+          where.status = query.status;
+        }
+
+        if (query.userId) {
+          where.ticket = {
+            userId: query.userId,
+          };
+        }
+
+        if (query.startDate || query.endDate) {
+          where.createdAt = {};
+          if (query.startDate) {
+            where.createdAt.gte = new Date(query.startDate);
+          }
+          if (query.endDate) {
+            where.createdAt.lte = new Date(query.endDate + 'T23:59:59.999Z');
+          }
+        }
+
+        // Get total count
+        const total = await prisma.paymentTransaction.count({ where });
+
+        // Get transactions with pagination
+        const transactions = await prisma.paymentTransaction.findMany({
+          where,
+          include: {
+            ticket: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+          skip: offset,
+          take: limit,
+        });
+
+        const totalPages = Math.ceil(total / limit);
+
+        reply.send({
+          transactions,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+          },
+        });
+      } catch (error) {
+        console.error('Transaction retrieval error:', error);
+        reply.code(500).send({
+          error: error instanceof Error ? error.message : 'Transaction retrieval failed',
+        });
+      }
+    },
+  );
+
+  // Get specific payment transaction by ID - Admin only
+  fastify.get(
+    '/payments/transactions/:id',
+    {
+      preHandler: (fastify as any).authenticate,
+      schema: {
+        description: 'Get specific payment transaction by ID (Admin only)',
+        tags: ['Payments'],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+          },
+          required: ['id'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              ticketId: { type: 'number' },
+              transactionId: { type: 'string' },
+              amount: { type: 'number' },
+              currency: { type: 'string' },
+              status: { type: 'string' },
+              paymentMethod: { type: 'string' },
+              valId: { type: 'string' },
+              bankTransactionId: { type: 'string' },
+              cardType: { type: 'string' },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' },
+              completedAt: { type: 'string', format: 'date-time' },
+              errorMessage: { type: 'string' },
+              metadata: { type: 'object' },
+              ticket: {
+                type: 'object',
+                properties: {
+                  ticketId: { type: 'string' },
+                  passengerName: { type: 'string' },
+                  passengerAge: { type: 'number' },
+                  passengerGender: { type: 'string' },
+                  status: { type: 'string' },
+                  paymentStatus: { type: 'string' },
+                  price: { type: 'number' },
+                  createdAt: { type: 'string', format: 'date-time' },
+                  user: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'number' },
+                      email: { type: 'string' },
+                      firstName: { type: 'string' },
+                      lastName: { type: 'string' },
+                      phone: { type: 'string' },
+                    },
+                  },
+                  trainSchedule: {
+                    type: 'object',
+                    properties: {
+                      date: { type: 'string', format: 'date-time' },
+                      time: { type: 'string' },
+                      train: {
+                        type: 'object',
+                        properties: {
+                          name: { type: 'string' },
+                          number: { type: 'string' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              logs: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'number' },
+                    action: { type: 'string' },
+                    details: { type: 'object' },
+                    createdAt: { type: 'string', format: 'date-time' },
+                  },
+                },
+              },
+            },
+          },
+          403: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+          404: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+          500: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const user = request.user as { role: string };
+
+      if (user.role !== 'admin') {
+        return reply.code(403).send({ error: 'Admin access required' });
+      }
+
+      const params = request.params as { id: string };
+
+      try {
+        // Get transaction with full details
+        const transaction = await prisma.paymentTransaction.findUnique({
+          where: { id: params.id },
+          include: {
+            ticket: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    phone: true,
+                  },
+                },
+                trainSchedule: {
+                  include: {
+                    train: {
+                      select: {
+                        name: true,
+                        number: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (!transaction) {
+          return reply.code(404).send({ error: 'Transaction not found' });
+        }
+
+        // Get payment logs for this transaction
+        const logs = await prisma.paymentLog.findMany({
+          where: { transactionId: params.id },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        reply.send({
+          ...transaction,
+          logs,
+        });
+      } catch (error) {
+        console.error('Transaction detail retrieval error:', error);
+        reply.code(500).send({
+          error: error instanceof Error ? error.message : 'Transaction detail retrieval failed',
+        });
+      }
+    },
+  );
 }
 
 export default paymentRoutes;

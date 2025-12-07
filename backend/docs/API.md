@@ -1670,6 +1670,161 @@ Get statistics about pending bookings and cleanup status.
 }
 ```
 
+#### Get All Payment Transactions (Admin Only)
+
+**GET** `/payments/transactions`
+
+Retrieve all payment transactions with filtering and pagination options.
+
+**Authentication:** Required (admin only)
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| page | integer | No | Page number (default: 1) |
+| limit | integer | No | Items per page (default: 20, max: 100) |
+| status | string | No | Filter by status: INITIATED, COMPLETED, FAILED, CANCELLED, EXPIRED |
+| userId | integer | No | Filter by user ID |
+| startDate | string | No | Filter from date (YYYY-MM-DD format) |
+| endDate | string | No | Filter to date (YYYY-MM-DD format) |
+
+**Example:** `GET /payments/transactions?page=1&limit=10&status=COMPLETED&startDate=2025-12-01&endDate=2025-12-07`
+
+**Response (200):**
+
+```json
+{
+  "transactions": [
+    {
+      "id": "TXN_1734953100030_1",
+      "ticketId": 1,
+      "transactionId": "TXN_1734953100030_1",
+      "amount": 150.00,
+      "currency": "BDT",
+      "status": "COMPLETED",
+      "paymentMethod": "SSLCOMMERZ",
+      "valId": "validation_id_here",
+      "bankTransactionId": "bank_txn_123",
+      "cardType": "VISA",
+      "createdAt": "2025-12-07T10:00:00.000Z",
+      "updatedAt": "2025-12-07T10:05:00.000Z",
+      "completedAt": "2025-12-07T10:05:00.000Z",
+      "ticket": {
+        "ticketId": "EXPR-20241205-1-042",
+        "passengerName": "John Doe",
+        "status": "confirmed",
+        "paymentStatus": "paid",
+        "price": 150.00,
+        "user": {
+          "id": 1,
+          "email": "user@example.com",
+          "firstName": "John",
+          "lastName": "Doe"
+        }
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 1,
+    "totalPages": 1
+  }
+}
+```
+
+#### Get Payment Transaction by ID (Admin Only)
+
+**GET** `/payments/transactions/{id}`
+
+Retrieve detailed information about a specific payment transaction.
+
+**Authentication:** Required (admin only)
+
+**Parameters:**
+
+- `id` (string) - Transaction ID
+
+**Example:** `GET /payments/transactions/TXN_1734953100030_1`
+
+**Response (200):**
+
+```json
+{
+  "id": "TXN_1734953100030_1",
+  "ticketId": 1,
+  "transactionId": "TXN_1734953100030_1",
+  "amount": 150.00,
+  "currency": "BDT",
+  "status": "COMPLETED",
+  "paymentMethod": "SSLCOMMERZ",
+  "valId": "validation_id_here",
+  "bankTransactionId": "bank_txn_123",
+  "cardType": "VISA",
+  "createdAt": "2025-12-07T10:00:00.000Z",
+  "updatedAt": "2025-12-07T10:05:00.000Z",
+  "completedAt": "2025-12-07T10:05:00.000Z",
+  "errorMessage": null,
+  "metadata": {
+    "ticketId": "EXPR-20241205-1-042",
+    "customerName": "John Doe",
+    "customerEmail": "user@example.com",
+    "customerPhone": "+880000000000",
+    "customerAddress": "Not provided",
+    "customerCity": "Dhaka",
+    "customerCountry": "Bangladesh"
+  },
+  "ticket": {
+    "ticketId": "EXPR-20241205-1-042",
+    "passengerName": "John Doe",
+    "passengerAge": 30,
+    "passengerGender": "Male",
+    "status": "confirmed",
+    "paymentStatus": "paid",
+    "price": 150.00,
+    "createdAt": "2025-12-07T09:55:00.000Z",
+    "user": {
+      "id": 1,
+      "email": "user@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "phone": "+880000000000"
+    },
+    "trainSchedule": {
+      "date": "2025-12-08T00:00:00.000Z",
+      "time": "08:00",
+      "train": {
+        "name": "Express Train 101",
+        "number": "EXP101"
+      }
+    }
+  },
+  "logs": [
+    {
+      "id": 1,
+      "action": "INITIATED",
+      "details": {
+        "sessionKey": "session_key_here",
+        "gatewayUrl": "https://sandbox.sslcommerz.com/gwprocess/..."
+      },
+      "createdAt": "2025-12-07T10:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "action": "COMPLETED",
+      "details": {
+        "valId": "validation_id_here",
+        "bankTranId": "bank_txn_123",
+        "amount": "150.00",
+        "currency": "BDT"
+      },
+      "createdAt": "2025-12-07T10:05:00.000Z"
+    }
+  ]
+}
+```
+
 ## Payment Flow
 
 1. **Book Ticket**: User books a ticket (status: `pending`, paymentStatus: `pending`)
