@@ -1670,6 +1670,71 @@ Get statistics about pending bookings and cleanup status.
 }
 ```
 
+#### Get User's Payment Transactions
+
+**GET** `/payments/my-transactions`
+
+Retrieve the authenticated user's payment transactions with filtering and pagination options.
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `page` (integer, optional) - Page number (default: 1)
+- `limit` (integer, optional) - Items per page (default: 20, max: 100)
+- `status` (string, optional) - Filter by transaction status (`INITIATED`, `COMPLETED`, `FAILED`, `CANCELLED`, `EXPIRED`)
+- `startDate` (string, optional) - Filter transactions from this date (YYYY-MM-DD)
+- `endDate` (string, optional) - Filter transactions until this date (YYYY-MM-DD)
+
+**Example:** `GET /payments/my-transactions?page=1&limit=10&status=COMPLETED&startDate=2025-12-01&endDate=2025-12-07`
+
+**Response (200):**
+
+```json
+{
+  "transactions": [
+    {
+      "id": "TXN_1734953100030_1",
+      "ticketId": 1,
+      "transactionId": "TXN_1734953100030_1",
+      "amount": 150.00,
+      "currency": "BDT",
+      "status": "COMPLETED",
+      "paymentMethod": "SSLCommerz",
+      "valId": "val_123456",
+      "bankTransactionId": "bank_txn_123",
+      "cardType": "VISA",
+      "createdAt": "2025-12-07T10:05:00.030Z",
+      "updatedAt": "2025-12-07T10:10:00.000Z",
+      "completedAt": "2025-12-07T10:10:00.000Z",
+      "errorMessage": null,
+      "ticket": {
+        "ticketId": "TKT_1734953100030_1",
+        "passengerName": "John Doe",
+        "passengerAge": 30,
+        "passengerGender": "Male",
+        "status": "CONFIRMED",
+        "paymentStatus": "PAID",
+        "price": 150.00,
+        "createdAt": "2025-12-07T10:05:00.030Z",
+        "trainSchedule": {
+          "date": "2025-12-10T00:00:00.000Z",
+          "time": "08:00",
+          "train": {
+            "name": "Express Train",
+            "number": "ET-001"
+          }
+        }
+      }
+    }
+  ],
+  "page": 1,
+  "limit": 10,
+  "total": 25,
+  "totalPages": 3
+}
+```
+
 #### Get All Payment Transactions (Admin Only)
 
 **GET** `/payments/transactions`

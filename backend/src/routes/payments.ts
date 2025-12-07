@@ -579,6 +579,177 @@ async function paymentRoutes(fastify: FastifyInstance) {
     },
   );
 
+  // Get user's payment transactions
+  fastify.get(
+    '/payments/my-transactions',
+    {
+      preHandler: (fastify as any).authenticate,
+      schema: {
+        description: 'Get authenticated user\'s payment transactions',
+        tags: ['Payments'],
+        security: [{ bearerAuth: [] }],
+        querystring: {
+          type: 'object',
+          properties: {
+            page: { type: 'integer', minimum: 1, default: 1 },
+            limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+            status: {
+              type: 'string',
+              enum: ['INITIATED', 'COMPLETED', 'FAILED', 'CANCELLED', 'EXPIRED']
+            },
+            startDate: { type: 'string', format: 'date' },
+            endDate: { type: 'string', format: 'date' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              transactions: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    ticketId: { type: 'number' },
+                    transactionId: { type: 'string' },
+                    amount: { type: 'number' },
+                    currency: { type: 'string' },
+                    status: { type: 'string' },
+                    paymentMethod: { type: 'string' },
+                    valId: { type: 'string' },
+                    bankTransactionId: { type: 'string' },
+                    cardType: { type: 'string' },
+                    createdAt: { type: 'string', format: 'date-time' },
+                    updatedAt: { type: 'string', format: 'date-time' },
+                    completedAt: { type: 'string', format: 'date-time' },
+                    errorMessage: { type: 'string' },
+                    ticket: {
+                      type: 'object',
+                      properties: {
+                        ticketId: { type: 'string' },
+                        passengerName: { type: 'string' },
+                        passengerAge: { type: 'number' },
+                        passengerGender: { type: 'string' },
+                        status: { type: 'string' },
+                        paymentStatus: { type: 'string' },
+                        price: { type: 'number' },
+                        createdAt: { type: 'string', format: 'date-time' },
+                        trainSchedule: {
+                          type: 'object',
+                          properties: {
+                            date: { type: 'string', format: 'date-time' },
+                            time: { type: 'string' },
+                            train: {
+                              type: 'object',
+                              properties: {
+                                name: { type: 'string' },
+                                number: { type: 'string' },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              page: { type: 'integer' },
+              limit: { type: 'integer' },
+              total: { type: 'integer' },
+              totalPages: { type: 'integer' },
+            },
+          },
+          500: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const userId = (request.user as { id: number }).id;
+      const query = request.query as {
+        page?: number;
+        limit?: number;
+        status?: string;
+        startDate?: string;
+        endDate?: string;
+      };
+
+      const page = query.page || 1;
+      const limit = Math.min(query.limit || 20, 100);
+      const offset = (page - 1) * limit;
+
+      const where: any = {
+        ticket: {
+          userId: userId,
+        },
+      };
+
+      if (query.status) {
+        where.status = query.status;
+      }
+
+      if (query.startDate || query.endDate) {
+        where.createdAt = {};
+        if (query.startDate) {
+          where.createdAt.gte = new Date(query.startDate);
+        }
+        if (query.endDate) {
+          where.createdAt.lte = new Date(query.endDate + 'T23:59:59.999Z');
+        }
+      }
+
+      try {
+        const [transactions, total] = await Promise.all([
+          prisma.paymentTransaction.findMany({
+            where,
+            include: {
+              ticket: {
+                include: {
+                  trainSchedule: {
+                    include: {
+                      train: {
+                        select: {
+                          name: true,
+                          number: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+            skip: offset,
+            take: limit,
+          }),
+          prisma.paymentTransaction.count({
+            where,
+          }),
+        ]);
+
+        const totalPages = Math.ceil(total / limit);
+
+        reply.send({
+          transactions,
+          page,
+          limit,
+          total,
+          totalPages,
+        });
+      } catch (error) {
+        console.error('User transaction retrieval error:', error);
+        reply.code(500).send({
+          error: error instanceof Error ? error.message : 'Transaction retrieval failed',
+        });
+      }
+    },
+  );
+
   // Get all payment transactions - Admin only
   fastify.get(
     '/payments/transactions',
