@@ -307,3 +307,80 @@ export interface PaginatedTransactionsResponse {
   };
 }
 
+// Ticket Types
+export type TicketStatus = "pending" | "confirmed" | "cancelled" | "expired";
+export type TicketPaymentStatus = "pending" | "paid" | "failed" | "refunded" | "expired";
+
+export interface SoldTicket {
+  id: number;
+  ticketId: string;
+  status: TicketStatus;
+  paymentStatus: TicketPaymentStatus;
+  passengerName: string;
+  passengerAge: number;
+  passengerGender: string;
+  price: number;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+  };
+  trainSchedule: {
+    id: number;
+    date: string;
+    time: string;
+    train: {
+      id: number;
+      name: string;
+      number: string;
+    };
+  };
+  fromStation: {
+    id: number;
+    name: string;
+  };
+  toStation: {
+    id: number;
+    name: string;
+  };
+  seat: {
+    id: number;
+    seatNumber: string;
+    trainCompartment: {
+      id: number;
+      compartment: {
+        id: number;
+        name: string;
+        type: string;
+      };
+    };
+  };
+}
+
+export interface TicketsQueryParams {
+  page?: number;
+  limit?: number;
+  status?: TicketStatus;
+  paymentStatus?: TicketPaymentStatus;
+  userId?: number;
+  trainId?: number;
+  ticketId?: string;
+  passengerName?: string;
+  startDate?: string;
+  endDate?: string;
+  travelStartDate?: string;
+  travelEndDate?: string;
+}
+
+export interface PaginatedTicketsResponse {
+  tickets: SoldTicket[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+

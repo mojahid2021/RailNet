@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { useTransactions } from "@/hooks/use-transactions";
 import { PaymentStatus } from "@/types";
 import { format } from "date-fns";
-import { CreditCard, DollarSign, User, Calendar, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { CreditCard, User, Calendar, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -199,7 +199,7 @@ export default function TransactionsPage() {
                     <p className="text-sm text-muted-foreground">Showing</p>
                     <p className="text-2xl font-bold">{data.transactions?.length || 0} items</p>
                   </div>
-                  <DollarSign className="h-8 w-8 text-primary" />
+                  <CreditCard className="h-8 w-8 text-primary" />
                 </div>
               </CardContent>
             </Card>
@@ -280,10 +280,8 @@ export default function TransactionsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center font-semibold">
-                          <DollarSign className="h-4 w-4 text-green-600" />
-                          {transaction.amount.toFixed(2)}
-                          <span className="ml-1 text-xs text-muted-foreground">{transaction.currency}</span>
+                        <div className="font-semibold">
+                          {transaction.amount.toFixed(2)} <span className="text-xs text-muted-foreground">{transaction.currency}</span>
                         </div>
                       </TableCell>
                       <TableCell>

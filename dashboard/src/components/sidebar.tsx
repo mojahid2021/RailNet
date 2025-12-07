@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Home, Users, Settings, BarChart3, Train, Route as RouteIcon, Armchair, Calendar, CreditCard } from "lucide-react";
+import { Home, Users, Settings, BarChart3, Train, Route as RouteIcon, Armchair, Calendar, CreditCard, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sidebarItems = [
@@ -51,6 +51,11 @@ const sidebarItems = [
     title: "Transactions",
     href: "/transactions",
     icon: CreditCard,
+  },
+  {
+    title: "Sold Tickets",
+    href: "/tickets",
+    icon: Ticket,
   },
   {
     title: "Settings",
