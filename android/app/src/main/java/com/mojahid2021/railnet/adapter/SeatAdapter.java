@@ -16,21 +16,21 @@ import java.util.List;
 /**
  * Adapter for displaying a list of seat identifiers (simple strings).
  *
- * This version is written to be easier to understand for beginners:
- * - clear method names
- * - JavaDoc & inline comments
- * - small helper methods for common actions (getSelectedSeat, clearSelection)
- * - selection updates only refresh the affected items (more efficient than full refresh)
+ * This adapter provides efficient seat selection with visual feedback.
+ * Only affected items are refreshed when selection changes for better performance.
  */
 public class SeatAdapter extends RecyclerView.Adapter<SeatAdapter.ViewHolder> {
 
-    // Underlying list of seat labels (e.g. "A1", "B3"). We keep this private for encapsulation.
+    // Constants
+    private static final String TAG = "SeatAdapter";
+
+    // Underlying list of seat labels (e.g. "A1", "B3")
     private final List<String> items = new ArrayList<>();
 
-    // Listener for click events. Nullable: not required but useful for callbacks.
+    // Listener for click events
     private final OnSeatClickListener listener;
 
-    // Track currently selected seat label (null = none selected).
+    // Track currently selected seat label (null = none selected)
     private String selectedSeat = null;
 
     /**
@@ -47,7 +47,9 @@ public class SeatAdapter extends RecyclerView.Adapter<SeatAdapter.ViewHolder> {
      * @param listener click listener (can be null)
      */
     public SeatAdapter(List<String> items, OnSeatClickListener listener) {
-        if (items != null) this.items.addAll(items);
+        if (items != null) {
+            this.items.addAll(items);
+        }
         this.listener = listener;
     }
 
@@ -60,8 +62,10 @@ public class SeatAdapter extends RecyclerView.Adapter<SeatAdapter.ViewHolder> {
     public void setItems(List<String> newItems) {
         this.items.clear();
         this.selectedSeat = null; // clear selection when data changes
-        if (newItems != null) this.items.addAll(newItems);
-        // Notify full change because the whole data set was replaced.
+        if (newItems != null) {
+            this.items.addAll(newItems);
+        }
+        // Notify full change because the whole data set was replaced
         notifyDataSetChanged();
     }
 
@@ -73,7 +77,7 @@ public class SeatAdapter extends RecyclerView.Adapter<SeatAdapter.ViewHolder> {
      */
     public void setSelectedSeat(String seat) {
         if (seat != null && !items.contains(seat)) {
-            // If the requested seat doesn't exist do nothing (safer for beginners).
+            // If the requested seat doesn't exist, do nothing
             return;
         }
 
@@ -85,12 +89,18 @@ public class SeatAdapter extends RecyclerView.Adapter<SeatAdapter.ViewHolder> {
         selectedSeat = seat;
 
         // Refresh only the affected rows
-        if (oldPos != -1) notifyItemChanged(oldPos);
-        if (newPos != -1) notifyItemChanged(newPos);
+        if (oldPos != -1) {
+            notifyItemChanged(oldPos);
+        }
+        if (newPos != -1) {
+            notifyItemChanged(newPos);
+        }
     }
 
     /**
      * Get currently selected seat label or null if none.
+     *
+     * @return selected seat label or null
      */
     public String getSelectedSeat() {
         return selectedSeat;
@@ -106,8 +116,9 @@ public class SeatAdapter extends RecyclerView.Adapter<SeatAdapter.ViewHolder> {
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_seat, parent, false);
-        return new ViewHolder(v);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_seat, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override
@@ -115,12 +126,12 @@ public class SeatAdapter extends RecyclerView.Adapter<SeatAdapter.ViewHolder> {
         String seatLabel = items.get(position);
 
         // Bind data to view
-        holder.tv.setText(seatLabel);
+        holder.tvSeat.setText(seatLabel);
 
         // Highlight view if this item is selected
         holder.itemView.setSelected(seatLabel.equals(selectedSeat));
 
-        // Click handling: use a small helper to keep logic out of the anonymous listener
+        // Click handling
         holder.itemView.setOnClickListener(v -> onItemClicked(position));
     }
 
@@ -129,31 +140,44 @@ public class SeatAdapter extends RecyclerView.Adapter<SeatAdapter.ViewHolder> {
         return items.size();
     }
 
-    // Helper: return index of an item or -1 if not found or if item == null
+    /**
+     * Return index of an item or -1 if not found or if item is null.
+     *
+     * @param seat seat label to find
+     * @return index or -1
+     */
     private int indexOf(String seat) {
-        if (seat == null) return -1;
+        if (seat == null) {
+            return -1;
+        }
         return items.indexOf(seat);
     }
 
-    // Called when an item is clicked in the list.
+    /**
+     * Called when an item is clicked in the list.
+     *
+     * @param position clicked position
+     */
     private void onItemClicked(int position) {
         String seat = items.get(position);
         // Update selection efficiently
         setSelectedSeat(seat);
 
-        // Notify external listener (if provided). Null-check for safety.
+        // Notify external listener (if provided)
         if (listener != null) {
             listener.onSeatClick(seat);
         }
     }
 
-    // ViewHolder class: keeps references to views for each item and is public so it's visible where needed.
+    /**
+     * ViewHolder class for seat items.
+     */
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        final TextView tv;
+        final TextView tvSeat;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tv = itemView.findViewById(R.id.tvSeat);
+            tvSeat = itemView.findViewById(R.id.tvSeat);
         }
     }
 }
