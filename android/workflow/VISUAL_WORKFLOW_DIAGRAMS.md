@@ -455,7 +455,7 @@ This document provides visual representations of the key workflows in the RailNe
 ```
 GET /stations HTTP/1.1
 Host: rail-net.vercel.app
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Authorization: Bearer <your-auth-token-here>
 Content-Type: application/json
 
 Response:
@@ -486,7 +486,7 @@ Content-Type: application/json
 
 Response:
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token": "<generated-jwt-token>",
   "user": {
     "id": 1,
     "name": "John Doe",
@@ -499,7 +499,7 @@ Response:
 ```
 POST /tickets HTTP/1.1
 Host: rail-net.vercel.app
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Authorization: Bearer <your-auth-token-here>
 Content-Type: application/json
 
 {
