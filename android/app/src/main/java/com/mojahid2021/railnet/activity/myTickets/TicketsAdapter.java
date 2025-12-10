@@ -1,5 +1,7 @@
 package com.mojahid2021.railnet.activity.myTickets;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Context;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
@@ -15,10 +17,20 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.mojahid2021.railnet.R;
+import com.mojahid2021.railnet.network.ApiClient;
+import com.mojahid2021.railnet.network.ApiService;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Simple adapter to show a user's tickets in a RecyclerView.
@@ -84,7 +96,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.VH> {
 
         // Bind seat information
         if (ut.seat != null) {
-            String seat = (ut.seat.compartment != null ? ut.seat.compartment + " " : "") + (ut.seat.number != null ? ut.seat.number : "");
+            String seat = ut.seat.number != null ? ut.seat.number : "N/A";
             holder.tvSeat.setText(seat);
         }
 
@@ -122,6 +134,74 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.VH> {
     }
 
     private void printTicket(Context context, UserTicket ut) {
+        // First, fetch fresh ticket data by ID
+        if (ut.ticket == null || ut.ticket.ticketId == null || ut.ticket.ticketId.isEmpty()) {
+            Toast.makeText(context, "Invalid ticket ID", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String ticketId = ut.ticket.ticketId;
+
+        // Show loading message
+        Toast.makeText(context, "Fetching ticket details...", Toast.LENGTH_SHORT).show();
+
+        // Fetch fresh ticket data
+        ApiService api = ApiClient.getRetrofit(context).create(ApiService.class);
+        Call<ResponseBody> call = api.getTicketById(ticketId);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ResponseBody rb = response.body();
+                    try {
+                        String body = rb.string();
+                        Log.d(TAG, "Raw API response: " + body); // Log the raw response
+                        Gson gson = new Gson();
+                        UserTicket freshTicket = gson.fromJson(body, UserTicket.class);
+
+                        // Also parse as JsonObject to ensure perfect field matching (compat with older Gson)
+                        com.google.gson.JsonObject jsonObj = gson.fromJson(body, com.google.gson.JsonObject.class);
+
+                        if (jsonObj != null) {
+                            // Now proceed with printing using JSON-based adapter for accuracy
+                            proceedWithPrintingJson(context, jsonObj);
+                        } else if (freshTicket != null) {
+                            proceedWithPrinting(context, freshTicket);
+                        } else {
+                            Toast.makeText(context, "Failed to parse ticket data", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (IOException | JsonSyntaxException e) {
+                        Log.e("TicketsAdapter", "Failed to parse fresh ticket data: " + e.getMessage(), e);
+                        Toast.makeText(context, "Failed to load ticket details", Toast.LENGTH_SHORT).show();
+                    } finally {
+                        rb.close();
+                    }
+                } else {
+                    Log.e("TicketsAdapter", "Failed to fetch ticket by ID: code=" + response.code());
+                    String errorMessage = "Failed to load ticket details";
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            if (!errorBody.isEmpty()) {
+                                errorMessage = "Error: " + errorBody;
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e("TicketsAdapter", "Failed to read error body", e);
+                    }
+                    Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e("TicketsAdapter", "Network error fetching ticket: " + t.getMessage(), t);
+                Toast.makeText(context, "Network error. Please check your connection.", Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void proceedWithPrinting(Context context, UserTicket ticket) {
         try {
             // Show printing message
             Toast.makeText(context, context.getString(R.string.printing_ticket), Toast.LENGTH_SHORT).show();
@@ -133,13 +213,40 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.VH> {
                 return;
             }
 
-            PrintDocumentAdapter adapter = new TicketPrintDocumentAdapter(context, ut);
+            PrintDocumentAdapter adapter = new TicketPrintDocumentAdapter(context, ticket);
             PrintAttributes.Builder builder = new PrintAttributes.Builder();
             builder.setMediaSize(PrintAttributes.MediaSize.ISO_A4);
             builder.setResolution(new PrintAttributes.Resolution("pdf", "pdf", 600, 600));
             builder.setMinMargins(PrintAttributes.Margins.NO_MARGINS);
 
-            String jobName = "RailNet_Ticket_" + (ut.ticket != null && ut.ticket.ticketId != null ? ut.ticket.ticketId : "Unknown");
+            String jobName = "RailNet_Ticket_" + (ticket.ticket != null && ticket.ticket.ticketId != null ? ticket.ticket.ticketId : "Unknown");
+            printManager.print(jobName, adapter, builder.build());
+
+        } catch (Exception e) {
+            Log.e("TicketsAdapter", "Error printing ticket", e);
+            Toast.makeText(context, "Error printing ticket: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void proceedWithPrintingJson(Context context, com.google.gson.JsonObject jsonObj) {
+        try {
+            // Show printing message
+            Toast.makeText(context, context.getString(R.string.printing_ticket), Toast.LENGTH_SHORT).show();
+
+            // Use Android's PrintManager to print the ticket
+            PrintManager printManager = (PrintManager) context.getSystemService(Context.PRINT_SERVICE);
+            if (printManager == null) {
+                Toast.makeText(context, "Print service not available", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            PrintDocumentAdapter adapter = new TicketPrintDocumentAdapter(context, jsonObj);
+            PrintAttributes.Builder builder = new PrintAttributes.Builder();
+            builder.setMediaSize(PrintAttributes.MediaSize.ISO_A4);
+            builder.setResolution(new PrintAttributes.Resolution("pdf", "pdf", 600, 600));
+            builder.setMinMargins(PrintAttributes.Margins.NO_MARGINS);
+
+            String jobName = "RailNet_Ticket_" + (jsonObj.has("ticketId") ? jsonObj.get("ticketId").getAsString() : "Unknown");
             printManager.print(jobName, adapter, builder.build());
 
         } catch (Exception e) {

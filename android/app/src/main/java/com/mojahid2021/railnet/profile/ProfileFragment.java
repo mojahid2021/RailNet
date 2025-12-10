@@ -42,13 +42,9 @@ import retrofit2.Response;
 public class ProfileFragment extends Fragment {
 
     // UI Components
-    private ImageView ivCoverPhoto, ivProfileAvatar;
-    private FloatingActionButton fabEditCover;
-    private MaterialButton btnEditProfile;
     private TextView tvUserName, tvMemberDate;
-    private TextView tvTripsCount, tvBookingsCount, tvSavedCount;
     private TextView tvUserEmail, tvUserPhone, tvUserLocation;
-    private LinearLayout btnMyTickets, btnMyBookings, btnSavedRoutes, btnSettings;
+    private LinearLayout btnMyTickets;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -70,18 +66,9 @@ public class ProfileFragment extends Fragment {
      * Initialize all view components
      */
     private void initializeViews(View view) {
-        // Cover photo and profile image components
-        ivCoverPhoto = view.findViewById(R.id.ivCoverPhoto);
-        ivProfileAvatar = view.findViewById(R.id.ivProfileAvatar);
-        fabEditCover = view.findViewById(R.id.fabEditCover);
-        btnEditProfile = view.findViewById(R.id.btnEditProfile);
+
         tvUserName = view.findViewById(R.id.tvUserName);
         tvMemberDate = view.findViewById(R.id.tvMemberDate);
-
-        // Stats
-        tvTripsCount = view.findViewById(R.id.tvTripsCount);
-        tvBookingsCount = view.findViewById(R.id.tvBookingsCount);
-        tvSavedCount = view.findViewById(R.id.tvSavedCount);
 
         // Contact info
         tvUserEmail = view.findViewById(R.id.tvUserEmail);
@@ -90,24 +77,14 @@ public class ProfileFragment extends Fragment {
 
         // Menu items
         btnMyTickets = view.findViewById(R.id.btnMyTickets);
-        btnSettings = view.findViewById(R.id.btnSettings);
     }
 
     /**
      * Setup click listeners for interactive elements
      */
     private void setupClickListeners() {
-        // Cover photo actions
-        fabEditCover.setOnClickListener(v -> onChangeCoverPhotoClick());
-        ivCoverPhoto.setOnClickListener(v -> onCoverPhotoClick());
-        ivProfileAvatar.setOnClickListener(v -> onProfileAvatarClick());
-
-        // Edit profile button
-        btnEditProfile.setOnClickListener(v -> onEditProfileClick());
-
         // Menu items
         btnMyTickets.setOnClickListener(v -> onMyTicketsClick());
-        btnSettings.setOnClickListener(v -> onSettingsClick());
     }
 
     /**
@@ -159,37 +136,10 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    // Click handler methods
-    private void onChangeCoverPhotoClick() {
-        showToast("Change cover photo");
-        // Open image picker or camera for cover photo
-    }
-
-    private void onCoverPhotoClick() {
-        showToast("View cover photo");
-        // Open full screen image viewer for cover photo
-    }
-
-    private void onProfileAvatarClick() {
-        showToast("Change profile photo");
-        // Open image picker or camera for profile photo
-    }
-
-    private void onEditProfileClick() {
-        showToast("Edit Profile");
-        // Navigate to edit profile screen
-    }
-
 
     private void onMyTicketsClick() {
         Intent intent = new Intent(getContext(), MyTicketsActivity.class);
         startActivity(intent);
-    }
-
-
-    private void onSettingsClick() {
-        showToast("Settings clicked");
-        // Navigate to settings screen
     }
 
     /**

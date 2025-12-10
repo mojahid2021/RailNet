@@ -61,10 +61,7 @@ public class MyTicketsActivity extends AppCompatActivity {
         tvActiveTickets = findViewById(R.id.tvActiveTickets);
         tvUpcomingTrips = findViewById(R.id.tvUpcomingTrips);
         tvTotalBookings = findViewById(R.id.tvTotalBookings);
-        btnBack = findViewById(R.id.btnBack);
 
-        // Set up back button
-        btnBack.setOnClickListener(v -> finish());
 
         // Use LinearLayoutManager for vertical list view instead of grid
         androidx.recyclerview.widget.LinearLayoutManager layoutManager = new androidx.recyclerview.widget.LinearLayoutManager(this);
@@ -123,6 +120,7 @@ public class MyTicketsActivity extends AppCompatActivity {
                     try {
                         String body = rb.string();
                         Gson gson = new Gson();
+                        Log.d(TAG, "onResponse: " + body);
                         UserTicket[] arr = gson.fromJson(body, UserTicket[].class);
                         List<UserTicket> list = Arrays.asList(arr != null ? arr : new UserTicket[0]);
 

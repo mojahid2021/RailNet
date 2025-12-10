@@ -5,6 +5,7 @@ import com.mojahid2021.railnet.home.model.Station;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -16,7 +17,7 @@ import retrofit2.http.Query;
 public interface ApiService {
 
     @GET("trains")
-    Call<String> getTrains(); // Replace String with your model class
+    Call<String> getTrains();
 
     @GET("train/{id}")
     Call<String> getTrainById(@Path("id") int id);
@@ -40,10 +41,13 @@ public interface ApiService {
     );
 
     @POST("tickets")
-    Call<ResponseBody> bookTicket(@Body okhttp3.RequestBody body);
+    Call<ResponseBody> bookTicket(@Body RequestBody body);
     @GET("tickets")
     Call<ResponseBody> getTickets();
 
     @POST("payments/initiate")
-    Call<PaymentInitiateResponse> initiatePayment(@Body java.util.Map<String, String> body);
+    Call<PaymentInitiateResponse> initiatePayment(@Body Map<String, String> body);
+
+    @GET("tickets/{id}")
+    Call<ResponseBody> getTicketById(@Path("id") String id);
 }

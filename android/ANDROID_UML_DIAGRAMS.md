@@ -1044,7 +1044,7 @@ flowchart TD
     SetMinDate --> WaitDateSelect[Wait for Selection]
     WaitDateSelect --> SelectDate[User Selects Date]
     SelectDate --> UpdateDateCalendar[Update selectedDate Calendar]
-    UpdateDateCalendar --> FormatDate[Format Date for Display]
+    UpdateDateCalendar --> FormatDate[Format Date to yyyy-MM-dd]
     FormatDate --> UpdateDateUI[Update Date TextView]
     UpdateDateUI --> WaitUserAction
     

@@ -8,20 +8,18 @@
     android:fillViewport="true"
     tools:context=".profile.ProfileFragment">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <!-- Cover Photo Section -->
         <androidx.cardview.widget.CardView
             android:id="@+id/coverPhotoCard"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="150dp"
             app:cardCornerRadius="0dp"
             app:cardElevation="0dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_alignParentTop="true">
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -68,8 +66,8 @@
             android:layout_marginTop="-70dp"
             app:cardCornerRadius="100dp"
             app:cardElevation="8dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/coverPhotoCard">
+            android:layout_below="@id/coverPhotoCard"
+            android:layout_alignParentStart="true">
 
             <ImageView
                 android:id="@+id/ivProfileAvatar"
@@ -94,16 +92,15 @@
             app:cornerRadius="20dp"
             app:icon="@drawable/ic_edit"
             app:iconTint="@color/white"
-            app:layout_constraintBottom_toBottomOf="@id/profileImageCard"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/coverPhotoCard"
+            android:layout_alignBottom="@id/profileImageCard"
+            android:layout_alignParentEnd="true"
             style="@style/Widget.Material3.Button.ElevatedButton"
             app:backgroundTint="@color/primary" />
 
         <!-- User Name -->
         <TextView
             android:id="@+id/tvUserName"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="16dp"
@@ -112,9 +109,7 @@
             android:textColor="@color/darkIndigo"
             android:textSize="26sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/profileImageCard" />
+            android:layout_below="@id/profileImageCard" />
 
         <!-- Member Since -->
         <LinearLayout
@@ -125,8 +120,7 @@
             android:layout_marginTop="6dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvUserName">
+            android:layout_below="@id/tvUserName">
 
             <ImageView
                 android:layout_width="16dp"
@@ -155,127 +149,11 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Stats Card -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/statsCard"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="24dp"
-            android:elevation="4dp"
-            app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/memberInfoLayout">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="20dp">
-
-                <!-- Total Trips Stat -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/tvTripsCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/trips_count"
-                        android:textColor="@color/primary"
-                        android:textSize="28sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="@string/total_trips"
-                        android:textColor="@color/lightGray"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <!-- Divider -->
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:background="@color/lightBlueGray" />
-
-                <!-- Bookings Stat -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/tvBookingsCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/bookings_count"
-                        android:textColor="@color/primary"
-                        android:textSize="28sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="@string/bookings"
-                        android:textColor="@color/lightGray"
-                        android:textSize="12sp" />
-                </LinearLayout>
-
-                <!-- Divider -->
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:background="@color/lightBlueGray" />
-
-                <!-- Saved Stat -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/tvSavedCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/saved_count"
-                        android:textColor="@color/primary"
-                        android:textSize="28sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="@string/saved"
-                        android:textColor="@color/lightGray"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
 
         <!-- Contact Information Card -->
         <androidx.cardview.widget.CardView
             android:id="@+id/contactCard"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="16dp"
@@ -283,9 +161,7 @@
             android:elevation="4dp"
             app:cardBackgroundColor="@color/white"
             app:cardCornerRadius="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/statsCard">
+            android:layout_below="@id/memberInfoLayout">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -376,7 +252,7 @@
         <!-- Menu Options Card -->
         <androidx.cardview.widget.CardView
             android:id="@+id/menuCard"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="16dp"
@@ -385,10 +261,7 @@
             android:elevation="4dp"
             app:cardBackgroundColor="@color/white"
             app:cardCornerRadius="16dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/contactCard">
+            android:layout_below="@id/contactCard">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -473,6 +346,5 @@
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </RelativeLayout>
 </ScrollView>
-

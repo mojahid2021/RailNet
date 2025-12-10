@@ -13,32 +13,17 @@
     <RelativeLayout
         android:id="@+id/header_container"
         android:layout_width="match_parent"
-        android:layout_height="180dp"
+        android:layout_height="wrap_content"
         android:background="@drawable/header_bg"
         android:paddingStart="24dp"
         android:paddingEnd="24dp"
         android:paddingTop="16dp"
         android:paddingBottom="24dp"
         android:elevation="8dp">
-
-        <!-- Back Button -->
-        <ImageView
-            android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:src="@android:drawable/ic_menu_revert"
-            android:contentDescription="@string/back_button_desc"
-            android:padding="8dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            app:tint="@android:color/white" />
-
         <!-- Header Content -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/btnBack"
             android:layout_marginTop="16dp"
             android:orientation="vertical">
 
@@ -71,11 +56,13 @@
     </RelativeLayout>
 
     <!-- Main Content -->
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fillViewport="true">
+
+
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -83,6 +70,7 @@
             android:orientation="vertical"
             android:padding="20dp"
             android:clipToPadding="false">
+
 
             <!-- Tickets Summary Card -->
             <LinearLayout
@@ -251,46 +239,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:background="@drawable/booking_card_elevated"
                 android:orientation="vertical"
-                android:padding="20dp"
                 android:elevation="8dp">
-
-                <!-- Card Header -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="20dp">
-
-                    <LinearLayout
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:background="@drawable/journey_timeline_bg"
-                        android:gravity="center">
-
-                        <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:src="@drawable/ic_schedule"
-                            android:contentDescription="@string/schedule_icon"
-                            app:tint="@color/primary" />
-
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="16dp"
-                        android:text="@string/recent_tickets"
-                        android:textStyle="bold"
-                        android:textSize="20sp"
-                        android:textColor="@color/darkIndigo"
-                        android:fontFamily="sans-serif-medium" />
-
-                </LinearLayout>
 
                 <!-- Loading State -->
                 <LinearLayout
@@ -386,13 +336,13 @@
                     android:id="@+id/recyclerViewTickets"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false"
-                    android:padding="8dp" />
+                    android:nestedScrollingEnabled="false" />
+
 
             </LinearLayout>
 
         </LinearLayout>
 
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>
