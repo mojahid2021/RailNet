@@ -99,6 +99,19 @@
 
     <!-- Trains Activity -->
     <string name="back_button_desc">Back</string>
+
+    <!-- Home Redesign Strings -->
+    <string name="plan_your">Plan Your</string>
+    <string name="perfect_journey">Perfect Journey</string>
+    <string name="quick_actions_title">Quick Actions</string>
+    <string name="pnr_status">PNR Status</string>
+    <string name="live_status_title">Live Status</string>
+    <string name="recent_searches_title">Recent Searches</string>
+    <string name="see_all">See All</string>
+    <string name="arrow">Arrow</string>
+    <string name="example_city_mumbai">Mumbai</string>
+    <string name="example_city_delhi">Delhi</string>
+    <string name="example_time_ago">2 days ago</string>
     <string name="search_trains_hint">Search trains...</string>
     <string name="no_trains_found">No trains found for this route</string>
     <string name="currency_symbol">৳</string>

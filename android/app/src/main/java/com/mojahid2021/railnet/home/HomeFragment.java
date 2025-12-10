@@ -16,7 +16,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.mojahid2021.railnet.R;
@@ -51,11 +51,11 @@ public class HomeFragment extends Fragment {
     private static final String KEY_TO_NAME = "selected_to_name";
 
     // UI elements (encapsulated as private fields)
-    private LinearLayout fromLocationLayout;
-    private LinearLayout toLocationLayout;
+    private RelativeLayout fromLocationLayout;
+    private RelativeLayout toLocationLayout;
     private AutoCompleteTextView actvFrom;
     private AutoCompleteTextView actvTo;
-    private LinearLayout dateSelectLayout;
+    private RelativeLayout dateSelectLayout;
     private TextView tvSelectedDate;
     private Button btnSearchTrains;
 
