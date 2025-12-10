@@ -30,10 +30,17 @@ classDiagram
         -LinearLayout homeLayout
         -LinearLayout mapLayout
         -LinearLayout profileLayout
-        -ImageView homeIcon, mapIcon, profileIcon
-        -TextView homeText, mapText, profileText
+        -LinearLayout homeIconLayout
+        -LinearLayout mapIconLayout
+        -LinearLayout profileIconLayout
+        -ImageView homeIcon
+        -ImageView mapIcon
+        -ImageView profileIcon
+        -TextView homeText
+        -TextView mapText
+        -TextView profileText
         +onCreate(Bundle)
-        +loadFragment(Fragment)
+        -loadFragment(Fragment)
         -configureNavigation()
         -highLightNavigation(LinearLayout)
         -resetNavigation()
@@ -815,7 +822,10 @@ flowchart TD
     CheckAuth -->|Yes| LoadHome
     
     LoadHome --> FetchStations[Fetch Stations from API]
-    FetchStations --> PopulateDropdowns[Populate From/To Dropdowns]
+    FetchStations --> StationsResponse{API Success?}
+    StationsResponse -->|Failed| UseDefaultStations[Use Cached/Default Stations]
+    UseDefaultStations --> PopulateDropdowns[Populate From/To Dropdowns]
+    StationsResponse -->|Success| PopulateDropdowns
     PopulateDropdowns --> WaitInput[Wait for User Input]
     
     WaitInput --> SelectFrom[User Selects From Station]

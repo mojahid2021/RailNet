@@ -421,9 +421,13 @@ flowchart TD
     FindSeat --> MarkUnavailable[Mark Seat as Unavailable]
     MarkUnavailable --> CreateTicket[Create Ticket Record]
     CreateTicket --> SetExpiry[Set Expiry Time +10 minutes]
-    SetExpiry --> CommitTx[Commit Transaction]
+    SetExpiry --> TryCommit{Commit Success?}
     
-    CommitTx --> UpdateCount[Update Compartment Booking Count]
+    TryCommit -->|Yes| UpdateCount[Update Compartment Booking Count]
+    TryCommit -->|No| RollbackTx[Rollback Transaction]
+    RollbackTx --> TxError[Return 500 Transaction Failed]
+    TxError --> End
+    
     UpdateCount --> FetchComplete[Fetch Complete Ticket Data]
     FetchComplete --> FormatResponse[Format Booking Response]
     FormatResponse --> ReturnSuccess[Return 201 Created with Ticket]
@@ -438,6 +442,7 @@ flowchart TD
     SeatError --> End
     CapacityError --> End
     PriceError --> End
+    TxError --> End
 
     style Start fill:#90EE90
     style End fill:#90EE90
@@ -451,8 +456,10 @@ flowchart TD
     style SeatError fill:#FFB6C1
     style CapacityError fill:#FFB6C1
     style PriceError fill:#FFB6C1
+    style TxError fill:#FFB6C1
     style StartTx fill:#87CEEB
-    style CommitTx fill:#87CEEB
+    style TryCommit fill:#87CEEB
+    style RollbackTx fill:#FFE4B5
 ```
 
 ---
