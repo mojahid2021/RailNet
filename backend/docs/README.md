@@ -276,7 +276,18 @@ Complete API documentation with examples is available in:
 
 - [API Reference](./API.md) - Detailed endpoint documentation
 - [API Examples](./examples.md) - Practical curl examples
+- [UML & Activity Diagrams](./DIAGRAMS.md) - System architecture and workflow diagrams
 - Swagger UI: `http://localhost:3000/documentation`
+
+### Visual Documentation
+
+The backend includes comprehensive diagrams:
+- **UML Class Diagram** - Complete system structure
+- **Database ERD** - Entity relationships and schema
+- **System Architecture** - Component interaction flow
+- **Activity Diagrams** - Key business process workflows
+
+See [DIAGRAMS.md](./DIAGRAMS.md) for details on viewing and understanding these diagrams.
 
 ## Contributing
 

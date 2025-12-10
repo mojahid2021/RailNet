@@ -31,14 +31,28 @@ The RailNet backend is a comprehensive railway management system built with:
 
 This directory contains the following diagram files in PlantUML format (`.puml`):
 
-1. **uml-class-diagram.puml** - Complete class diagram showing all models, services, and route handlers
-2. **database-erd-diagram.puml** - Entity-Relationship Diagram (ERD) for the database schema
-3. **system-architecture-diagram.puml** - High-level system architecture and component interaction
-4. **activity-diagram-authentication.puml** - User authentication and registration flow
-5. **activity-diagram-ticket-booking.puml** - Ticket booking process with seat reservation
-6. **activity-diagram-payment-processing.puml** - SSLCommerz payment integration flow
-7. **activity-diagram-booking-cleanup.puml** - Automated booking expiration and cleanup
-8. **activity-diagram-train-search.puml** - Train search and seat availability checking
+| File | Type | Description | Best For |
+|------|------|-------------|----------|
+| `uml-class-diagram.puml` | Class Diagram | Complete system class structure | Understanding code organization |
+| `database-erd-diagram.puml` | ERD | Database schema and relationships | Database design and queries |
+| `system-architecture-diagram.puml` | Component Diagram | High-level system components | Understanding system flow |
+| `activity-diagram-authentication.puml` | Activity Diagram | User registration and login | Auth implementation |
+| `activity-diagram-ticket-booking.puml` | Activity Diagram | Ticket booking with seat reservation | Booking logic |
+| `activity-diagram-payment-processing.puml` | Activity Diagram | SSLCommerz payment integration | Payment flow |
+| `activity-diagram-booking-cleanup.puml` | Activity Diagram | Expired booking cleanup | Background jobs |
+| `activity-diagram-train-search.puml` | Activity Diagram | Train search and availability | Search functionality |
+
+### Quick Diagram Selection Guide
+
+**Need to understand...**
+- **Database structure?** → Use `database-erd-diagram.puml`
+- **API endpoints?** → Use `uml-class-diagram.puml` (Route Handlers section)
+- **How authentication works?** → Use `activity-diagram-authentication.puml`
+- **Booking process?** → Use `activity-diagram-ticket-booking.puml`
+- **Payment integration?** → Use `activity-diagram-payment-processing.puml`
+- **Overall architecture?** → Use `system-architecture-diagram.puml`
+- **Cleanup jobs?** → Use `activity-diagram-booking-cleanup.puml`
+- **Search logic?** → Use `activity-diagram-train-search.puml`
 
 ## UML Class Diagram
 
@@ -451,17 +465,36 @@ This ensures accurate availability for segment-based bookings.
 
 ### Option 5: Export to Images
 Generate PNG/SVG files for documentation:
+
+**Using PlantUML (requires Java):**
 ```bash
-# Install PlantUML (requires Java)
+# Download PlantUML
+wget https://github.com/plantuml/plantuml/releases/download/v1.2024.7/plantuml-1.2024.7.jar
+
+# Generate all diagrams as PNG
+cd backend/docs
+java -jar plantuml-1.2024.7.jar -tpng *.puml
+
+# Generate as SVG (scalable)
+java -jar plantuml-1.2024.7.jar -tsvg *.puml
+
+# Output: PNG or SVG files in same directory
+```
+
+**Using PlantUML CLI (if installed via package manager):**
+```bash
 # On macOS:
 brew install plantuml
+
+# On Ubuntu/Debian:
+sudo apt-get install plantuml
 
 # Generate all diagrams
 cd backend/docs
 plantuml *.puml
-
-# Output: PNG files in same directory
 ```
+
+**Note**: Generated image files (*.png, *.svg) are excluded from version control via .gitignore since they can be regenerated from the .puml source files.
 
 ## Diagram Notation Guide
 
