@@ -1,246 +1,456 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- MODERN TRAINS ACTIVITY - STYLISH DESIGN -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FD"
+    android:orientation="vertical"
+    android:background="@color/primaryBackground"
     tools:context=".activity.TrainsActivity">
 
-    <!-- Elegant Header Section with Gradient -->
+    <!-- Custom Header -->
     <RelativeLayout
         android:id="@+id/header_container"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:background="@drawable/premium_gradient_background"
-        android:paddingStart="20dp"
+        android:layout_height="180dp"
+        android:background="@drawable/header_bg"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
         android:paddingTop="16dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="60dp">
+        android:paddingBottom="24dp"
+        android:elevation="8dp">
 
         <!-- Back Button -->
-        <FrameLayout
-            android:id="@+id/btnBackContainer"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_alignParentStart="true"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/circle_white_background"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?android:attr/selectableItemBackgroundBorderless">
-
-            <ImageView
-                android:id="@+id/btnBack"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:contentDescription="@string/back_button_desc"
-                android:rotation="180"
-                android:src="@drawable/ic_arrow_forward"
-                app:tint="#5B67CA" />
-        </FrameLayout>
+            android:layout_alignParentTop="true"
+            android:src="@android:drawable/ic_menu_revert"
+            android:contentDescription="@string/back_button_desc"
+            android:padding="8dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            app:tint="@android:color/white" />
 
         <!-- Header Content -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/btnBackContainer"
-            android:layout_marginTop="24dp"
+            android:layout_below="@id/btnBack"
+            android:layout_marginTop="16dp"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/headerTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="@string/available_trains"
+                android:textColor="@android:color/white"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-light"
                 android:ellipsize="end"
-                android:fontFamily="sans-serif-medium"
-                android:letterSpacing="-0.01"
-                android:maxLines="2"
-                android:text="@string/example_route_title"
-                android:textColor="#FFFFFF"
-                android:textSize="28sp"
-                android:textStyle="bold" />
+                android:maxLines="2" />
 
             <TextView
                 android:id="@+id/headerSubtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:alpha="0.9"
-                android:ellipsize="end"
+                android:text="@string/select_your_train"
+                android:textColor="#DDFFFFFF"
+                android:textSize="14sp"
                 android:fontFamily="sans-serif"
-                android:maxLines="1"
-                android:text="@string/example_date"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp" />
+                android:ellipsize="end"
+                android:maxLines="1" />
+
         </LinearLayout>
+
     </RelativeLayout>
 
-    <!-- Floating Filter/Info Card -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/search_card"
+    <!-- Main Content -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/header_container"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="-40dp"
-        android:layout_marginEnd="20dp"
-        app:cardBackgroundColor="#FFFFFF"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="10dp">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="16dp">
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:clipToPadding="false">
 
-            <!-- Train Count Info -->
+            <!-- Route Information Card -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:id="@+id/route_card"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/booking_card_elevated"
                 android:orientation="vertical"
-                android:baselineAligned="false">
+                android:padding="20dp"
+                android:elevation="8dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- Card Header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif"
-                    android:text="@string/available_trains"
-                    android:textAllCaps="true"
-                    android:textColor="#9CA3AF"
-                    android:textSize="11sp"
-                    android:letterSpacing="0.08" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="20dp">
 
-                <TextView
-                    android:id="@+id/tvTrainCount"
-                    android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/journey_timeline_bg"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_train"
+                            android:contentDescription="@string/train_icon"
+                            app:tint="@color/primary" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:text="@string/journey_details"
+                        android:textStyle="bold"
+                        android:textSize="20sp"
+                        android:textColor="@color/darkIndigo"
+                        android:fontFamily="sans-serif-medium" />
+
+                </LinearLayout>
+
+                <!-- Route Display -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="@string/loading_text"
-                    android:textColor="#1F2937"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- From Station -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/station_from"
+                            android:textSize="11sp"
+                            android:textColor="@color/lightGray"
+                            android:letterSpacing="0.1"
+                            android:fontFamily="sans-serif-medium"
+                            android:textAllCaps="true" />
+
+                        <TextView
+                            android:id="@+id/tvFromStation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textSize="18sp"
+                            android:textColor="@color/darkIndigo"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </LinearLayout>
+
+                    <!-- Arrow -->
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:src="@drawable/ic_arrow_forward"
+                        android:contentDescription="@string/arrow_forward"
+                        app:tint="@color/primary" />
+
+                    <!-- To Station -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/station_to"
+                            android:textSize="11sp"
+                            android:textColor="@color/lightGray"
+                            android:letterSpacing="0.1"
+                            android:fontFamily="sans-serif-medium"
+                            android:textAllCaps="true" />
+
+                        <TextView
+                            android:id="@+id/tvToStation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textSize="18sp"
+                            android:textColor="@color/darkIndigo"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Journey Date -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/journey_timeline_bg"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_calendar"
+                        android:contentDescription="@string/calendar_icon"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvJourneyDate"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/select_date"
+                        android:textSize="14sp"
+                        android:textColor="@color/darkBlue"
+                        android:fontFamily="sans-serif" />
+
+                </LinearLayout>
+
             </LinearLayout>
 
-            <!-- Filter Button -->
-            <FrameLayout
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/circle_blue_background"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackgroundBorderless">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@string/filter_trains"
-                    android:src="@drawable/ic_settings"
-                    app:tint="#5B67CA" />
-            </FrameLayout>
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <!-- Trains List Section -->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/search_card"
-        android:layout_marginTop="20dp">
-
-        <!-- RecyclerView for train list -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvSchedules"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingStart="16dp"
-            android:paddingTop="8dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="24dp"
-            android:scrollbars="vertical" />
-
-        <!-- Loading Progress -->
-        <LinearLayout
-            android:id="@+id/progressContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <ProgressBar
-                android:id="@+id/progress"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:indeterminateTint="#5B67CA" />
-
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Trains Count Card -->
+            <LinearLayout
+                android:id="@+id/trains_count_card"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:fontFamily="sans-serif-medium"
-                android:text="@string/finding_trains"
-                android:textColor="#6B7280"
-                android:textSize="15sp" />
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/booking_card_elevated"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:elevation="8dp">
+
+                <!-- Card Header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/journey_timeline_bg"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_train"
+                            android:contentDescription="@string/train_icon"
+                            app:tint="@color/primary" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:text="@string/available_trains"
+                        android:textStyle="bold"
+                        android:textSize="20sp"
+                        android:textColor="@color/darkIndigo"
+                        android:fontFamily="sans-serif-medium" />
+
+                </LinearLayout>
+
+                <!-- Train Count Display -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/found_trains"
+                        android:textSize="16sp"
+                        android:textColor="@color/darkBlue"
+                        android:fontFamily="sans-serif" />
+
+                    <TextView
+                        android:id="@+id/tvTrainCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/loading_text"
+                        android:textSize="24sp"
+                        android:textColor="@color/primary"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Trains List Card -->
+            <LinearLayout
+                android:id="@+id/trains_list_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/booking_card_elevated"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:elevation="8dp">
+
+                <!-- Card Header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="20dp">
+
+                    <LinearLayout
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/journey_timeline_bg"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_schedule"
+                            android:contentDescription="@string/schedule_icon"
+                            app:tint="@color/primary" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:text="@string/train_schedules"
+                        android:textStyle="bold"
+                        android:textSize="20sp"
+                        android:textColor="@color/darkIndigo"
+                        android:fontFamily="sans-serif-medium" />
+
+                </LinearLayout>
+
+                <!-- Loading State -->
+                <LinearLayout
+                    android:id="@+id/progressContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="40dp"
+                    android:visibility="gone">
+
+                    <ProgressBar
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:indeterminateTint="@color/primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/finding_trains"
+                        android:textSize="16sp"
+                        android:textColor="@color/darkBlue"
+                        android:fontFamily="sans-serif-medium" />
+
+                </LinearLayout>
+
+                <!-- Empty State -->
+                <LinearLayout
+                    android:id="@+id/emptyContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="40dp"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:background="@drawable/journey_timeline_bg"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:src="@drawable/ic_train"
+                            android:contentDescription="@string/no_trains_icon"
+                            app:tint="@color/primary" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvEmpty"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:text="@string/no_trains_found"
+                        android:textSize="18sp"
+                        android:textColor="@color/darkIndigo"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/try_different_search"
+                        android:textSize="14sp"
+                        android:textColor="@color/lightGray"
+                        android:fontFamily="sans-serif"
+                        android:gravity="center" />
+
+                </LinearLayout>
+
+                <!-- Trains RecyclerView -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSchedules"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:padding="8dp" />
+
+            </LinearLayout>
+
         </LinearLayout>
 
-        <!-- Empty State -->
-        <LinearLayout
-            android:id="@+id/emptyContainer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="32dp"
-            android:visibility="gone">
+    </ScrollView>
 
-            <FrameLayout
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:background="@drawable/circle_blue_background">
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@string/no_trains_icon"
-                    android:src="@drawable/ic_train"
-                    app:tint="#5B67CA" />
-            </FrameLayout>
-
-            <TextView
-                android:id="@+id/tvEmpty"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:fontFamily="sans-serif-medium"
-                android:gravity="center"
-                android:text="@string/no_trains_found"
-                android:textColor="#1F2937"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:fontFamily="sans-serif"
-                android:gravity="center"
-                android:text="@string/try_different_search"
-                android:textColor="#9CA3AF"
-                android:textSize="14sp" />
-        </LinearLayout>
-    </RelativeLayout>
-
-</RelativeLayout>
+</LinearLayout>

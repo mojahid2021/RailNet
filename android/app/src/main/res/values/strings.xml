@@ -99,6 +99,13 @@
 
     <!-- Trains Activity -->
     <string name="back_button_desc">Back</string>
+    <string name="select_your_train">Select your preferred train</string>
+    <string name="journey_details">Journey Details</string>
+    <string name="calendar_icon">Calendar icon</string>
+    <string name="select_date">Select date</string>
+    <string name="found_trains">Found</string>
+    <string name="schedule_icon">Schedule icon</string>
+    <string name="train_schedules">Train Schedules</string>
 
     <!-- Home Redesign Strings -->
     <string name="plan_your">Plan Your</string>
@@ -192,4 +199,15 @@
     <string name="clock_icon">Clock icon</string>
     <string name="arrow_forward">Arrow forward</string>
     <string name="success_icon">Success icon</string>
+
+    <!-- My Tickets Activity -->
+    <string name="view_your_bookings">View and manage your bookings</string>
+    <string name="active_tickets">Active Tickets</string>
+    <string name="upcoming_trips">Upcoming Trips</string>
+    <string name="total_bookings">Total Bookings</string>
+    <string name="recent_tickets">Recent Tickets</string>
+    <string name="loading_tickets">Loading your tickets...</string>
+    <string name="no_tickets_found">No tickets found</string>
+    <string name="no_tickets_icon">No tickets icon</string>
+    <string name="book_your_first_ticket">Book your first ticket to get started</string>
 </resources>
