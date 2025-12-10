@@ -28,13 +28,9 @@ public class CompartmentActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_compartment);
 
-        View btnBack = findViewById(R.id.btnBack);
-        TextView headerTitle = findViewById(R.id.headerTitle);
-        TextView headerSubtitle = findViewById(R.id.headerSubtitle);
         ChipGroup chipGroupCompartments = findViewById(R.id.chipGroupCompartments);
         RecyclerView rvSeats = findViewById(R.id.rvSeats);
 
-        btnBack.setOnClickListener(v -> finish());
 
         rvSeats.setLayoutManager(new GridLayoutManager(this, 4));
         final View btnNext = findViewById(R.id.btnNext);
@@ -65,8 +61,6 @@ public class CompartmentActivity extends AppCompatActivity {
             if (schedule.train != null) {
                 title = (schedule.train.name != null ? schedule.train.name : "") + (schedule.train.number != null ? " (" + schedule.train.number + ")" : "");
             }
-            headerTitle.setText(title);
-            headerSubtitle.setText(DateTimeUtils.formatDisplayDateFromIso(schedule.date));
 
             // Populate chip group with compartments
             if (schedule.train != null && schedule.train.compartments != null) {

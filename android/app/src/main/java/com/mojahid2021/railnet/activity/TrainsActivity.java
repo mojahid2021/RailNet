@@ -63,13 +63,6 @@ public class TrainsActivity extends AppCompatActivity {
             return insets;
         });
 
-
-        // Use modern header instead of toolbar
-        View btnBack = findViewById(R.id.btnBack);
-        TextView headerTitle = findViewById(R.id.headerTitle);
-        TextView headerSubtitle = findViewById(R.id.headerSubtitle);
-        btnBack.setOnClickListener(v -> finish());
-
         // Read extras early so we can pass them when starting other activities
         String fromId = getIntent().getStringExtra("fromStationId");
         String toId = getIntent().getStringExtra("toStationId");
@@ -96,11 +89,6 @@ public class TrainsActivity extends AppCompatActivity {
 
         String fromName = getIntent().getStringExtra("fromStationName");
         String toName = getIntent().getStringExtra("toStationName");
-
-        if (fromName != null && toName != null) {
-            headerTitle.setText(String.format(getString(R.string.route_format), fromName, toName));
-            headerSubtitle.setText(DateTimeUtils.formatDisplayDateFromIso(date));
-        }
 
         // Validate
         if (fromId == null || toId == null || date == null) return;

@@ -28,20 +28,13 @@ public class BookingSummaryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_booking_summary);
 
-        // Handle back button
-        android.view.View btnBack = findViewById(R.id.btnBack);
-        btnBack.setOnClickListener(v -> finish());
+
 
         Button btnConfirm = findViewById(R.id.btnConfirm);
         Button btnDone = findViewById(R.id.btnDone);
         android.view.View progressBooking = findViewById(R.id.progressBooking);
         android.view.View cardResult = findViewById(R.id.cardResult);
         android.view.View cardPassenger = findViewById(R.id.cardPassenger);
-        android.view.View cardJourney = findViewById(R.id.cardJourney);
-        android.widget.TextView tvJourneyTrain = findViewById(R.id.tvJourneyTrain);
-        android.widget.TextView tvJourneyRoute = findViewById(R.id.tvJourneyRoute);
-        android.widget.TextView tvJourneySchedule = findViewById(R.id.tvJourneySchedule);
-        android.widget.TextView tvSeatInfo = findViewById(R.id.tvSeatInfo);
         android.widget.TextView tvPriceView = findViewById(R.id.tvPrice);
         Button btnPay = findViewById(R.id.btnPay);
 
@@ -80,7 +73,6 @@ public class BookingSummaryActivity extends AppCompatActivity {
         // Prefill if we had seat/travel info
         // Prefill seat & price UI; journey fields will show layout placeholders unless real data provided
         String seatLabel = "Seat: " + (seatNumber != null ? seatNumber : "-") + " • Compartment: " + compartmentId;
-        tvSeatInfo.setText(seatLabel);
         tvPriceView.setText(getString(R.string.amount_placeholder));
 
         btnConfirm.setOnClickListener(v -> {
@@ -143,37 +135,6 @@ public class BookingSummaryActivity extends AppCompatActivity {
                             // show result card and reveal Pay button (store ticket id on the button tag)
                             cardResult.setVisibility(android.view.View.VISIBLE);
                             cardPassenger.setVisibility(android.view.View.GONE);
-                            cardJourney.setVisibility(android.view.View.GONE); // Hide journey card after booking
-
-                            // Populate journey card with booking details
-                            if (br.journey != null) {
-                                cardJourney.setVisibility(android.view.View.VISIBLE);
-                                if (br.journey.train != null) {
-                                    String trainInfo = (br.journey.train.name != null ? br.journey.train.name : "") +
-                                                     (br.journey.train.number != null ? " (" + br.journey.train.number + ")" : "");
-                                    tvJourneyTrain.setText(trainInfo);
-                                }
-                                if (br.journey.route != null) {
-                                    String routeInfo = (br.journey.route.from != null ? br.journey.route.from : "") + " → " +
-                                                     (br.journey.route.to != null ? br.journey.route.to : "");
-                                    tvJourneyRoute.setText(routeInfo);
-                                }
-                                if (br.journey.schedule != null) {
-                                    // Format date professionally
-                                    String formattedDate = formatDisplayDate(br.journey.schedule.date);
-                                    String scheduleInfo = formattedDate +
-                                                        (br.journey.schedule.departureTime != null ? " • " + br.journey.schedule.departureTime : "");
-                                    tvJourneySchedule.setText(scheduleInfo);
-                                }
-                            }
-
-                            // Update seat info professionally
-                            if (br.seat != null) {
-                                String seatInfo = "Seat " + (br.seat.number != null ? br.seat.number : "") +
-                                                " • Compartment " + (br.seat.compartment != null ? br.seat.compartment : "") +
-                                                " • " + (br.seat.clazz != null ? br.seat.clazz : "") + " Class";
-                                tvSeatInfo.setText(seatInfo);
-                            }
 
                             // Update price professionally
                             if (br.pricing != null) {

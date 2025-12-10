@@ -6,74 +6,7 @@
     android:orientation="vertical"
     android:background="@color/primaryBackground">
 
-    <!-- Custom Header -->
-    <RelativeLayout
-        android:id="@+id/header_container"
-        android:layout_width="match_parent"
-        android:layout_height="180dp"
-        android:background="@drawable/header_bg"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="24dp"
-        android:elevation="8dp">
 
-        <!-- Back Button -->
-        <ImageView
-            android:id="@+id/btnBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:src="@android:drawable/ic_menu_revert"
-            android:contentDescription="@string/back_button_desc"
-            android:padding="8dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            app:tint="@android:color/white" />
-
-        <!-- Header Content -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/btnBack"
-            android:layout_marginTop="24dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/headerSubtitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/booking_summary_subtitle"
-                android:textColor="#CCFFFFFF"
-                android:textSize="13sp"
-                android:letterSpacing="0.08"
-                android:textAllCaps="true"
-                android:fontFamily="sans-serif-medium" />
-
-            <TextView
-                android:id="@+id/headerTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="@string/booking_summary_title"
-                android:textColor="@android:color/white"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-light" />
-
-            <TextView
-                android:id="@+id/tvBookingStep"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/booking_step"
-                android:textColor="#DDFFFFFF"
-                android:textSize="14sp"
-                android:fontFamily="sans-serif" />
-
-        </LinearLayout>
-
-    </RelativeLayout>
 
     <!-- Main Scrollable Content -->
     <ScrollView
@@ -88,257 +21,6 @@
             android:orientation="vertical"
             android:padding="20dp"
             android:clipToPadding="false">
-
-            <!-- Journey Details Card -->
-            <LinearLayout
-                android:id="@+id/cardJourney"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone"
-                android:background="@drawable/booking_card_elevated"
-                android:orientation="vertical"
-                android:padding="20dp"
-                android:elevation="8dp">
-
-                <!-- Card Header -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="20dp">
-
-                    <LinearLayout
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:background="@drawable/journey_timeline_bg"
-                        android:gravity="center">
-
-                        <ImageView
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:src="@drawable/ic_train"
-                            android:contentDescription="@string/train_icon"
-                            app:tint="@color/primary" />
-
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tvJourneyTitle"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="16dp"
-                        android:text="@string/journey_title"
-                        android:textStyle="bold"
-                        android:textSize="20sp"
-                        android:textColor="@color/darkIndigo"
-                        android:fontFamily="sans-serif-medium" />
-
-                </LinearLayout>
-
-                <!-- Train Info with Badge -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
-
-                    <TextView
-                        android:id="@+id/tvJourneyTrain"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/train_placeholder"
-                        android:textSize="17sp"
-                        android:textColor="@color/darkBlue"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif" />
-
-                    <TextView
-                        android:id="@+id/tvSeatInfo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/seat_info_placeholder"
-                        android:textSize="13sp"
-                        android:textColor="@color/primary"
-                        android:textStyle="bold"
-                        android:background="@drawable/price_badge_bg"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:paddingTop="8dp"
-                        android:paddingBottom="8dp" />
-
-                </LinearLayout>
-
-                <!-- Journey Timeline -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="16dp">
-
-                    <!-- From Station -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="8dp">
-
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:src="@drawable/ic_location_from"
-                                android:contentDescription="@string/location_icon"
-                                android:layout_marginEnd="8dp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/station_from"
-                                android:textSize="11sp"
-                                android:textColor="@color/lightGray"
-                                android:letterSpacing="0.1"
-                                android:fontFamily="sans-serif-medium" />
-
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/tvFromStation"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="16sp"
-                            android:textColor="@color/darkIndigo"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium" />
-
-                        <TextView
-                            android:id="@+id/tvDepartureTime"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:textSize="14sp"
-                            android:textColor="@color/lightGray"
-                            android:fontFamily="sans-serif" />
-
-                    </LinearLayout>
-
-                    <!-- Arrow -->
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="center_vertical"
-                        android:src="@drawable/ic_arrow_forward"
-                        android:contentDescription="@string/arrow_forward"
-                        app:tint="@color/primary"
-                        android:layout_marginStart="12dp"
-                        android:layout_marginEnd="12dp" />
-
-                    <!-- To Station -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="end">
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="8dp">
-
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:src="@drawable/ic_location_to"
-                                android:contentDescription="@string/location_icon"
-                                android:layout_marginEnd="8dp" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/station_to"
-                                android:textSize="11sp"
-                                android:textColor="@color/lightGray"
-                                android:letterSpacing="0.1"
-                                android:fontFamily="sans-serif-medium" />
-
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/tvToStation"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="16sp"
-                            android:textColor="@color/darkIndigo"
-                            android:textStyle="bold"
-                            android:fontFamily="sans-serif-medium"
-                            android:gravity="end" />
-
-                        <TextView
-                            android:id="@+id/tvArrivalTime"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:textSize="14sp"
-                            android:textColor="@color/lightGray"
-                            android:fontFamily="sans-serif"
-                            android:gravity="end" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- Journey Date and Duration -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="@drawable/journey_timeline_bg"
-                    android:padding="12dp"
-                    android:gravity="center_vertical">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:src="@drawable/ic_clock"
-                        android:contentDescription="@string/clock_icon"
-                        android:layout_marginEnd="8dp" />
-
-                    <TextView
-                        android:id="@+id/tvJourneySchedule"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/date_departure_placeholder"
-                        android:textSize="14sp"
-                        android:textColor="@color/darkBlue"
-                        android:fontFamily="sans-serif" />
-
-                    <TextView
-                        android:id="@+id/tvJourneyRoute"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/route_placeholder"
-                        android:textSize="13sp"
-                        android:textColor="@color/primary"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-medium" />
-
-                </LinearLayout>
-
-            </LinearLayout>
 
             <!-- Passenger Details Card -->
             <LinearLayout
@@ -528,7 +210,7 @@
                     android:textStyle="bold"
                     android:textSize="17sp"
                     android:textColor="@android:color/white"
-                    android:background="@drawable/button_primary_bg"
+                    android:backgroundTint="@color/primary"
                     android:elevation="4dp"
                     android:fontFamily="sans-serif-medium" />
 
@@ -901,7 +583,7 @@
             android:textStyle="bold"
             android:textSize="17sp"
             android:textColor="@android:color/white"
-            android:background="@drawable/button_success_bg"
+            android:backgroundTint="@color/primary"
             android:elevation="4dp"
             android:fontFamily="sans-serif-medium" />
 
@@ -917,7 +599,7 @@
             android:textStyle="bold"
             android:textSize="17sp"
             android:textColor="@android:color/white"
-            android:background="@drawable/button_primary_bg"
+            android:backgroundTint="@color/primary"
             android:elevation="4dp"
             android:fontFamily="sans-serif-medium" />
 
