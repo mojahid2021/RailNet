@@ -75,7 +75,6 @@ public class BookingSummaryActivity extends AppCompatActivity {
         String seatLabel = "Seat: " + (seatNumber != null ? seatNumber : "-") + " • Compartment: " + compartmentId;
         tvSeatInfo.setText(seatLabel);
         tvPriceView.setText(getString(R.string.amount_placeholder));
-        String baseSummary = "";
 
         btnConfirm.setOnClickListener(v -> {
             String passengerName = etName.getText() != null ? etName.getText().toString().trim() : "";
@@ -138,7 +137,60 @@ public class BookingSummaryActivity extends AppCompatActivity {
                             // show result card and reveal Pay button (store ticket id on the button tag)
                             cardResult.setVisibility(android.view.View.VISIBLE);
                             cardPassenger.setVisibility(android.view.View.GONE);
-                            tvSummary.setText(out.toString());
+
+                            // Populate journey card with booking details
+                            if (br.journey != null) {
+                                cardJourney.setVisibility(android.view.View.VISIBLE);
+                                if (br.journey.train != null) {
+                                    String trainInfo = (br.journey.train.name != null ? br.journey.train.name : "") +
+                                                     (br.journey.train.number != null ? " (" + br.journey.train.number + ")" : "");
+                                    tvJourneyTrain.setText(trainInfo);
+                                }
+                                if (br.journey.route != null) {
+                                    String routeInfo = (br.journey.route.from != null ? br.journey.route.from : "") + " → " +
+                                                     (br.journey.route.to != null ? br.journey.route.to : "");
+                                    tvJourneyRoute.setText(routeInfo);
+                                }
+                                if (br.journey.schedule != null) {
+                                    String scheduleInfo = (br.journey.schedule.date != null ? br.journey.schedule.date : "") +
+                                                        (br.journey.schedule.departureTime != null ? " • " + br.journey.schedule.departureTime : "");
+                                    tvJourneySchedule.setText(scheduleInfo);
+                                }
+                            }
+
+                            // Update seat info if available
+                            if (br.seat != null) {
+                                String seatInfo = "Seat: " + (br.seat.number != null ? br.seat.number : "") +
+                                                " • Compartment " + (br.seat.compartment != null ? br.seat.compartment : "") +
+                                                " • Class: " + (br.seat.clazz != null ? br.seat.clazz : "");
+                                tvSeatInfo.setText(seatInfo);
+                            }
+
+                            // Update price if available
+                            if (br.pricing != null) {
+                                String priceText = (br.pricing.currency != null ? br.pricing.currency : "৳") + " " +
+                                                 String.valueOf(br.pricing.amount);
+                                tvPriceView.setText(priceText);
+                            }
+
+                            // Show booking confirmation message
+                            StringBuilder summaryText = new StringBuilder();
+                            summaryText.append("Booking confirmed successfully!\n\n");
+
+                            if (br.ticket != null) {
+                                summaryText.append("Ticket ID: ").append(br.ticket.ticketId != null ? br.ticket.ticketId : "N/A").append("\n");
+                                summaryText.append("Status: ").append(br.ticket.status != null ? br.ticket.status : "N/A").append("\n");
+                            }
+
+                            if (br.passenger != null) {
+                                summaryText.append("Passenger: ").append(br.passenger.name != null ? br.passenger.name : "N/A");
+                                summaryText.append(" (").append(br.passenger.age).append(", ").append(br.passenger.gender != null ? br.passenger.gender : "N/A").append(")\n");
+                            }
+
+                            summaryText.append("\nPlease proceed with payment to complete your booking.");
+
+                            tvSummary.setText(summaryText.toString());
+
                             if (bookedTicketId != null) {
                                 btnPay.setTag(bookedTicketId);
                                 btnPay.setVisibility(android.view.View.VISIBLE);
@@ -243,6 +295,35 @@ public class BookingSummaryActivity extends AppCompatActivity {
                 }
             });
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Check if returning from payment WebView
+        if (getIntent().getBooleanExtra("payment_completed", false)) {
+            handlePaymentSuccess();
+        }
+    }
+
+    private void handlePaymentSuccess() {
+        // Hide progress and show success state
+        android.view.View progressBooking = findViewById(R.id.progressBooking);
+        android.view.View cardResult = findViewById(R.id.cardResult);
+        Button btnPay = findViewById(R.id.btnPay);
+        Button btnDone = findViewById(R.id.btnDone);
+        TextView tvSummary = findViewById(R.id.tvSummary);
+
+        progressBooking.setVisibility(android.view.View.GONE);
+        btnPay.setVisibility(android.view.View.GONE);
+        btnDone.setVisibility(android.view.View.VISIBLE);
+
+        // Update summary with payment success message
+        String successMessage = "Payment completed successfully!\n\n" +
+                               "Your ticket has been confirmed and is ready for travel.\n" +
+                               "Check your email for the complete ticket details and QR code.\n\n" +
+                               "Safe travels!";
+        tvSummary.setText(successMessage);
     }
 
     static class TicketRequest {

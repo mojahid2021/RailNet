@@ -3,349 +3,626 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/primaryBackground"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/primaryBackground">
 
-    <!-- Modern header with gradient background -->
-    <LinearLayout
+    <!-- Custom Header -->
+    <RelativeLayout
         android:id="@+id/header_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="180dp"
         android:background="@drawable/header_bg"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="5dp">
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="24dp"
+        android:elevation="8dp">
 
+        <!-- Back Button -->
         <ImageView
             android:id="@+id/btnBack"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginStart="4dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:src="@android:drawable/ic_menu_revert"
             android:contentDescription="@string/back_button_desc"
             android:padding="8dp"
-            android:src="@android:drawable/ic_menu_revert"
-            app:tint="@android:color/white"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            app:tint="@android:color/white" />
 
+        <!-- Header Content -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
+            android:layout_below="@id/btnBack"
+            android:layout_marginTop="24dp"
             android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/headerSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/booking_summary_subtitle"
+                android:textColor="#CCFFFFFF"
+                android:textSize="13sp"
+                android:letterSpacing="0.08"
+                android:textAllCaps="true"
+                android:fontFamily="sans-serif-medium" />
 
             <TextView
                 android:id="@+id/headerTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/booking_summary_title"
                 android:textColor="@android:color/white"
-                android:textSize="20sp"
+                android:textSize="28sp"
                 android:textStyle="bold"
-                android:text="@string/booking_summary_title" />
+                android:fontFamily="sans-serif-light" />
 
             <TextView
-                android:id="@+id/headerSubtitle"
-                android:layout_width="match_parent"
+                android:id="@+id/tvBookingStep"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="12dp"
+                android:text="@string/booking_step"
                 android:textColor="#DDFFFFFF"
                 android:textSize="14sp"
-                android:text="@string/booking_summary_subtitle" />
+                android:fontFamily="sans-serif" />
 
         </LinearLayout>
 
-    </LinearLayout>
+    </RelativeLayout>
 
-    <!-- Scrollable content -->
-    <androidx.core.widget.NestedScrollView
+    <!-- Main Scrollable Content -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="-16dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp"
+            android:clipToPadding="false">
 
-            <!-- Journey summary card -->
+            <!-- Journey Details Card -->
             <LinearLayout
                 android:id="@+id/cardJourney"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:layout_marginTop="10dp"
-                android:background="@android:color/white"
+                android:visibility="gone"
+                android:background="@drawable/booking_card_elevated"
                 android:orientation="vertical"
-                android:padding="16dp"
-                android:visibility="gone">
+                android:padding="20dp"
+                android:elevation="8dp">
 
+                <!-- Card Header -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="20dp">
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_train"
-                        app:tint="@color/primary"
-                        android:layout_marginEnd="8dp" />
+                    <LinearLayout
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/journey_timeline_bg"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_train"
+                            android:contentDescription="@string/train_icon"
+                            app:tint="@color/primary" />
+
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvJourneyTitle"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:text="@string/journey_title"
                         android:textStyle="bold"
-                        android:textSize="18sp"
+                        android:textSize="20sp"
                         android:textColor="@color/darkIndigo"
-                        android:text="@string/journey_title" />
+                        android:fontFamily="sans-serif-medium" />
 
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tvJourneyTrain"
+                <!-- Train Info with Badge -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/train_placeholder"
-                    android:textSize="16sp"
-                    android:textColor="@color/darkBlue"
-                    android:layout_marginBottom="4dp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
 
-                <TextView
-                    android:id="@+id/tvJourneyRoute"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/route_placeholder"
-                    android:textSize="14sp"
-                    android:textColor="@color/lightGray"
-                    android:layout_marginBottom="4dp" />
+                    <TextView
+                        android:id="@+id/tvJourneyTrain"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/train_placeholder"
+                        android:textSize="17sp"
+                        android:textColor="@color/darkBlue"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif" />
 
-                <TextView
-                    android:id="@+id/tvJourneySchedule"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/date_departure_placeholder"
-                    android:textSize="14sp"
-                    android:textColor="@color/lightGray"
-                    android:layout_marginBottom="4dp" />
+                    <TextView
+                        android:id="@+id/tvSeatInfo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/seat_info_placeholder"
+                        android:textSize="13sp"
+                        android:textColor="@color/primary"
+                        android:textStyle="bold"
+                        android:background="@drawable/price_badge_bg"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp" />
 
-                <TextView
-                    android:id="@+id/tvSeatInfo"
+                </LinearLayout>
+
+                <!-- Journey Timeline -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/seat_info_placeholder"
-                    android:textSize="14sp"
-                    android:textColor="@color/primary"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- From Station -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_location_from"
+                                android:contentDescription="@string/location_icon"
+                                android:layout_marginEnd="8dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/station_from"
+                                android:textSize="11sp"
+                                android:textColor="@color/lightGray"
+                                android:letterSpacing="0.1"
+                                android:fontFamily="sans-serif-medium" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvFromStation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="16sp"
+                            android:textColor="@color/darkIndigo"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:id="@+id/tvDepartureTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textSize="14sp"
+                            android:textColor="@color/lightGray"
+                            android:fontFamily="sans-serif" />
+
+                    </LinearLayout>
+
+                    <!-- Arrow -->
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/ic_arrow_forward"
+                        android:contentDescription="@string/arrow_forward"
+                        app:tint="@color/primary"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="12dp" />
+
+                    <!-- To Station -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="end">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_location_to"
+                                android:contentDescription="@string/location_icon"
+                                android:layout_marginEnd="8dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/station_to"
+                                android:textSize="11sp"
+                                android:textColor="@color/lightGray"
+                                android:letterSpacing="0.1"
+                                android:fontFamily="sans-serif-medium" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvToStation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="16sp"
+                            android:textColor="@color/darkIndigo"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-medium"
+                            android:gravity="end" />
+
+                        <TextView
+                            android:id="@+id/tvArrivalTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textSize="14sp"
+                            android:textColor="@color/lightGray"
+                            android:fontFamily="sans-serif"
+                            android:gravity="end" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Journey Date and Duration -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="@drawable/journey_timeline_bg"
+                    android:padding="12dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_clock"
+                        android:contentDescription="@string/clock_icon"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvJourneySchedule"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/date_departure_placeholder"
+                        android:textSize="14sp"
+                        android:textColor="@color/darkBlue"
+                        android:fontFamily="sans-serif" />
+
+                    <TextView
+                        android:id="@+id/tvJourneyRoute"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/route_placeholder"
+                        android:textSize="13sp"
+                        android:textColor="@color/primary"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
-            <!-- Passenger input card -->
+            <!-- Passenger Details Card -->
             <LinearLayout
                 android:id="@+id/cardPassenger"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:layout_marginTop="10dp"
-                android:background="@android:color/white"
+                android:background="@drawable/booking_card_elevated"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp"
+                android:elevation="8dp">
 
+                <!-- Card Header -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="20dp">
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_profile"
-                        app:tint="@color/primary"
-                        android:layout_marginEnd="8dp" />
+                    <LinearLayout
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/journey_timeline_bg"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_profile"
+                            android:contentDescription="@string/profile_icon"
+                            app:tint="@color/primary" />
+
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:layout_marginStart="16dp"
                         android:text="@string/passenger_details"
                         android:textStyle="bold"
-                        android:textSize="18sp"
-                        android:textColor="@color/darkIndigo" />
+                        android:textSize="20sp"
+                        android:textColor="@color/darkIndigo"
+                        android:fontFamily="sans-serif-medium" />
 
                 </LinearLayout>
 
-                <com.google.android.material.textfield.TextInputLayout
+                <!-- Full Name Input -->
+                <EditText
+                    android:id="@+id/etName"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="16dp"
                     android:hint="@string/hint_full_name"
-                    app:boxStrokeColor="@color/primary"
-                    app:hintTextColor="@color/primary">
+                    android:inputType="textPersonName"
+                    android:autofillHints="name"
+                    android:textSize="16sp"
+                    android:fontFamily="sans-serif"
+                    android:background="@drawable/premium_card_background"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/darkIndigo"
+                    android:textColorHint="@color/lightGray" />
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etName"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textPersonName"
-                        android:autofillHints="name" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
+                <!-- Age and Gender Row -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:baselineAligned="false">
 
-                    <com.google.android.material.textfield.TextInputLayout
+                    <EditText
+                        android:id="@+id/etAge"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="56dp"
                         android:layout_weight="1"
+                        android:layout_marginEnd="12dp"
                         android:hint="@string/hint_age"
-                        app:boxStrokeColor="@color/primary"
-                        app:hintTextColor="@color/primary">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etAge"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="number"
-                            android:autofillHints="birthYear" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
+                        android:inputType="number"
+                        android:autofillHints="birthYear"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif"
+                        android:background="@drawable/premium_card_background"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:textColor="@color/darkIndigo"
+                        android:textColorHint="@color/lightGray" />
 
                     <Spinner
                         android:id="@+id/spinnerGender"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
                         android:spinnerMode="dropdown"
-                        android:layout_marginStart="12dp"
-                        android:layout_gravity="bottom" />
+                        android:background="@drawable/premium_card_background"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp" />
 
                 </LinearLayout>
 
             </LinearLayout>
 
-            <!-- Pricing & confirm area -->
+            <!-- Pricing & Payment Card -->
             <LinearLayout
                 android:id="@+id/cardPricing"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:layout_marginTop="10dp"
-                android:background="@android:color/white"
+                android:background="@drawable/booking_card_elevated"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp"
+                android:elevation="8dp">
 
+                <!-- Price Header -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="20dp"
+                    android:baselineAligned="false">
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_ticket"
-                        app:tint="@color/primary"
-                        android:layout_marginEnd="8dp" />
+                    <LinearLayout
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/journey_timeline_bg"
+                        android:gravity="center">
 
-                    <TextView
-                        android:id="@+id/tvPrice"
+                        <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/ic_ticket"
+                            android:contentDescription="@string/ticket_icon"
+                            app:tint="@color/primary" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/amount_placeholder"
-                        android:textStyle="bold"
-                        android:textSize="18sp"
-                        android:textColor="@color/darkIndigo" />
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/total_fare"
+                            android:textSize="11sp"
+                            android:textColor="@color/lightGray"
+                            android:letterSpacing="0.1"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:id="@+id/tvPrice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/amount_placeholder"
+                            android:textStyle="bold"
+                            android:textSize="24sp"
+                            android:textColor="@color/primary"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
+                <!-- Progress Bar -->
                 <ProgressBar
                     android:id="@+id/progressBooking"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:visibility="gone"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="16dp"
+                    android:indeterminateTint="@color/primary" />
 
-                <com.google.android.material.button.MaterialButton
+                <!-- Confirm Button -->
+                <Button
                     android:id="@+id/btnConfirm"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="60dp"
                     android:text="@string/confirm"
-                    android:layout_marginBottom="8dp"
-                    app:cornerRadius="24dp"
+                    android:textAllCaps="false"
                     android:textStyle="bold"
-                    android:textSize="16sp"
-                    app:backgroundTint="@color/primary"
-                    android:textColor="@android:color/white" />
+                    android:textSize="17sp"
+                    android:textColor="@android:color/white"
+                    android:background="@drawable/button_primary_bg"
+                    android:elevation="4dp"
+                    android:fontFamily="sans-serif-medium" />
 
-                <com.google.android.material.button.MaterialButton
+                <!-- Pay Button -->
+                <Button
                     android:id="@+id/btnPay"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="60dp"
                     android:text="@string/pay"
-                    android:layout_marginBottom="8dp"
+                    android:textAllCaps="false"
                     android:visibility="gone"
-                    app:cornerRadius="24dp"
+                    android:layout_marginTop="12dp"
                     android:textStyle="bold"
-                    android:textSize="16sp"
-                    app:backgroundTint="@color/success"
-                    android:textColor="@android:color/white" />
+                    android:textSize="17sp"
+                    android:textColor="@android:color/white"
+                    android:background="@drawable/button_success_bg"
+                    android:elevation="4dp"
+                    android:fontFamily="sans-serif-medium" />
 
-                <com.google.android.material.button.MaterialButton
+                <!-- Done Button -->
+                <Button
                     android:id="@+id/btnDone"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="60dp"
                     android:text="@string/done"
+                    android:textAllCaps="false"
                     android:visibility="gone"
-                    app:cornerRadius="24dp"
+                    android:layout_marginTop="12dp"
                     android:textStyle="bold"
-                    android:textSize="16sp"
-                    app:backgroundTint="@color/primary"
-                    android:textColor="@android:color/white" />
+                    android:textSize="17sp"
+                    android:textColor="@android:color/white"
+                    android:background="@drawable/button_primary_bg"
+                    android:elevation="4dp"
+                    android:fontFamily="sans-serif-medium" />
 
             </LinearLayout>
 
-            <!-- Result / summary display (hidden until booking response) -->
+            <!-- Booking Success Card -->
             <LinearLayout
                 android:id="@+id/cardResult"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@android:color/white"
+                android:visibility="gone"
+                android:background="@drawable/booking_card_elevated"
+                android:backgroundTint="#F0FDF4"
                 android:orientation="vertical"
-                android:padding="16dp"
-                android:visibility="gone">
+                android:padding="32dp"
+                android:gravity="center"
+                android:elevation="8dp">
 
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:src="@drawable/ic_check_circle"
-                    app:tint="@color/success"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginBottom="12dp" />
+                <!-- Success Icon with background -->
+                <LinearLayout
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:background="@drawable/circle_white_background"
+                    android:gravity="center"
+                    android:elevation="4dp">
 
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_check_circle"
+                        android:contentDescription="@string/success_icon"
+                        app:tint="@color/success" />
+
+                </LinearLayout>
+
+                <!-- Success Title -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/booking_confirmed"
+                    android:textSize="24sp"
+                    android:textColor="@color/success"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium" />
+
+                <!-- Summary Message -->
                 <TextView
                     android:id="@+id/tvSummary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
                     android:textSize="16sp"
                     android:textColor="@color/darkIndigo"
                     android:gravity="center"
-                    android:textStyle="bold" />
+                    android:lineSpacingMultiplier="1.3"
+                    android:fontFamily="sans-serif" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-    </androidx.core.widget.NestedScrollView>
+    </ScrollView>
 
 </LinearLayout>

@@ -139,7 +139,18 @@
     <string name="seat_booked">Booked</string>
     <string name="seat_selected">Selected</string>
     <string name="select_your_seat">Select Your Seat</string>
-    <string name="train_compartment_placeholder">Train Name • Compartment</string>
+    <string name="choose_compartment_and_seat">Choose your preferred compartment and seat</string>
+    <string name="ac_first_class">AC First Class</string>
+    <string name="ac_first_description">Premium comfort with all amenities</string>
+    <string name="ac_first_price">৳ 850</string>
+    <string name="ac_chair_car">AC Chair Car</string>
+    <string name="ac_chair_description">Comfortable seating with AC</string>
+    <string name="ac_chair_price">৳ 450</string>
+    <string name="non_ac_chair">Non-AC Chair</string>
+    <string name="non_ac_description">Budget-friendly option</string>
+    <string name="non_ac_price">৳ 250</string>
+    <string name="selected_seat_label">Selected Seat: %1$s</string>
+    <string name="selected_desc">Selected</string>
 
     <!-- Booking summary strings -->
     <string name="journey_title">Journey</string>
@@ -168,4 +179,17 @@
     <!-- Booking Summary Activity -->
     <string name="booking_summary_title">Booking Summary</string>
     <string name="booking_summary_subtitle">Review and confirm your booking</string>
+    <string name="booking_step">Step 2 of 3</string>
+    <string name="station_from">FROM</string>
+    <string name="station_to">TO</string>
+    <string name="gender_hint">Gender</string>
+    <string name="total_fare">TOTAL FARE</string>
+    <string name="booking_confirmed">Booking Confirmed!</string>
+    <string name="train_icon">Train icon</string>
+    <string name="profile_icon">Profile icon</string>
+    <string name="ticket_icon">Ticket icon</string>
+    <string name="location_icon">Location icon</string>
+    <string name="clock_icon">Clock icon</string>
+    <string name="arrow_forward">Arrow forward</string>
+    <string name="success_icon">Success icon</string>
 </resources>
