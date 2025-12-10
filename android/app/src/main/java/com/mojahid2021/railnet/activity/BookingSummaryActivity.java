@@ -1,11 +1,16 @@
 package com.mojahid2021.railnet.activity;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -28,7 +33,22 @@ public class BookingSummaryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_booking_summary);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // Set status bar icons to black (dark icons)
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
 
+        // Set up edge-to-edge display
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            v.setPadding(
+                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).left,
+                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).top,
+                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).right,
+                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+            );
+            return insets;
+        });
 
         Button btnConfirm = findViewById(R.id.btnConfirm);
         Button btnDone = findViewById(R.id.btnDone);
@@ -63,12 +83,11 @@ public class BookingSummaryActivity extends AppCompatActivity {
         // Hook up inputs
         final android.widget.EditText etName = findViewById(R.id.etName);
         final android.widget.EditText etAge = findViewById(R.id.etAge);
-        final android.widget.Spinner spinnerGender = findViewById(R.id.spinnerGender);
+        final android.widget.AutoCompleteTextView spinnerGender = findViewById(R.id.spinnerGender);
 
         // Populate spinner
         String[] genders = new String[]{"Male", "Female", "Other"};
-        android.widget.ArrayAdapter<String> genderAdapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_item, genders);
-        genderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        android.widget.ArrayAdapter<String> genderAdapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, genders);
         spinnerGender.setAdapter(genderAdapter);
 
         // Prefill if we had seat/travel info
@@ -81,7 +100,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
             String ageStr = etAge.getText() != null ? etAge.getText().toString().trim() : "";
             int passengerAge = -1;
             try { passengerAge = Integer.parseInt(ageStr); } catch (NumberFormatException ignored) {}
-            String passengerGender = (String) spinnerGender.getSelectedItem();
+            String passengerGender = spinnerGender.getText() != null ? spinnerGender.getText().toString().trim() : "";
 
             if (passengerName.isEmpty() || passengerAge <= 0) {
                 // Show error - could add a toast or error message here

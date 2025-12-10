@@ -214,4 +214,5 @@
     <string name="printing_ticket">Printing ticket...</string>
     <string name="ticket_printed_successfully">Ticket printed successfully</string>
     <string name="print_failed">Print failed</string>
+    <string name="hint_gender">Gender</string>
 </resources>

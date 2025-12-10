@@ -17,73 +17,19 @@
         <RelativeLayout
             android:id="@+id/headerSection"
             android:layout_width="match_parent"
-            android:layout_height="250dp"
+            android:layout_height="200dp"
             android:background="@drawable/premium_gradient_background"
             android:paddingStart="24dp"
             android:paddingTop="40dp"
             android:paddingEnd="24dp"
             android:paddingBottom="0dp">
 
-            <!-- Top Bar with Profile -->
-            <RelativeLayout
-                android:id="@+id/topBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:layout_centerVertical="true"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:alpha="0.85"
-                        android:fontFamily="sans-serif-light"
-                        android:letterSpacing="0.02"
-                        android:text="@string/welcome_back"
-                        android:textColor="#FFFFFF"
-                        android:textSize="15sp" />
-
-                    <TextView
-                        android:id="@+id/tvUserNameHome"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:fontFamily="sans-serif-medium"
-                        android:letterSpacing="-0.01"
-                        android:text="@string/user_name"
-                        android:textColor="#FFFFFF"
-                        android:textSize="26sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <!-- Profile Circle -->
-                <FrameLayout
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:background="@drawable/circle_white_background"
-                    android:elevation="4dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="@string/profile_title"
-                        android:src="@drawable/ic_profile"
-                        app:tint="#5B67CA" />
-                </FrameLayout>
-            </RelativeLayout>
 
             <!-- Journey Title -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/topBar"
                 android:layout_marginTop="32dp"
                 android:orientation="vertical">
 
