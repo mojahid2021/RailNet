@@ -1,0 +1,181 @@
+@startuml Booking Cleanup Flow
+!theme plain
+title Booking Cleanup & Expiration Activity Diagram
+
+|#LightGreen|Cleanup Jobs Scheduler|
+start
+:System starts;
+
+fork
+  :Schedule cleanup job\nevery 5 minutes;
+fork again
+  :Schedule statistics logging\nevery 10 minutes;
+end fork
+
+repeat
+  :Wait for scheduled time;
+  
+  |#LightBlue|Cleanup Service|
+  partition "Cleanup Expired Bookings" {
+    :Calculate cutoff time\n(current time - 10 minutes);
+    
+    :Query expired tickets:
+    - status: "pending"
+    - paymentStatus: "pending"
+    - expiresAt < current time;
+    
+    if (Found expired tickets?) then (no)
+      :Log "No expired bookings";
+    else (yes)
+      repeat :For each expired ticket;
+        
+        partition "Process Expired Ticket" {
+          :Begin transaction;
+          
+          :Update ticket:
+          - status: "expired"
+          - paymentStatus: "expired";
+          
+          :Fetch associated\nPaymentTransactions;
+          
+          repeat :For each transaction;
+            
+            if (Transaction status?) then (INITIATED/PENDING)
+              :Update PaymentTransaction:
+              - status: "CANCELLED"
+              - errorMessage: "Booking expired"
+              - completedAt: now;
+              
+              :Create PaymentLog:
+              - action: "EXPIRED"
+              - reason: "Payment timeout";
+              
+              :Increment\ncancelledTransactions counter;
+            endif
+            
+          repeat while (More transactions?) is (yes)
+          -> no;
+          
+          :Delete seat record\n(frees up seat);
+          
+          :Decrement booked seats\nin CompartmentBooking;
+          
+          :Commit transaction;
+          
+          :Increment\nexpiredTickets counter;
+          
+          :Log expiration details;
+        }
+        
+      repeat while (More expired tickets?) is (yes)
+      -> no;
+      
+      :Return CleanupResult:
+      - expiredTickets count
+      - cancelledTransactions count
+      - errors (if any);
+      
+      :Log cleanup summary;
+    endif
+  }
+
+repeat while (System running?) is (yes)
+-> System stopped;
+
+|#LightGreen|Cleanup Jobs Scheduler|
+:Stop scheduled jobs;
+stop
+
+note right of "Query expired tickets"
+  Expired tickets are identified by:
+  1. Still in pending status
+  2. Payment not completed
+  3. Past expiration time (10 min)
+end note
+
+note left of "Delete seat record"
+  Deleting the seat makes it
+  available for other bookings
+  on the same train/date
+end note
+
+|Admin|
+partition "Manual Cleanup (Admin Only)" {
+  start
+  :Request manual cleanup;
+  
+  |#LightBlue|Cleanup Service|
+  :Verify admin authorization;
+  
+  if (User is admin?) then (no)
+    :Return 403 error\n"Admin access required";
+    stop
+  else (yes)
+    :Execute cleanup process\n(same as scheduled);
+    
+    :Return cleanup results:
+    - Number of tickets expired
+    - Number of transactions cancelled
+    - Any errors encountered;
+    
+    |Admin|
+    :View cleanup report;
+    stop
+  endif
+}
+
+|Admin|
+partition "Cleanup Statistics (Admin Only)" {
+  start
+  :Request cleanup statistics;
+  
+  |#LightBlue|Cleanup Service|
+  :Verify admin authorization;
+  
+  if (User is admin?) then (no)
+    :Return 403 error\n"Admin access required";
+    stop
+  else (yes)
+    :Query current statistics:
+    - Total pending tickets
+    - Tickets expiring soon (< 5 min)
+    - Already expired tickets;
+    
+    :Return statistics:
+    - totalPending
+    - expiringSoon
+    - expired;
+    
+    |Admin|
+    :View statistics dashboard;
+    stop
+  endif
+}
+
+note right of "Manual Cleanup"
+  Admins can trigger cleanup
+  manually to free resources
+  immediately without waiting
+  for scheduled job
+end note
+
+|#LightGreen|Cleanup Jobs Scheduler|
+partition "Statistics Logging (Every 10 min)" {
+  repeat
+    :Wait 10 minutes;
+    
+    |#LightBlue|Cleanup Service|
+    :Fetch cleanup statistics;
+    
+    :Log to console:
+    - Pending bookings count
+    - Expiring soon count
+    - Expired count;
+    
+  repeat while (System running?) is (yes)
+  -> no;
+  
+  stop
+}
+
+@enduml
