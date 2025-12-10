@@ -4,7 +4,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +22,9 @@ import com.mojahid2021.railnet.R;
 import com.mojahid2021.railnet.network.ApiClient;
 import com.mojahid2021.railnet.network.ApiService;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -26,309 +32,507 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * BookingSummaryActivity handles the final step of ticket booking process.
+ * Displays passenger details form, processes booking, and initiates payment.
+ */
 public class BookingSummaryActivity extends AppCompatActivity {
+
+    // Constants
+    private static final String TAG = "BookingSummaryActivity";
+    private static final String[] GENDERS = {"Male", "Female", "Other"};
+    private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json");
+
+    // UI Components
+    private EditText etName;
+    private EditText etAge;
+    private AutoCompleteTextView spinnerGender;
+    private Button btnConfirm;
+    private Button btnDone;
+    private Button btnPay;
+    private View progressBooking;
+    private View cardResult;
+    private View cardPassenger;
+    private TextView tvPrice;
+    private TextView tvError;
+    private TextView tvTicketId;
+    private TextView tvTicketStatus;
+    private TextView tvTicketExpiry;
+    private TextView tvPassengerName;
+    private TextView tvPassengerAge;
+    private TextView tvPassengerGender;
+
+    // Data
+    private int trainScheduleId;
+    private int compartmentId;
+    private String seatNumber;
+    private int fromStationId;
+    private int toStationId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_booking_summary);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Set status bar icons to black (dark icons)
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
-
-        // Set up edge-to-edge display
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            v.setPadding(
-                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).left,
-                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).top,
-                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).right,
-                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-            );
-            return insets;
-        });
-
-        Button btnConfirm = findViewById(R.id.btnConfirm);
-        Button btnDone = findViewById(R.id.btnDone);
-        android.view.View progressBooking = findViewById(R.id.progressBooking);
-        android.view.View cardResult = findViewById(R.id.cardResult);
-        android.view.View cardPassenger = findViewById(R.id.cardPassenger);
-        android.widget.TextView tvPriceView = findViewById(R.id.tvPrice);
-        Button btnPay = findViewById(R.id.btnPay);
-        android.widget.TextView tvError = findViewById(R.id.tvError);
-
-        // New professional UI elements
-        TextView tvTicketId = findViewById(R.id.tvTicketId);
-        TextView tvTicketStatus = findViewById(R.id.tvTicketStatus);
-        TextView tvTicketExpiry = findViewById(R.id.tvTicketExpiry);
-        TextView tvPassengerName = findViewById(R.id.tvPassengerName);
-        TextView tvPassengerAge = findViewById(R.id.tvPassengerAge);
-        TextView tvPassengerGender = findViewById(R.id.tvPassengerGender);
-
-        // Read extras
-        final int trainScheduleId = getIntent().getIntExtra("trainScheduleId", -1);
-        final int compartmentId = getIntent().getIntExtra("compartmentId", -1);
-        final String seatNumber = getIntent().getStringExtra("seatNumber");
-        final String fromStationId = getIntent().getStringExtra("fromStationId");
-        final String toStationId = getIntent().getStringExtra("toStationId");
-        final int fromIdInt;
-        final int toIdInt;
-        int tmpFrom = -1, tmpTo = -1;
-        try { if (fromStationId != null) tmpFrom = Integer.parseInt(fromStationId); } catch (NumberFormatException ignored) {}
-        try { if (toStationId != null) tmpTo = Integer.parseInt(toStationId); } catch (NumberFormatException ignored) {}
-        fromIdInt = tmpFrom; toIdInt = tmpTo;
-
-        // Hook up inputs
-        final android.widget.EditText etName = findViewById(R.id.etName);
-        final android.widget.EditText etAge = findViewById(R.id.etAge);
-        final android.widget.AutoCompleteTextView spinnerGender = findViewById(R.id.spinnerGender);
-
-        // Populate spinner
-        String[] genders = new String[]{"Male", "Female", "Other"};
-        android.widget.ArrayAdapter<String> genderAdapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, genders);
-        spinnerGender.setAdapter(genderAdapter);
-
-        // Prefill if we had seat/travel info
-        // Prefill seat & price UI; journey fields will show layout placeholders unless real data provided
-        String seatLabel = "Seat: " + (seatNumber != null ? seatNumber : "-") + " • Compartment: " + compartmentId;
-        tvPriceView.setText(getString(R.string.amount_placeholder));
-
-        btnConfirm.setOnClickListener(v -> {
-            String passengerName = etName.getText() != null ? etName.getText().toString().trim() : "";
-            String ageStr = etAge.getText() != null ? etAge.getText().toString().trim() : "";
-            int passengerAge = -1;
-            try { passengerAge = Integer.parseInt(ageStr); } catch (NumberFormatException ignored) {}
-            String passengerGender = spinnerGender.getText() != null ? spinnerGender.getText().toString().trim() : "";
-
-            if (passengerName.isEmpty() || passengerAge <= 0) {
-                // Show error - could add a toast or error message here
-                return;
-            }
-
-            // Log the request details
-            Log.d("Booking", "Sending booking request: name=" + passengerName + ", age=" + passengerAge + ", gender=" + passengerGender + ", trainScheduleId=" + trainScheduleId + ", compartmentId=" + compartmentId + ", seatNumber=" + seatNumber);
-
-            // build JSON body
-            Gson g = new Gson();
-            String jsonReq = g.toJson(new TicketRequest(trainScheduleId, fromIdInt, toIdInt, compartmentId, seatNumber, passengerName, passengerAge, passengerGender));
-            RequestBody body = RequestBody.create(jsonReq, MediaType.parse("application/json"));
-            ApiService api = ApiClient.getRetrofit(this).create(ApiService.class);
-            Call<ResponseBody> call = api.bookTicket(body);
-            // show temporary message & lock UI
-            progressBooking.setVisibility(android.view.View.VISIBLE);
-            btnConfirm.setEnabled(false);
-            call.enqueue(new Callback<ResponseBody>() {
-                @Override
-                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                    Log.d("Booking", "onResponse called, isSuccessful: " + response.isSuccessful() + ", code: " + response.code());
-                    // Hide progress and re-enable button
-                    progressBooking.setVisibility(android.view.View.GONE);
-                    btnConfirm.setEnabled(true);
-                    tvError.setVisibility(android.view.View.GONE); // Hide any previous error
-
-                    if (response.isSuccessful()) {
-                        ResponseBody rb = response.body();
-                        if (rb == null) {
-                            tvError.setText(getString(R.string.booking_failed_empty));
-                            tvError.setVisibility(android.view.View.VISIBLE);
-                            return;
-                        }
-                        try (ResponseBody bodyRes = rb) {
-                            String resp = bodyRes.string();
-                            Log.d("Booking", "Response body: " + resp);
-                            // parse booking response JSON into BookingResponse (use instance parser for older Gson)
-                            JsonElement je = new JsonParser().parse(resp);
-                            BookingResponse br = g.fromJson(je, BookingResponse.class);
-                            // build display
-                            StringBuilder out = new StringBuilder();
-                            String bookedTicketId = null;
-                            if (br.ticket != null) {
-                                bookedTicketId = br.ticket.ticketId;
-                                out.append("Ticket ID: ").append(br.ticket.ticketId).append("\nStatus: ").append(br.ticket.status).append("\nPayment: ").append(br.ticket.paymentStatus).append("\nExpires: ").append(br.ticket.expiresAt).append("\n\n");
-                            }
-                            if (br.passenger != null) {
-                                out.append("Passenger: ").append(br.passenger.name).append(" (" + br.passenger.age + ") ").append(br.passenger.gender).append("\n");
-                            }
-                            if (br.journey != null) {
-                                if (br.journey.train != null) out.append("Train: ").append(br.journey.train.name).append(" (").append(br.journey.train.number).append(")\n");
-                                if (br.journey.route != null) out.append("Route: ").append(br.journey.route.from).append(" → ").append(br.journey.route.to).append("\n");
-                                if (br.journey.schedule != null) out.append("Date: ").append(br.journey.schedule.date).append(" Departs: ").append(br.journey.schedule.departureTime).append("\n");
-                            }
-                            if (br.seat != null) out.append("Seat: ").append(br.seat.number).append(" (" + br.seat.compartment + ") " + br.seat.clazz).append("\n");
-                            if (br.pricing != null) out.append("Amount: ").append(br.pricing.amount).append(" ").append(br.pricing.currency).append("\n");
-                            // show result card and reveal Pay button (store ticket id on the button tag)
-                            cardResult.setVisibility(android.view.View.VISIBLE);
-                            cardPassenger.setVisibility(android.view.View.GONE);
-
-                            // Update price professionally
-                            if (br.pricing != null) {
-                                String priceText = (br.pricing.currency != null ? br.pricing.currency : "৳") + " " +
-                                                 String.format("%.0f", br.pricing.amount);
-                                tvPriceView.setText(priceText);
-                            }
-
-                            // Populate professional booking confirmation UI
-                            if (br.ticket != null) {
-                                tvTicketId.setText(br.ticket.ticketId != null ? br.ticket.ticketId : "N/A");
-                                tvTicketStatus.setText(getStatusWithEmoji(br.ticket.status));
-                                tvTicketExpiry.setText(formatExpiryDate(br.ticket.expiresAt));
-                            }
-
-                            if (br.passenger != null) {
-                                tvPassengerName.setText(br.passenger.name != null ? br.passenger.name : "N/A");
-                                tvPassengerAge.setText(String.valueOf(br.passenger.age));
-                                tvPassengerGender.setText(br.passenger.gender != null ? br.passenger.gender : "N/A");
-                            }
-
-                            if (bookedTicketId != null) {
-                                btnPay.setTag(bookedTicketId);
-                                btnPay.setVisibility(android.view.View.VISIBLE);
-                            }
-                            btnConfirm.setVisibility(android.view.View.GONE);
-                            progressBooking.setVisibility(android.view.View.GONE);
-                        } catch (Exception ex) {
-                            Log.e("Booking", "parse error", ex);
-                            tvError.setText(getString(R.string.booking_response_error));
-                            tvError.setVisibility(android.view.View.VISIBLE);
-                        }
-                    } else {
-                        Log.d("Booking", "Response not successful, code: " + response.code());
-                        String errorMessage = getString(R.string.booking_failed_code, response.code());
-                        try {
-                            if (response.errorBody() != null) {
-                                String errorBody = response.errorBody().string();
-                                Log.d("Booking", "Error body: " + errorBody);
-                                // Try to extract meaningful error message from response
-                                if (!errorBody.isEmpty()) {
-                                    errorMessage = "Booking failed: " + errorBody;
-                                }
-                            }
-                        } catch (Exception e) {
-                            Log.e("Booking", "Failed to read error body", e);
-                        }
-                        tvError.setText(errorMessage);
-                        tvError.setVisibility(android.view.View.VISIBLE);
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<ResponseBody> call, Throwable t) {
-                    Log.e("Booking", "error", t);
-                    progressBooking.setVisibility(android.view.View.GONE);
-                    btnConfirm.setEnabled(true);
-                    tvError.setText(getString(R.string.network_error_booking, t.getMessage()));
-                    tvError.setVisibility(android.view.View.VISIBLE);
-                }
-            });
-        });
-
-        btnDone.setOnClickListener(v -> finish());
-        // Pay button behavior: simulate payment then show success and Done
-        btnPay.setOnClickListener(v -> {
-            Object tag = v.getTag();
-            if (!(tag instanceof String)) return;
-            String ticketIdToPay = (String) tag;
-            // disable and show progress
-            btnPay.setEnabled(false);
-            progressBooking.setVisibility(android.view.View.VISIBLE);
-            //tvSummary.setText(getString(R.string.payment_in_progress));
-
-            // build payment initiate body
-            Gson gson = new Gson();
-            String json = gson.toJson(new java.util.HashMap<String, String>() {{ put("ticketId", ticketIdToPay); }});
-            RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
-            ApiService api = ApiClient.getRetrofit(this).create(ApiService.class);
-            // Debug: log request body and base URL to help diagnose failures
-            try { Log.d("Payment", "initiatePayment request json=" + json + ", baseUrl=" + ApiClient.getRetrofit(BookingSummaryActivity.this).baseUrl()); } catch (Exception _e) { /* ignore */ }
-            java.util.Map<String, String> map = new java.util.HashMap<>();
-            map.put("ticketId", ticketIdToPay);
-            Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call = api.initiatePayment(map);
-            call.enqueue(new Callback<com.mojahid2021.railnet.network.PaymentInitiateResponse>() {
-                @Override
-                public void onResponse(Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call, retrofit2.Response<com.mojahid2021.railnet.network.PaymentInitiateResponse> response) {
-                    progressBooking.setVisibility(android.view.View.GONE);
-                    btnPay.setEnabled(true);
-                    tvError.setVisibility(android.view.View.GONE); // Hide any previous error
-
-                    if (response.isSuccessful()) {
-                        com.mojahid2021.railnet.network.PaymentInitiateResponse pr = response.body();
-                        if (pr == null) {
-                            Log.e("Payment", "initiatePayment: parsed response is null");
-                            tvError.setText(getString(R.string.booking_failed_empty));
-                            tvError.setVisibility(android.view.View.VISIBLE);
-                            return;
-                        }
-                        Log.d("Payment", "parsed initiatePayment: paymentUrl=" + pr.paymentUrl + ", transactionId=" + pr.transactionId);
-                        if (pr.paymentUrl != null && !pr.paymentUrl.isEmpty()) {
-                            android.content.Intent intent = new android.content.Intent(BookingSummaryActivity.this, WebviewActivity.class);
-                            intent.putExtra("url", pr.paymentUrl);
-                            startActivity(intent);
-                        } else {
-                            Log.e("Payment", "initiatePayment: missing paymentUrl in parsed response");
-                            tvError.setText("Payment initiation failed: Missing payment URL");
-                            tvError.setVisibility(android.view.View.VISIBLE);
-                        }
-                    } else {
-                        // Try to read error body for debugging
-                        String errBody = null;
-                        String errorMessage = "Payment initiation failed: " + response.code();
-                        try {
-                            if (response.errorBody() != null) errBody = response.errorBody().string();
-                            Log.w("Payment", "failed to read errorBody: " + errBody);
-                            if (errBody != null && !errBody.isEmpty()) {
-                                errorMessage = "Payment failed: " + errBody;
-                            }
-                        } catch (Exception e) {
-                            Log.w("Payment", "failed to read errorBody", e);
-                        }
-                        Log.e("Payment", "initiatePayment failed: code=" + response.code() + ", errorBody=" + errBody);
-                        tvError.setText(errorMessage);
-                        tvError.setVisibility(android.view.View.VISIBLE);
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call, Throwable t) {
-                    progressBooking.setVisibility(android.view.View.GONE);
-                    btnPay.setEnabled(true);
-                    Log.e("Payment", "initiatePayment network error", t);
-                    tvError.setText(getString(R.string.network_error_booking, t.getMessage()));
-                    tvError.setVisibility(android.view.View.VISIBLE);
-                }
-            });
-        });
+        setupWindow();
+        initializeViews();
+        extractIntentData();
+        setupGenderDropdown();
+        setupClickListeners();
+        updateUI();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Check if returning from payment WebView
+        handlePaymentReturn();
+    }
+
+    /**
+     * Sets up edge-to-edge display and status bar appearance
+     */
+    private void setupWindow() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            v.setPadding(
+                insets.getInsets(WindowInsetsCompat.Type.systemBars()).left,
+                insets.getInsets(WindowInsetsCompat.Type.systemBars()).top,
+                insets.getInsets(WindowInsetsCompat.Type.systemBars()).right,
+                insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+            );
+            return insets;
+        });
+    }
+
+    /**
+     * Initializes all view references
+     */
+    private void initializeViews() {
+        etName = findViewById(R.id.etName);
+        etAge = findViewById(R.id.etAge);
+        spinnerGender = findViewById(R.id.spinnerGender);
+        btnConfirm = findViewById(R.id.btnConfirm);
+        btnDone = findViewById(R.id.btnDone);
+        btnPay = findViewById(R.id.btnPay);
+        progressBooking = findViewById(R.id.progressBooking);
+        cardResult = findViewById(R.id.cardResult);
+        cardPassenger = findViewById(R.id.cardPassenger);
+        tvPrice = findViewById(R.id.tvPrice);
+        tvError = findViewById(R.id.tvError);
+        tvTicketId = findViewById(R.id.tvTicketId);
+        tvTicketStatus = findViewById(R.id.tvTicketStatus);
+        tvTicketExpiry = findViewById(R.id.tvTicketExpiry);
+        tvPassengerName = findViewById(R.id.tvPassengerName);
+        tvPassengerAge = findViewById(R.id.tvPassengerAge);
+        tvPassengerGender = findViewById(R.id.tvPassengerGender);
+    }
+
+    /**
+     * Extracts data from intent extras
+     */
+    private void extractIntentData() {
+        trainScheduleId = getIntent().getIntExtra("trainScheduleId", -1);
+        compartmentId = getIntent().getIntExtra("compartmentId", -1);
+        seatNumber = getIntent().getStringExtra("seatNumber");
+        fromStationId = parseIntSafely(getIntent().getStringExtra("fromStationId"));
+        toStationId = parseIntSafely(getIntent().getStringExtra("toStationId"));
+    }
+
+    /**
+     * Safely parses string to int, returns -1 on failure
+     */
+    private int parseIntSafely(String value) {
+        try {
+            return value != null ? Integer.parseInt(value) : -1;
+        } catch (NumberFormatException e) {
+            Log.w(TAG, "Failed to parse int: " + value, e);
+            return -1;
+        }
+    }
+
+    /**
+     * Sets up the gender dropdown with predefined options
+     */
+    private void setupGenderDropdown() {
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(
+            this, android.R.layout.simple_dropdown_item_1line, GENDERS);
+        spinnerGender.setAdapter(adapter);
+    }
+
+    /**
+     * Sets up all click listeners
+     */
+    private void setupClickListeners() {
+        btnConfirm.setOnClickListener(v -> handleBookingConfirmation());
+        btnDone.setOnClickListener(v -> finish());
+        btnPay.setOnClickListener(v -> initiatePayment());
+    }
+
+    /**
+     * Updates initial UI state
+     */
+    private void updateUI() {
+        tvPrice.setText(getString(R.string.amount_placeholder));
+    }
+
+    /**
+     * Handles booking confirmation button click
+     */
+    private void handleBookingConfirmation() {
+        PassengerData passengerData = collectPassengerData();
+        if (!isValidPassengerData(passengerData)) {
+            showValidationError();
+            return;
+        }
+
+        logBookingRequest(passengerData);
+        performBooking(passengerData);
+    }
+
+    /**
+     * Collects passenger data from input fields
+     */
+    private PassengerData collectPassengerData() {
+        String name = etName.getText() != null ? etName.getText().toString().trim() : "";
+        String ageStr = etAge.getText() != null ? etAge.getText().toString().trim() : "";
+        String gender = spinnerGender.getText() != null ? spinnerGender.getText().toString().trim() : "";
+
+        int age = -1;
+        try {
+            age = Integer.parseInt(ageStr);
+        } catch (NumberFormatException ignored) {}
+
+        return new PassengerData(name, age, gender);
+    }
+
+    /**
+     * Validates passenger data
+     */
+    private boolean isValidPassengerData(PassengerData data) {
+        return !data.name.isEmpty() && data.age > 0;
+    }
+
+    /**
+     * Shows validation error to user
+     */
+    private void showValidationError() {
+        // TODO: Show proper validation error message
+        Log.w(TAG, "Invalid passenger data");
+    }
+
+    /**
+     * Logs booking request details
+     */
+    private void logBookingRequest(PassengerData data) {
+        Log.d(TAG, String.format("Booking request: name=%s, age=%d, gender=%s, trainScheduleId=%d, compartmentId=%d, seatNumber=%s",
+            data.name, data.age, data.gender, trainScheduleId, compartmentId, seatNumber));
+    }
+
+    /**
+     * Performs the booking API call
+     */
+    private void performBooking(PassengerData data) {
+        showProgress(true);
+        btnConfirm.setEnabled(false);
+
+        TicketRequest request = new TicketRequest(trainScheduleId, fromStationId, toStationId,
+            compartmentId, seatNumber, data.name, data.age, data.gender);
+
+        Gson gson = new Gson();
+        String jsonRequest = gson.toJson(request);
+        RequestBody body = RequestBody.create(jsonRequest, JSON_MEDIA_TYPE);
+
+        ApiService api = ApiClient.getRetrofit(this).create(ApiService.class);
+        Call<ResponseBody> call = api.bookTicket(body);
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                handleBookingResponse(response);
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                handleBookingFailure(t);
+            }
+        });
+    }
+
+    /**
+     * Handles booking API response
+     */
+    private void handleBookingResponse(Response<ResponseBody> response) {
+        showProgress(false);
+        btnConfirm.setEnabled(true);
+        tvError.setVisibility(View.GONE);
+
+        if (response.isSuccessful()) {
+            processSuccessfulBooking(response);
+        } else {
+            handleBookingError(response);
+        }
+    }
+
+    /**
+     * Processes successful booking response
+     */
+    private void processSuccessfulBooking(Response<ResponseBody> response) {
+        try {
+            String responseBody = response.body().string();
+            Log.d(TAG, "Booking response: " + responseBody);
+
+            Gson gson = new Gson();
+            JsonParser parser = new JsonParser();
+            JsonElement jsonElement = parser.parse(responseBody);
+            BookingResponse bookingResponse = gson.fromJson(jsonElement, BookingResponse.class);
+
+            updateBookingUI(bookingResponse);
+            showBookingSuccess(bookingResponse);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Parse error", e);
+            tvError.setText(getString(R.string.booking_response_error));
+            tvError.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /**
+     * Handles booking API error
+     */
+    private void handleBookingError(Response<ResponseBody> response) {
+        Log.d(TAG, "Booking failed with code: " + response.code());
+        String errorMessage = getString(R.string.booking_failed_code, response.code());
+
+        try {
+            if (response.errorBody() != null) {
+                String errorBody = response.errorBody().string();
+                Log.d(TAG, "Error body: " + errorBody);
+                if (!errorBody.isEmpty()) {
+                    errorMessage = "Booking failed: " + errorBody;
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to read error body", e);
+        }
+
+        tvError.setText(errorMessage);
+        tvError.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Handles booking network failure
+     */
+    private void handleBookingFailure(Throwable t) {
+        Log.e(TAG, "Booking network error", t);
+        showProgress(false);
+        btnConfirm.setEnabled(true);
+        tvError.setText(getString(R.string.network_error_booking, t.getMessage()));
+        tvError.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Updates UI with booking response data
+     */
+    private void updateBookingUI(BookingResponse response) {
+        if (response.pricing != null) {
+            String currency = response.pricing.currency != null ? response.pricing.currency : "৳";
+            String priceText = currency + " " + String.format("%.0f", response.pricing.amount);
+            tvPrice.setText(priceText);
+        }
+
+        if (response.ticket != null) {
+            tvTicketId.setText(response.ticket.ticketId != null ? response.ticket.ticketId : "N/A");
+            tvTicketStatus.setText(getStatusWithEmoji(response.ticket.status));
+            tvTicketExpiry.setText(formatExpiryDate(response.ticket.expiresAt));
+        }
+
+        if (response.passenger != null) {
+            tvPassengerName.setText(response.passenger.name != null ? response.passenger.name : "N/A");
+            tvPassengerAge.setText(String.valueOf(response.passenger.age));
+            tvPassengerGender.setText(response.passenger.gender != null ? response.passenger.gender : "N/A");
+        }
+    }
+
+    /**
+     * Shows booking success state
+     */
+    private void showBookingSuccess(BookingResponse bookingResponse) {
+        cardResult.setVisibility(View.VISIBLE);
+        cardPassenger.setVisibility(View.GONE);
+        btnConfirm.setVisibility(View.GONE);
+        progressBooking.setVisibility(View.GONE);
+
+        // Always show Pay button for successful booking
+        btnPay.setVisibility(View.VISIBLE);
+        // Set tag to ticketId if available, otherwise use id as string
+        if (bookingResponse.ticket != null) {
+            if (bookingResponse.ticket.ticketId != null && !bookingResponse.ticket.ticketId.isEmpty()) {
+                btnPay.setTag(bookingResponse.ticket.ticketId);
+            } else {
+                btnPay.setTag(String.valueOf(bookingResponse.ticket.id));
+            }
+        } else {
+            btnPay.setTag("UNKNOWN_TICKET_ID");
+        }
+
+        // Scroll to bottom to show the Pay button
+        ScrollView scrollView = findViewById(R.id.scrollView);
+        scrollView.post(() -> scrollView.fullScroll(View.FOCUS_DOWN));
+    }
+
+    /**
+     * Initiates payment process
+     */
+    private void initiatePayment() {
+        Object tag = btnPay.getTag();
+        if (!(tag instanceof String)) return;
+
+        String ticketId = (String) tag;
+        showProgress(true);
+        btnPay.setEnabled(false);
+
+        Map<String, String> requestMap = new HashMap<>();
+        requestMap.put("ticketId", ticketId);
+
+        Gson gson = new Gson();
+        String jsonRequest = gson.toJson(requestMap);
+        RequestBody body = RequestBody.create(jsonRequest, JSON_MEDIA_TYPE);
+
+        ApiService api = ApiClient.getRetrofit(this).create(ApiService.class);
+        Log.d(TAG, "Payment request: " + jsonRequest);
+
+        Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call = api.initiatePayment(requestMap);
+        call.enqueue(new Callback<com.mojahid2021.railnet.network.PaymentInitiateResponse>() {
+            @Override
+            public void onResponse(Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call,
+                                 Response<com.mojahid2021.railnet.network.PaymentInitiateResponse> response) {
+                handlePaymentResponse(response);
+            }
+
+            @Override
+            public void onFailure(Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call, Throwable t) {
+                handlePaymentFailure(t);
+            }
+        });
+    }
+
+    /**
+     * Handles payment API response
+     */
+    private void handlePaymentResponse(Response<com.mojahid2021.railnet.network.PaymentInitiateResponse> response) {
+        showProgress(false);
+        btnPay.setEnabled(true);
+        tvError.setVisibility(View.GONE);
+
+        if (response.isSuccessful()) {
+            com.mojahid2021.railnet.network.PaymentInitiateResponse paymentResponse = response.body();
+            if (paymentResponse != null && paymentResponse.paymentUrl != null && !paymentResponse.paymentUrl.isEmpty()) {
+                Log.d(TAG, "Payment URL: " + paymentResponse.paymentUrl);
+                android.content.Intent intent = new android.content.Intent(this, WebviewActivity.class);
+                intent.putExtra("url", paymentResponse.paymentUrl);
+                startActivity(intent);
+            } else {
+                Log.e(TAG, "Missing payment URL in response");
+                tvError.setText("Payment initiation failed: Missing payment URL");
+                tvError.setVisibility(View.VISIBLE);
+            }
+        } else {
+            handlePaymentError(response);
+        }
+    }
+
+    /**
+     * Handles payment API error
+     */
+    private void handlePaymentError(Response<com.mojahid2021.railnet.network.PaymentInitiateResponse> response) {
+        String errorMessage = "Payment initiation failed: " + response.code();
+        try {
+            if (response.errorBody() != null) {
+                String errorBody = response.errorBody().string();
+                Log.w(TAG, "Payment error body: " + errorBody);
+                if (errorBody != null && !errorBody.isEmpty()) {
+                    errorMessage = "Payment failed: " + errorBody;
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to read payment error body", e);
+        }
+        Log.e(TAG, "Payment failed: " + errorMessage);
+        tvError.setText(errorMessage);
+        tvError.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Handles payment network failure
+     */
+    private void handlePaymentFailure(Throwable t) {
+        Log.e(TAG, "Payment network error", t);
+        showProgress(false);
+        btnPay.setEnabled(true);
+        tvError.setText(getString(R.string.network_error_booking, t.getMessage()));
+        tvError.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Handles return from payment WebView
+     */
+    private void handlePaymentReturn() {
         if (getIntent().getBooleanExtra("payment_completed", false)) {
             handlePaymentSuccess();
         }
     }
 
+    /**
+     * Handles successful payment completion
+     */
     private void handlePaymentSuccess() {
-        // Hide progress and show success state
-        android.view.View progressBooking = findViewById(R.id.progressBooking);
-        android.view.View cardResult = findViewById(R.id.cardResult);
-        Button btnPay = findViewById(R.id.btnPay);
-        Button btnDone = findViewById(R.id.btnDone);
-
-        progressBooking.setVisibility(android.view.View.GONE);
-        btnPay.setVisibility(android.view.View.GONE);
-        btnDone.setVisibility(android.view.View.VISIBLE);
-
-        // Payment success is handled by the WebView activity
-        // The success state is already shown in the booking confirmation card
+        showProgress(false);
+        btnPay.setVisibility(View.GONE);
+        btnDone.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * Shows or hides progress indicator
+     */
+    private void showProgress(boolean show) {
+        progressBooking.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    /**
+     * Formats expiry date for display
+     */
+    private String formatExpiryDate(String expiryString) {
+        if (expiryString == null) return "Expiry not set";
+        try {
+            String datePart = expiryString;
+            if (expiryString.contains("T")) {
+                datePart = expiryString.split("T")[0];
+            }
+            String formattedDate = formatDisplayDate(datePart);
+
+            if (expiryString.contains("T")) {
+                String timePart = expiryString.split("T")[1];
+                if (timePart.length() >= 5) {
+                    return formattedDate + " • " + timePart.substring(0, 5);
+                }
+            }
+            return formattedDate;
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to format expiry: " + expiryString, e);
+            return expiryString;
+        }
+    }
+
+    /**
+     * Formats display date
+     */
     private String formatDisplayDate(String dateString) {
         if (dateString == null) return "Date not available";
         try {
-            // Assuming date format is YYYY-MM-DD, convert to more readable format
             String[] parts = dateString.split("-");
             if (parts.length == 3) {
                 int year = Integer.parseInt(parts[0]);
@@ -340,53 +544,41 @@ public class BookingSummaryActivity extends AppCompatActivity {
                 return monthNames[month - 1] + " " + day + ", " + year;
             }
         } catch (Exception e) {
-            Log.w("BookingSummary", "Failed to parse date: " + dateString, e);
+            Log.w(TAG, "Failed to parse date: " + dateString, e);
         }
-        return dateString; // fallback to original
+        return dateString;
     }
 
-    private String formatExpiryDate(String expiryString) {
-        if (expiryString == null) return "Expiry not set";
-        try {
-            // Try to format the expiry date/time
-            // Assuming format like "2025-12-10T23:59:59Z" or similar
-            String datePart = expiryString;
-            if (expiryString.contains("T")) {
-                datePart = expiryString.split("T")[0];
-            }
-            String formattedDate = formatDisplayDate(datePart);
-
-            // Add time if available
-            if (expiryString.contains("T")) {
-                String timePart = expiryString.split("T")[1];
-                if (timePart.length() >= 5) {
-                    timePart = timePart.substring(0, 5); // HH:MM
-                    return formattedDate + " • " + timePart;
-                }
-            }
-            return formattedDate;
-        } catch (Exception e) {
-            Log.w("BookingSummary", "Failed to format expiry: " + expiryString, e);
-            return expiryString;
-        }
-    }
-
+    /**
+     * Gets status text with emoji
+     */
     private String getStatusWithEmoji(String status) {
         if (status == null) return "Unknown";
         switch (status.toLowerCase()) {
-            case "confirmed":
-                return "✅ Confirmed";
-            case "pending":
-                return "⏳ Pending";
-            case "cancelled":
-                return "❌ Cancelled";
-            case "completed":
-                return "🎉 Completed";
-            default:
-                return status;
+            case "confirmed": return "✅ Confirmed";
+            case "pending": return "⏳ Pending";
+            case "cancelled": return "❌ Cancelled";
+            case "completed": return "🎉 Completed";
+            default: return status;
         }
     }
 
+    /**
+     * Data class for passenger information
+     */
+    private static class PassengerData {
+        final String name;
+        final int age;
+        final String gender;
+
+        PassengerData(String name, int age, String gender) {
+            this.name = name;
+            this.age = age;
+            this.gender = gender;
+        }
+    }
+
+    // API Request/Response Models
     static class TicketRequest {
         int trainScheduleId;
         int fromStationId;
@@ -397,7 +589,8 @@ public class BookingSummaryActivity extends AppCompatActivity {
         int passengerAge;
         String passengerGender;
 
-        public TicketRequest(int trainScheduleId, int fromStationId, int toStationId, int compartmentId, String seatNumber, String passengerName, int passengerAge, String passengerGender) {
+        TicketRequest(int trainScheduleId, int fromStationId, int toStationId, int compartmentId,
+                     String seatNumber, String passengerName, int passengerAge, String passengerGender) {
             this.trainScheduleId = trainScheduleId;
             this.fromStationId = fromStationId;
             this.toStationId = toStationId;
@@ -409,7 +602,6 @@ public class BookingSummaryActivity extends AppCompatActivity {
         }
     }
 
-    // BookingResponse model matching your provided JSON
     static class BookingResponse {
         Ticket ticket;
         Passenger passenger;
@@ -418,12 +610,50 @@ public class BookingSummaryActivity extends AppCompatActivity {
         Pricing pricing;
     }
 
-    static class Ticket { public int id; public String ticketId; public String status; public String paymentStatus; public String expiresAt; public String createdAt; }
-    static class Passenger { public String name; public int age; public String gender; }
-    static class Journey { public TrainShort train; public RouteShort route; public Schedule schedule; }
-    static class TrainShort { public String name; public String number; }
-    static class RouteShort { public String from; public String to; }
-    static class Schedule { public String date; public String departureTime; }
-    static class Seat { public String number; public String compartment; public String clazz; }
-    static class Pricing { public double amount; public String currency; }
+    static class Ticket {
+        public int id;
+        public String ticketId;
+        public String status;
+        public String paymentStatus;
+        public String expiresAt;
+        public String createdAt;
+    }
+
+    static class Passenger {
+        public String name;
+        public int age;
+        public String gender;
+    }
+
+    static class Journey {
+        public TrainShort train;
+        public RouteShort route;
+        public Schedule schedule;
+    }
+
+    static class TrainShort {
+        public String name;
+        public String number;
+    }
+
+    static class RouteShort {
+        public String from;
+        public String to;
+    }
+
+    static class Schedule {
+        public String date;
+        public String departureTime;
+    }
+
+    static class Seat {
+        public String number;
+        public String compartment;
+        public String clazz;
+    }
+
+    static class Pricing {
+        public double amount;
+        public String currency;
+    }
 }
