@@ -276,6 +276,7 @@ Complete API documentation with examples is available in:
 
 - [API Reference](./API.md) - Detailed endpoint documentation
 - [API Examples](./examples.md) - Practical curl examples
+- [UML & Activity Diagrams](./DIAGRAMS.md) - System architecture and flow diagrams
 - Swagger UI: `http://localhost:3000/documentation`
 
 ## Contributing
