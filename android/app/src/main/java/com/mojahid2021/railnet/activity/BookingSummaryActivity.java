@@ -32,7 +32,6 @@ public class BookingSummaryActivity extends AppCompatActivity {
         android.view.View btnBack = findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> finish());
 
-        TextView tvSummary = findViewById(R.id.tvSummary);
         Button btnConfirm = findViewById(R.id.btnConfirm);
         Button btnDone = findViewById(R.id.btnDone);
         android.view.View progressBooking = findViewById(R.id.progressBooking);
@@ -45,6 +44,14 @@ public class BookingSummaryActivity extends AppCompatActivity {
         android.widget.TextView tvSeatInfo = findViewById(R.id.tvSeatInfo);
         android.widget.TextView tvPriceView = findViewById(R.id.tvPrice);
         Button btnPay = findViewById(R.id.btnPay);
+
+        // New professional UI elements
+        TextView tvTicketId = findViewById(R.id.tvTicketId);
+        TextView tvTicketStatus = findViewById(R.id.tvTicketStatus);
+        TextView tvTicketExpiry = findViewById(R.id.tvTicketExpiry);
+        TextView tvPassengerName = findViewById(R.id.tvPassengerName);
+        TextView tvPassengerAge = findViewById(R.id.tvPassengerAge);
+        TextView tvPassengerGender = findViewById(R.id.tvPassengerGender);
 
         // Read extras
         final int trainScheduleId = getIntent().getIntExtra("trainScheduleId", -1);
@@ -84,7 +91,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
             String passengerGender = (String) spinnerGender.getSelectedItem();
 
             if (passengerName.isEmpty() || passengerAge <= 0) {
-                tvSummary.setText(getString(R.string.please_enter_valid_passenger));
+                // Show error - could add a toast or error message here
                 return;
             }
 
@@ -100,7 +107,6 @@ public class BookingSummaryActivity extends AppCompatActivity {
             // show temporary message & lock UI
             progressBooking.setVisibility(android.view.View.VISIBLE);
             btnConfirm.setEnabled(false);
-            tvSummary.setText(getString(R.string.booking_progress_passenger, passengerName));
             call.enqueue(new Callback<ResponseBody>() {
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -108,7 +114,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
                     if (response.isSuccessful()) {
                         ResponseBody rb = response.body();
                         if (rb == null) {
-                            tvSummary.setText(getString(R.string.booking_failed_empty));
+                            //tvSummary.setText(getString(R.string.booking_failed_empty));
                             return;
                         }
                         try (ResponseBody bodyRes = rb) {
@@ -152,44 +158,41 @@ public class BookingSummaryActivity extends AppCompatActivity {
                                     tvJourneyRoute.setText(routeInfo);
                                 }
                                 if (br.journey.schedule != null) {
-                                    String scheduleInfo = (br.journey.schedule.date != null ? br.journey.schedule.date : "") +
+                                    // Format date professionally
+                                    String formattedDate = formatDisplayDate(br.journey.schedule.date);
+                                    String scheduleInfo = formattedDate +
                                                         (br.journey.schedule.departureTime != null ? " • " + br.journey.schedule.departureTime : "");
                                     tvJourneySchedule.setText(scheduleInfo);
                                 }
                             }
 
-                            // Update seat info if available
+                            // Update seat info professionally
                             if (br.seat != null) {
-                                String seatInfo = "Seat: " + (br.seat.number != null ? br.seat.number : "") +
+                                String seatInfo = "Seat " + (br.seat.number != null ? br.seat.number : "") +
                                                 " • Compartment " + (br.seat.compartment != null ? br.seat.compartment : "") +
-                                                " • Class: " + (br.seat.clazz != null ? br.seat.clazz : "");
+                                                " • " + (br.seat.clazz != null ? br.seat.clazz : "") + " Class";
                                 tvSeatInfo.setText(seatInfo);
                             }
 
-                            // Update price if available
+                            // Update price professionally
                             if (br.pricing != null) {
                                 String priceText = (br.pricing.currency != null ? br.pricing.currency : "৳") + " " +
-                                                 String.valueOf(br.pricing.amount);
+                                                 String.format("%.0f", br.pricing.amount);
                                 tvPriceView.setText(priceText);
                             }
 
-                            // Show booking confirmation message
-                            StringBuilder summaryText = new StringBuilder();
-                            summaryText.append("Booking confirmed successfully!\n\n");
-
+                            // Populate professional booking confirmation UI
                             if (br.ticket != null) {
-                                summaryText.append("Ticket ID: ").append(br.ticket.ticketId != null ? br.ticket.ticketId : "N/A").append("\n");
-                                summaryText.append("Status: ").append(br.ticket.status != null ? br.ticket.status : "N/A").append("\n");
+                                tvTicketId.setText(br.ticket.ticketId != null ? br.ticket.ticketId : "N/A");
+                                tvTicketStatus.setText(getStatusWithEmoji(br.ticket.status));
+                                tvTicketExpiry.setText(formatExpiryDate(br.ticket.expiresAt));
                             }
 
                             if (br.passenger != null) {
-                                summaryText.append("Passenger: ").append(br.passenger.name != null ? br.passenger.name : "N/A");
-                                summaryText.append(" (").append(br.passenger.age).append(", ").append(br.passenger.gender != null ? br.passenger.gender : "N/A").append(")\n");
+                                tvPassengerName.setText(br.passenger.name != null ? br.passenger.name : "N/A");
+                                tvPassengerAge.setText(String.valueOf(br.passenger.age));
+                                tvPassengerGender.setText(br.passenger.gender != null ? br.passenger.gender : "N/A");
                             }
-
-                            summaryText.append("\nPlease proceed with payment to complete your booking.");
-
-                            tvSummary.setText(summaryText.toString());
 
                             if (bookedTicketId != null) {
                                 btnPay.setTag(bookedTicketId);
@@ -199,7 +202,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
                             progressBooking.setVisibility(android.view.View.GONE);
                         } catch (Exception ex) {
                             Log.e("Booking", "parse error", ex);
-                            tvSummary.setText(getString(R.string.booking_response_error));
+                            //tvSummary.setText(getString(R.string.booking_response_error));
                             progressBooking.setVisibility(android.view.View.GONE);
                             btnConfirm.setEnabled(true);
                         }
@@ -213,7 +216,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
                         } catch (Exception e) {
                             Log.e("Booking", "Failed to read error body", e);
                         }
-                        tvSummary.setText(getString(R.string.booking_failed_code, response.code()));
+                        //tvSummary.setText(getString(R.string.booking_failed_code, response.code()));
                         progressBooking.setVisibility(android.view.View.GONE);
                         btnConfirm.setEnabled(true);
                     }
@@ -222,7 +225,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(Call<ResponseBody> call, Throwable t) {
                     Log.e("Booking", "error", t);
-                    tvSummary.setText(getString(R.string.network_error_booking, t.getMessage()));
+                    //tvSummary.setText(getString(R.string.network_error_booking, t.getMessage()));
                     progressBooking.setVisibility(android.view.View.GONE);
                     btnConfirm.setEnabled(true);
                 }
@@ -238,7 +241,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
             // disable and show progress
             btnPay.setEnabled(false);
             progressBooking.setVisibility(android.view.View.VISIBLE);
-            tvSummary.setText(getString(R.string.payment_in_progress));
+            //tvSummary.setText(getString(R.string.payment_in_progress));
 
             // build payment initiate body
             Gson gson = new Gson();
@@ -258,7 +261,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
                         com.mojahid2021.railnet.network.PaymentInitiateResponse pr = response.body();
                         if (pr == null) {
                             Log.e("Payment", "initiatePayment: parsed response is null");
-                            tvSummary.setText(getString(R.string.booking_failed_empty));
+                            //tvSummary.setText(getString(R.string.booking_failed_empty));
                             btnPay.setEnabled(true);
                             return;
                         }
@@ -269,7 +272,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
                             startActivity(intent);
                         } else {
                             Log.e("Payment", "initiatePayment: missing paymentUrl in parsed response");
-                            tvSummary.setText("Payment initiation failed");
+                            //tvSummary.setText("Payment initiation failed");
                             btnPay.setEnabled(true);
                         }
                     } else {
@@ -281,7 +284,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
                             Log.w("Payment", "failed to read errorBody", e);
                         }
                         Log.e("Payment", "initiatePayment failed: code=" + response.code() + ", errorBody=" + errBody);
-                        tvSummary.setText("Payment initiation failed: " + response.code());
+                        //tvSummary.setText("Payment initiation failed: " + response.code());
                         btnPay.setEnabled(true);
                     }
                 }
@@ -290,7 +293,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
                 public void onFailure(Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call, Throwable t) {
                     progressBooking.setVisibility(android.view.View.GONE);
                     Log.e("Payment", "initiatePayment network error", t);
-                    tvSummary.setText(getString(R.string.network_error_booking, t.getMessage()));
+                    //tvSummary.setText(getString(R.string.network_error_booking, t.getMessage()));
                     btnPay.setEnabled(true);
                 }
             });
@@ -312,18 +315,75 @@ public class BookingSummaryActivity extends AppCompatActivity {
         android.view.View cardResult = findViewById(R.id.cardResult);
         Button btnPay = findViewById(R.id.btnPay);
         Button btnDone = findViewById(R.id.btnDone);
-        TextView tvSummary = findViewById(R.id.tvSummary);
 
         progressBooking.setVisibility(android.view.View.GONE);
         btnPay.setVisibility(android.view.View.GONE);
         btnDone.setVisibility(android.view.View.VISIBLE);
 
-        // Update summary with payment success message
-        String successMessage = "Payment completed successfully!\n\n" +
-                               "Your ticket has been confirmed and is ready for travel.\n" +
-                               "Check your email for the complete ticket details and QR code.\n\n" +
-                               "Safe travels!";
-        tvSummary.setText(successMessage);
+        // Payment success is handled by the WebView activity
+        // The success state is already shown in the booking confirmation card
+    }
+
+    private String formatDisplayDate(String dateString) {
+        if (dateString == null) return "Date not available";
+        try {
+            // Assuming date format is YYYY-MM-DD, convert to more readable format
+            String[] parts = dateString.split("-");
+            if (parts.length == 3) {
+                int year = Integer.parseInt(parts[0]);
+                int month = Integer.parseInt(parts[1]);
+                int day = Integer.parseInt(parts[2]);
+
+                String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+                return monthNames[month - 1] + " " + day + ", " + year;
+            }
+        } catch (Exception e) {
+            Log.w("BookingSummary", "Failed to parse date: " + dateString, e);
+        }
+        return dateString; // fallback to original
+    }
+
+    private String formatExpiryDate(String expiryString) {
+        if (expiryString == null) return "Expiry not set";
+        try {
+            // Try to format the expiry date/time
+            // Assuming format like "2025-12-10T23:59:59Z" or similar
+            String datePart = expiryString;
+            if (expiryString.contains("T")) {
+                datePart = expiryString.split("T")[0];
+            }
+            String formattedDate = formatDisplayDate(datePart);
+
+            // Add time if available
+            if (expiryString.contains("T")) {
+                String timePart = expiryString.split("T")[1];
+                if (timePart.length() >= 5) {
+                    timePart = timePart.substring(0, 5); // HH:MM
+                    return formattedDate + " • " + timePart;
+                }
+            }
+            return formattedDate;
+        } catch (Exception e) {
+            Log.w("BookingSummary", "Failed to format expiry: " + expiryString, e);
+            return expiryString;
+        }
+    }
+
+    private String getStatusWithEmoji(String status) {
+        if (status == null) return "Unknown";
+        switch (status.toLowerCase()) {
+            case "confirmed":
+                return "✅ Confirmed";
+            case "pending":
+                return "⏳ Pending";
+            case "cancelled":
+                return "❌ Cancelled";
+            case "completed":
+                return "🎉 Completed";
+            default:
+                return status;
+        }
     }
 
     static class TicketRequest {
