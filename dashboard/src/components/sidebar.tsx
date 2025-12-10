@@ -84,12 +84,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className="p-4 border-t border-sidebar-border">
-        <div className="rounded-lg bg-sidebar-accent p-4">
-          <p className="text-xs font-medium text-sidebar-foreground">Pro Plan</p>
-          <p className="text-xs text-muted-foreground mt-1">Expires in 12 days</p>
-        </div>
-      </div>
     </div>
   );
 }
