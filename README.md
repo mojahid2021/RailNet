@@ -97,7 +97,10 @@ RailNet is a mobile (Android) passenger railway application backed by a robust m
 
 ### System Architecture & Workflow
 
-For a detailed view of the system architecture and workflows, please refer to [WORKFLOW.md](WORKFLOW.md).
+For a detailed view of the system architecture and workflows, please refer to:
+- **Backend Architecture & Workflows**: [WORKFLOW.md](WORKFLOW.md)
+- **Backend UML Diagrams**: [backend/docs/DIAGRAMS.md](backend/docs/DIAGRAMS.md)
+- **Android UML Diagrams**: [android/ANDROID_UML_DIAGRAMS.md](android/ANDROID_UML_DIAGRAMS.md)
 
 #### High-level System Overview
 ```
