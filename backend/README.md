@@ -545,6 +545,13 @@ prisma/
 └── migrations/         # Database migrations
 ```
 
+## Documentation
+
+- **API Documentation**: [http://localhost:3000/documentation](http://localhost:3000/documentation) - Interactive Swagger UI
+- **Architecture Diagrams**: [docs/DIAGRAMS.md](./docs/DIAGRAMS.md) - UML class diagrams and activity flow diagrams
+- **API Reference**: [docs/API.md](./docs/API.md) - Detailed endpoint documentation
+- **Examples**: [docs/examples.md](./docs/examples.md) - Practical usage examples
+
 ## Testing the API
 
 1. Start the server: `npm run dev`
