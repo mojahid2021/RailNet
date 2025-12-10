@@ -143,6 +143,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
                             // show result card and reveal Pay button (store ticket id on the button tag)
                             cardResult.setVisibility(android.view.View.VISIBLE);
                             cardPassenger.setVisibility(android.view.View.GONE);
+                            cardJourney.setVisibility(android.view.View.GONE); // Hide journey card after booking
 
                             // Populate journey card with booking details
                             if (br.journey != null) {
