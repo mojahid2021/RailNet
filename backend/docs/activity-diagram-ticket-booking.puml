@@ -1,0 +1,113 @@
+@startuml Ticket Booking Flow
+!theme plain
+title Ticket Booking Activity Diagram
+
+|User|
+start
+:Select train schedule;
+:Choose compartment type;
+:Enter passenger details;
+:Select seat number;
+:Submit booking request;
+
+|#LightBlue|Backend API|
+:Receive booking request;
+:Verify JWT token;
+
+if (User authenticated?) then (no)
+  :Return 401 error\n"Authentication required";
+  stop
+else (yes)
+  partition "Database Transaction" {
+    :Begin transaction;
+    
+    :Fetch train schedule\nwith route and train details;
+    
+    if (Schedule exists?) then (no)
+      :Rollback transaction;
+      :Return 404 error\n"Schedule not found";
+      stop
+    else (yes)
+      :Verify from/to stations\nare in route;
+      
+      if (Stations valid?) then (no)
+        :Rollback transaction;
+        :Return 400 error\n"Invalid station sequence";
+        stop
+      else (yes)
+        :Find train compartment\nfor selected type;
+        
+        if (Compartment exists?) then (no)
+          :Rollback transaction;
+          :Return 404 error\n"Compartment not found";
+          stop
+        else (yes)
+          :Check if seat number\nalready booked;
+          
+          if (Seat already booked?) then (yes)
+            :Rollback transaction;
+            :Return 409 error\n"Seat already booked";
+            stop
+          else (no)
+            :Get/Create CompartmentBooking\nfor schedule;
+            
+            :Check total booked seats\nvs capacity;
+            
+            if (Capacity exceeded?) then (yes)
+              :Rollback transaction;
+              :Return 409 error\n"No available seats";
+              stop
+            else (no)
+              :Calculate distance\nbetween stations;
+              
+              :Calculate price\n(distance * compartment price);
+              
+              :Create seat record\nwith seat number;
+              
+              :Generate unique ticket ID\n(TrainName-Date-Seat-Random);
+              
+              :Create ticket record with:
+              - ticketId
+              - userId
+              - trainScheduleId
+              - fromStationId/toStationId
+              - seatId
+              - seatNumber
+              - passenger details
+              - price
+              - status: "pending"
+              - paymentStatus: "pending"
+              - expiresAt: now + 10 minutes;
+              
+              :Increment booked seats\nin CompartmentBooking;
+              
+              :Commit transaction;
+              
+              :Return ticket details\nwith booking confirmation;
+              
+              |User|
+              :Receive booking confirmation;
+              :Proceed to payment;
+              stop
+            endif
+          endif
+        endif
+      endif
+    endif
+  }
+endif
+
+note right of "Create ticket record"
+  Ticket automatically expires
+  after 10 minutes if payment
+  is not completed
+end note
+
+note left of "Database Transaction"
+  Using Prisma transaction
+  ensures atomicity and prevents
+  race conditions during
+  concurrent bookings
+end note
+
+@enduml
