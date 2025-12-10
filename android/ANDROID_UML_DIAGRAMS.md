@@ -229,10 +229,11 @@ classDiagram
 
     %% Network Layer
     class ApiClient {
-        -Retrofit secureRetrofit
-        -String PREFS_NAME
-        -String TOKEN_KEY
-        +getRetrofit(Context) Retrofit
+        -{static} Retrofit secureRetrofit
+        -{static} String TAG
+        -{static} String PREFS_NAME
+        -{static} String TOKEN_KEY
+        +{static} getRetrofit(Context) Retrofit
     }
 
     class ApiService {
@@ -1647,6 +1648,19 @@ When updating the Android codebase:
 - **Singleton Pattern**: ApiClient uses singleton for Retrofit instance
 - **Observer Pattern**: LiveData and callbacks for async operations
 - **Interceptor Pattern**: AuthInterceptor for request modification
+
+### Important Implementation Notes
+
+1. **ApiClient Static Retrofit Instance**:
+   - The `ApiClient` class uses a static Retrofit instance for simplicity
+   - While this can potentially lead to memory leaks in complex scenarios, it's acceptable for this application's scope
+   - For production applications with complex lifecycle requirements, consider using dependency injection frameworks like Dagger/Hilt
+   - The static fields are marked with `{static}` notation in the class diagram to reflect the actual implementation
+
+2. **Error Handling in Activity Diagrams**:
+   - All activity diagrams include comprehensive error handling paths
+   - Network failures have fallback mechanisms (e.g., cached data for stations)
+   - Transaction failures in booking flow include rollback handling on the backend
 
 ### Key Design Decisions
 

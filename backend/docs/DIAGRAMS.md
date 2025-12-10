@@ -1307,6 +1307,18 @@ graph TB
 - The system architecture provides a high-level overview of the backend structure
 - Color coding is used to distinguish different types of components and outcomes
 
+### Important Design Decisions
+
+1. **Ticket-Seat Relationship (One-to-One with Unique Constraint)**:
+   - The `seatId` field in the Ticket model has a unique constraint (UK), enforcing that each seat can only be assigned to one active ticket at a time
+   - This prevents double-booking of seats for the same train schedule
+   - When a ticket expires or is cancelled, the seat becomes available for booking again
+
+2. **Ticket-PaymentTransaction Relationship (One-to-One)**:
+   - Each ticket has exactly one payment transaction
+   - The `ticketId` field in PaymentTransaction is unique, ensuring one-to-one mapping
+   - This simplifies payment tracking and prevents multiple payment attempts for the same ticket
+
 ## How to Use These Diagrams
 
 1. **In GitHub/GitLab**: These diagrams will render automatically in markdown preview
