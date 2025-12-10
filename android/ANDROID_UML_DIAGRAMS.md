@@ -25,58 +25,144 @@ This comprehensive class diagram shows all major classes in the Android applicat
 
 ```mermaid
 classDiagram
-    %% Main Activity and Base Classes
+    %% Models
+    class Station {
+        +id : int
+        +name : String
+        +city : String
+        +latitude : double
+        +longitude : double
+        +createdAt : String
+        +updatedAt : String
+    }
+
+    class Train {
+        +id : int
+        +name : String
+        +number : String
+        +trainRouteId : int
+        +trainRoute : TrainRoute
+        +compartments : List_CompartmentAssignment
+    }
+
+    class TrainSchedule {
+        +id : int
+        +trainId : int
+        +trainRouteId : int
+        +train : Train
+        +trainRoute : TrainRoute
+        +date : String
+        +time : String
+        +stationTimes : List_StationTime
+        +createdAt : String
+        +updatedAt : String
+    }
+
+    class TrainRoute {
+        +id : int
+        +name : String
+        +startStationId : int
+        +endStationId : int
+        +startStation : SimpleStation
+        +endStation : SimpleStation
+        +routeStations : List_RouteStation
+    }
+
+    class Compartment {
+        +id : int
+        +name : String
+        +clazz : String
+        +type : String
+        +price : double
+        +totalSeats : int
+    }
+
+    class CompartmentAssignment {
+        +id : int
+        +trainId : int
+        +compartmentId : int
+        +quantity : int
+        +compartment : Compartment
+    }
+
+    class StationTime {
+        +id : int
+        +trainScheduleId : int
+        +stationId : int
+        +station : SimpleStation
+        +arrivalTime : String
+        +departureTime : String
+        +sequence : int
+    }
+
+    class UserTicket {
+        +ticket : TicketInfo
+        +passenger : PassengerInfo
+        +journey : JourneyInfo
+        +seat : SeatInfo
+        +pricing : PricingInfo
+    }
+
+    class PaymentInitiateResponse {
+        +paymentUrl : String
+        +transactionId : String
+        +sessionKey : String
+    }
+
+    %% Activities / Fragments
     class MainActivity {
-        -LinearLayout homeLayout
-        -LinearLayout mapLayout
-        -LinearLayout profileLayout
-        -ImageView homeIcon, mapIcon, profileIcon
-        -TextView homeText, mapText, profileText
+        -homeLayout : LinearLayout
+        -mapLayout : LinearLayout
+        -profileLayout : LinearLayout
+        -homeIcon : ImageView
+        -mapIcon : ImageView
+        -profileIcon : ImageView
+        -homeText : TextView
+        -mapText : TextView
+        -profileText : TextView
         +onCreate(Bundle)
         +loadFragment(Fragment)
         -configureNavigation()
-        -highLightNavigation(LinearLayout)
+        -highlightNavigation(LinearLayout)
         -resetNavigation()
     }
 
-    %% Authentication Activities
     class LoginActivity {
-        -TextInputEditText emailEditText
-        -TextInputEditText passwordEditText
-        -LinearLayout loginButton
-        -TextView registerLink
-        -SharedPreferences sharedPreferences
+        -emailEditText : TextInputEditText
+        -passwordEditText : TextInputEditText
+        -loginButton : LinearLayout
+        -registerLink : TextView
+        -sharedPreferences : SharedPreferences
         +onCreate(Bundle)
-        -login(String, String)
+        -login(email : String, password : String)
     }
 
     class RegisterActivity {
-        -TextInputEditText firstName
-        -TextInputEditText lastName
-        -TextInputEditText emailEditText
-        -TextInputEditText phone
-        -TextInputEditText address
-        -TextInputEditText passwordEditText
-        -LinearLayout registerButton
-        -TextView loginLink
+        -firstName : TextInputEditText
+        -lastName : TextInputEditText
+        -emailEditText : TextInputEditText
+        -phone : TextInputEditText
+        -address : TextInputEditText
+        -passwordEditText : TextInputEditText
+        -registerButton : LinearLayout
+        -loginLink : TextView
         +onCreate(Bundle)
-        -register(String, String, String, String, String, String)
+        -register(firstName : String, lastName : String, email : String, phone : String, address : String, password : String)
     }
 
-    %% Fragment Classes
     class HomeFragment {
-        -AutoCompleteTextView actvFrom
-        -AutoCompleteTextView actvTo
-        -TextView tvSelectedDate
-        -Button btnSearchTrains
-        -List~Station~ stations
-        -Map~String,Station~ stationByName
-        -Map~Integer,Station~ stationById
-        -Station selectedFrom
-        -Station selectedTo
-        -Calendar selectedDate
-        -SimpleDateFormat displayDateFormat
-        -SimpleDateFormat apiDateFormat
+        -actvFrom : AutoCompleteTextView
+        -actvTo : AutoCompleteTextView
+        -tvSelectedDate : TextView
+        -btnSearchTrains : Button
+        -stations : List_Station
+        -stationByName : Map_string_station
+        -stationById : Map_int_station
+        -selectedFrom : Station
+        -selectedTo : Station
+        -selectedDate : Calendar
+        -displayDateFormat : SimpleDateFormat
+        -apiDateFormat : SimpleDateFormat
         +onCreateView(LayoutInflater, ViewGroup, Bundle)
         -initializeViews(View)
         -setupEventListeners()
@@ -85,21 +171,21 @@ classDiagram
         -performSearch()
         -showDatePicker()
         -loadStationsFromPreferences()
-        -saveStationToPreferences(String, String, Station)
+        -saveStationToPreferences(keyFrom : String, keyTo : String, station : Station)
     }
 
     class ProfileFragment {
-        -ImageView ivCoverPhoto
-        -ImageView ivProfileAvatar
-        -FloatingActionButton fabEditCover
-        -MaterialButton btnEditProfile
-        -TextView tvUserName
-        -TextView tvMemberDate
-        -TextView tvUserEmail
-        -TextView tvUserPhone
-        -TextView tvUserLocation
-        -LinearLayout btnMyTickets
-        -LinearLayout btnSettings
+        -ivCoverPhoto : ImageView
+        -ivProfileAvatar : ImageView
+        -fabEditCover : FloatingActionButton
+        -btnEditProfile : MaterialButton
+        -tvUserName : TextView
+        -tvMemberDate : TextView
+        -tvUserEmail : TextView
+        -tvUserPhone : TextView
+        -tvUserLocation : TextView
+        -btnMyTickets : LinearLayout
+        -btnSettings : LinearLayout
         +onCreateView(LayoutInflater, ViewGroup, Bundle)
         +onViewCreated(View, Bundle)
         -initializeViews(View)
@@ -116,233 +202,138 @@ classDiagram
         +onCreateView(LayoutInflater, ViewGroup, Bundle)
     }
 
-    %% Activity Classes
     class TrainsActivity {
-        -RecyclerView rvSchedules
-        -TrainScheduleAdapter adapter
-        -View progressContainer
-        -View emptyContainer
-        -TextView tvTrainCount
+        -rvSchedules : RecyclerView
+        -adapter : TrainScheduleAdapter
+        -progressContainer : View
+        -emptyContainer : View
+        -tvTrainCount : TextView
         +onCreate(Bundle)
-        -fetchTrainSchedules(String, String, String)
+        -fetchTrainSchedules(from : String, to : String, date : String)
     }
 
     class CompartmentActivity {
-        -ChipGroup chipGroupCompartments
-        -RecyclerView rvSeats
-        -SeatAdapter seatAdapter
-        -View btnNext
-        -String[] selectedSeat
-        -int[] selectedCompartmentId
+        -chipGroupCompartments : ChipGroup
+        -rvSeats : RecyclerView
+        -seatAdapter : SeatAdapter
+        -btnNext : View
+        -selectedSeat : String[]
+        -selectedCompartmentId : int[]
         +onCreate(Bundle)
-        -populateCompartments(TrainSchedule)
+        -populateCompartments(schedule : TrainSchedule)
     }
 
     class BookingSummaryActivity {
-        -EditText etName
-        -EditText etAge
-        -Spinner spinnerGender
-        -Button btnConfirm
-        -Button btnPay
-        -Button btnDone
-        -TextView tvTicketId
-        -TextView tvTicketStatus
-        -TextView tvPassengerName
-        -View progressBooking
-        -View cardResult
+        -etName : EditText
+        -etAge : EditText
+        -spinnerGender : Spinner
+        -btnConfirm : Button
+        -btnPay : Button
+        -btnDone : Button
+        -tvTicketId : TextView
+        -tvTicketStatus : TextView
+        -tvPassengerName : TextView
+        -progressBooking : View
+        -cardResult : View
         +onCreate(Bundle)
-        -bookTicket(String, int, String)
-        -initiatePayment(String)
+        -bookTicket(name : String, age : int, gender : String)
+        -initiatePayment(ticketId : String)
         -handlePaymentSuccess()
-        -formatDisplayDate(String)
-        -getStatusWithEmoji(String)
+        -formatDisplayDate(isoDate : String)
+        -getStatusWithEmoji(status : String)
     }
 
     class MyTicketsActivity {
-        -RecyclerView rv
-        -TicketsAdapter adapter
-        -View progress
-        -TextView tvEmpty
-        -TextView tvError
-        -TextView tvActiveTickets
-        -TextView tvUpcomingTrips
-        -TextView tvTotalBookings
-        -ImageView btnBack
+        -rv : RecyclerView
+        -adapter : TicketsAdapter
+        -progress : View
+        -tvEmpty : TextView
+        -tvError : TextView
+        -tvActiveTickets : TextView
+        -tvUpcomingTrips : TextView
+        -tvTotalBookings : TextView
+        -btnBack : ImageView
         +onCreate(Bundle)
         -fetchTickets()
-        -updateStatistics(List~UserTicket~)
-        -showLoading(boolean)
+        -updateStatistics(tickets : List_UserTicket)
+        -showLoading(show : boolean)
         -showEmpty()
-        -showError(String)
+        -showError(message : String)
     }
 
     class WebviewActivity {
-        -WebView webView
-        -ProgressBar progressBar
+        -webView : WebView
+        -progressBar : ProgressBar
         +onCreate(Bundle)
-        -setupWebView(String)
+        -setupWebView(url : String)
     }
 
-    %% Adapter Classes
+    %% Adapters / Network / Utils
     class TrainScheduleAdapter {
-        -List~TrainSchedule~ items
-        -OnItemClickListener listener
-        +TrainScheduleAdapter(OnItemClickListener)
-        +setItems(List~TrainSchedule~)
-        +onCreateViewHolder(ViewGroup, int)
-        +onBindViewHolder(ViewHolder, int)
+        -items : List_TrainSchedule
+        -listener : OnItemClickListener
+        +TrainScheduleAdapter(listener : OnItemClickListener)
+        +setItems(items : List_TrainSchedule)
+        +onCreateViewHolder(parent : ViewGroup, viewType : int)
+        +onBindViewHolder(holder : ViewHolder, position : int)
         +getItemCount()
-        -bindToHolder(ViewHolder, TrainSchedule)
-        -formatTrainName(TrainSchedule)
-        -formatTimesAndRoute(TrainSchedule)
-        -formatPrice(TrainSchedule)
+        -bindToHolder(holder : ViewHolder, schedule : TrainSchedule)
     }
 
     class SeatAdapter {
-        -List~String~ items
-        -String selectedSeat
-        -OnSeatClickListener listener
-        +SeatAdapter(List~String~, OnSeatClickListener)
-        +setItems(List~String~)
-        +setSelectedSeat(String)
-        +onCreateViewHolder(ViewGroup, int)
-        +onBindViewHolder(ViewHolder, int)
-        +getItemCount()
+        -items : List_String
+        -selectedSeat : String
+        -listener : OnSeatClickListener
+        +SeatAdapter(items : List_String, listener : OnSeatClickListener)
+        +setItems(items : List_String)
+        +setSelectedSeat(seat : String)
     }
 
     class TicketsAdapter {
-        -List~UserTicket~ items
-        +setItems(List~UserTicket~)
-        +onCreateViewHolder(ViewGroup, int)
-        +onBindViewHolder(ViewHolder, int)
+        -items : List_UserTicket
+        +setItems(items : List_UserTicket)
+        +onCreateViewHolder(parent : ViewGroup, viewType : int)
+        +onBindViewHolder(holder : ViewHolder, position : int)
         +getItemCount()
-        -formatDateTime(String)
-        -getStatusColor(String)
     }
 
-    %% Network Layer
     class ApiClient {
-        -Retrofit secureRetrofit
-        -String PREFS_NAME
-        -String TOKEN_KEY
-        +getRetrofit(Context) Retrofit
+        -secureRetrofit : Retrofit
+        -PREFS_NAME : String
+        -TOKEN_KEY : String
+        +getRetrofit(context : Context) : Retrofit
     }
 
     class ApiService {
         <<interface>>
-        +login(Map~String,String~) Call~ResponseBody~
-        +register(Map~String,String~) Call~ResponseBody~
-        +getProfile() Call~ResponseBody~
-        +getStations() Call~List~Station~~
-        +searchTrainSchedules(String, String, String) Call~ResponseBody~
-        +bookTicket(RequestBody) Call~ResponseBody~
-        +getTickets() Call~ResponseBody~
-        +initiatePayment(Map~String,String~) Call~PaymentInitiateResponse~
+        +login(body : Map_string_string) : Call_ResponseBody
+        +register(body : Map_string_string) : Call_ResponseBody
+        +getProfile() : Call_ResponseBody
+        +getStations() : Call_List_Station
+        +searchTrainSchedules(from : String, to : String, date : String) : Call_ResponseBody
+        +bookTicket(body : RequestBody) : Call_ResponseBody
+        +getTickets() : Call_ResponseBody
+        +initiatePayment(body : Map_string_string) : Call_PaymentInitiateResponse
     }
 
     class AuthInterceptor {
-        -Context context
-        -String TOKEN_KEY
-        +intercept(Chain) Response
+        -context : Context
+        -TOKEN_KEY : String
+        +intercept(chain : Chain) : Response
     }
 
-    %% Model Classes
-    class Station {
-        +int id
-        +String name
-        +String city
-        +double latitude
-        +double longitude
-        +String createdAt
-        +String updatedAt
-    }
-
-    class TrainSchedule {
-        +int id
-        +int trainId
-        +int trainRouteId
-        +Train train
-        +TrainRoute trainRoute
-        +String date
-        +String time
-        +List~StationTime~ stationTimes
-        +String createdAt
-        +String updatedAt
-    }
-
-    class Train {
-        +int id
-        +String name
-        +String number
-        +int trainRouteId
-        +TrainRoute trainRoute
-        +List~CompartmentAssignment~ compartments
-    }
-
-    class TrainRoute {
-        +int id
-        +String name
-        +int startStationId
-        +int endStationId
-        +SimpleStation startStation
-        +SimpleStation endStation
-        +List~RouteStation~ routeStations
-    }
-
-    class Compartment {
-        +int id
-        +String name
-        +String clazz
-        +String type
-        +double price
-        +int totalSeats
-    }
-
-    class CompartmentAssignment {
-        +int id
-        +int trainId
-        +int compartmentId
-        +int quantity
-        +Compartment compartment
-    }
-
-    class StationTime {
-        +int id
-        +int trainScheduleId
-        +int stationId
-        +SimpleStation station
-        +String arrivalTime
-        +String departureTime
-        +int sequence
-    }
-
-    class UserTicket {
-        +TicketInfo ticket
-        +PassengerInfo passenger
-        +JourneyInfo journey
-        +SeatInfo seat
-        +PricingInfo pricing
-    }
-
-    class PaymentInitiateResponse {
-        +String paymentUrl
-        +String transactionId
-        +String sessionKey
-    }
-
-    %% Utility Classes
     class DateTimeUtils {
-        +formatTimeFromIso(String) String
-        +formatTimeForDisplay(String) String
-        +formatDateForDisplay(String) String
+        +formatTimeFromIso(iso : String) : String
+        +formatTimeForDisplay(time : String) : String
+        +formatDateForDisplay(date : String) : String
     }
 
     class TicketPrintDocumentAdapter {
-        -Context context
-        -UserTicket ticket
-        +TicketPrintDocumentAdapter(Context, UserTicket)
-        +onLayout(PrintAttributes, PrintAttributes, CancellationSignal, LayoutResultCallback, Bundle)
-        +onWrite(PageRange[], ParcelFileDescriptor, CancellationSignal, WriteResultCallback)
+        -context : Context
+        -ticket : UserTicket
+        +TicketPrintDocumentAdapter(context : Context, ticket : UserTicket)
+        +onLayout(oldAttr : PrintAttributes, newAttr : PrintAttributes, token : CancellationSignal, callback : LayoutResultCallback, extras : Bundle)
+        +onWrite(pages : PageRange[], destination : ParcelFileDescriptor, token : CancellationSignal, callback : WriteResultCallback)
     }
 
     %% Relationships
@@ -401,22 +392,25 @@ classDiagram
     CompartmentAssignment --> Compartment : contains
     StationTime --> Station : references
 
-    %% Interface implementations
-    TrainScheduleAdapter ..|> "RecyclerView.Adapter" : implements
-    SeatAdapter ..|> "RecyclerView.Adapter" : implements
-    TicketsAdapter ..|> "RecyclerView.Adapter" : implements
+    %% Implementations - safe interface name
+    class RecyclerViewAdapter
 
-    %% Inner classes
-    TrainScheduleAdapter +-- ViewHolder
-    TrainScheduleAdapter +-- OnItemClickListener
-    SeatAdapter +-- ViewHolder
-    SeatAdapter +-- OnSeatClickListener
-    TicketsAdapter +-- ViewHolder
+    TrainScheduleAdapter ..|> RecyclerViewAdapter : implements
+    SeatAdapter ..|> RecyclerViewAdapter : implements
+    TicketsAdapter ..|> RecyclerViewAdapter : implements
 
-    BookingSummaryActivity +-- TicketRequest
-    BookingSummaryActivity +-- BookingResponse
-    BookingSummaryActivity +-- Ticket
-    BookingSummaryActivity +-- Passenger
+    %% Inner / nested classes (use composition token '*--' for containment)
+    TrainScheduleAdapter *-- ViewHolder
+    TrainScheduleAdapter *-- OnItemClickListener
+    SeatAdapter *-- ViewHolder
+    SeatAdapter *-- OnSeatClickListener
+    TicketsAdapter *-- ViewHolder
+
+    BookingSummaryActivity *-- TicketRequest
+    BookingSummaryActivity *-- BookingResponse
+    BookingSummaryActivity *-- Ticket
+    BookingSummaryActivity *-- Passenger
+
 ```
 
 ---
@@ -813,97 +807,97 @@ flowchart TD
     DoLogin --> SaveToken[Save JWT Token]
     SaveToken --> LoadHome[Load MainActivity with HomeFragment]
     CheckAuth -->|Yes| LoadHome
-    
+
     LoadHome --> FetchStations[Fetch Stations from API]
     FetchStations --> PopulateDropdowns[Populate From/To Dropdowns]
     PopulateDropdowns --> WaitInput[Wait for User Input]
-    
+
     WaitInput --> SelectFrom[User Selects From Station]
     SelectFrom --> SelectTo[User Selects To Station]
     SelectTo --> SelectDate[User Selects Date]
     SelectDate --> ClickSearch[User Clicks Search]
-    
+
     ClickSearch --> ValidateInput{Validate Input?}
     ValidateInput -->|Invalid| ShowError1[Show Validation Error]
     ShowError1 --> WaitInput
     ValidateInput -->|Valid| CheckSameStation{From != To?}
-    
-    CheckSameStation -->|Same| ShowError2[Show "Stations Must be Different"]
+
+    CheckSameStation -->|Same| ShowError2[Show Stations Must be Different]
     ShowError2 --> WaitInput
     CheckSameStation -->|Different| SearchTrains[Call searchTrainSchedules API]
-    
+
     SearchTrains --> ProcessResponse{Response OK?}
     ProcessResponse -->|Error| ShowNetworkError[Show Network Error]
     ShowNetworkError --> WaitInput
     ProcessResponse -->|Success| ParseSchedules[Parse Train Schedules]
-    
+
     ParseSchedules --> HasTrains{Trains Available?}
-    HasTrains -->|No| ShowEmptyState[Show "No Trains Found"]
+    HasTrains -->|No| ShowEmptyState[Show No Trains Found]
     ShowEmptyState --> WaitInput
     HasTrains -->|Yes| DisplayTrains[Display Train List]
-    
+
     DisplayTrains --> WaitSelection[Wait for Train Selection]
     WaitSelection --> UserSelectsTrain[User Clicks Train]
     UserSelectsTrain --> NavigateCompartment[Navigate to CompartmentActivity]
-    
+
     NavigateCompartment --> ShowCompartments[Show Compartment Chips]
     ShowCompartments --> WaitCompartment[Wait for Compartment Selection]
     WaitCompartment --> SelectCompartment[User Selects Compartment]
     SelectCompartment --> LoadSeats[Load Available Seats]
     LoadSeats --> DisplaySeats[Display Seat Grid]
-    
+
     DisplaySeats --> WaitSeat[Wait for Seat Selection]
     WaitSeat --> SelectSeat[User Selects Seat]
-    SelectSeat --> ShowNextButton[Show "Go Next" Button]
+    SelectSeat --> ShowNextButton[Show Go Next Button]
     ShowNextButton --> ClickNext[User Clicks Next]
-    
+
     ClickNext --> NavigateBooking[Navigate to BookingSummaryActivity]
     NavigateBooking --> ShowPassengerForm[Show Passenger Details Form]
     ShowPassengerForm --> WaitPassenger[Wait for Input]
     WaitPassenger --> FillDetails[User Fills Details]
     FillDetails --> ClickConfirm[User Clicks Confirm]
-    
+
     ClickConfirm --> ValidatePassenger{Valid Details?}
     ValidatePassenger -->|Invalid| ShowPassengerError[Show Validation Error]
     ShowPassengerError --> WaitPassenger
     ValidatePassenger -->|Valid| BuildRequest[Build Booking Request]
-    
+
     BuildRequest --> CallBookAPI[Call bookTicket API]
     CallBookAPI --> BookingResponse{Booking Success?}
     BookingResponse -->|Failed| ShowBookingError[Show Booking Error]
     ShowBookingError --> End1([Booking Failed])
     BookingResponse -->|Success| ParseBooking[Parse Booking Response]
-    
+
     ParseBooking --> DisplayTicket[Display Ticket Details]
-    DisplayTicket --> ShowPayButton[Show "Pay Now" Button]
+    DisplayTicket --> ShowPayButton[Show Pay Now Button]
     ShowPayButton --> WaitPayment[Wait for Payment]
     WaitPayment --> ClickPay[User Clicks Pay]
-    
+
     ClickPay --> InitiatePayment[Call initiatePayment API]
     InitiatePayment --> PaymentInit{Init Success?}
     PaymentInit -->|Failed| ShowPaymentError[Show Payment Error]
     ShowPaymentError --> End2([Payment Failed])
     PaymentInit -->|Success| GetGatewayURL[Get Payment Gateway URL]
-    
+
     GetGatewayURL --> OpenWebView[Open WebviewActivity]
     OpenWebView --> LoadGateway[Load SSLCommerz Gateway]
     LoadGateway --> UserPays[User Enters Payment Details]
     UserPays --> SubmitPayment[Submit Payment]
-    
+
     SubmitPayment --> ProcessPayment{Payment Result?}
     ProcessPayment -->|Cancelled| PaymentCancelled[Update Status: Cancelled]
     ProcessPayment -->|Failed| PaymentFailed[Update Status: Failed]
     ProcessPayment -->|Success| ValidatePayment[Validate with Gateway]
-    
+
     ValidatePayment --> UpdateTicket[Update Ticket: Confirmed]
     UpdateTicket --> UpdatePaymentStatus[Update Payment: Paid]
     UpdatePaymentStatus --> ShowSuccess[Show Success State]
     ShowSuccess --> ClickDone[User Clicks Done]
-    
+
     ClickDone --> End3([Booking Complete])
     PaymentCancelled --> End4([Payment Cancelled])
     PaymentFailed --> End5([Payment Failed])
-    
+
     style Start fill:#90EE90
     style End1 fill:#FFB6C1
     style End2 fill:#FFB6C1
@@ -919,325 +913,7 @@ flowchart TD
     style ValidatePayment fill:#87CEEB
     style CallBookAPI fill:#87CEEB
     style InitiatePayment fill:#87CEEB
-```
 
----
-
-### User Login Process
-
-This activity diagram shows the detailed login process with error handling.
-
-```mermaid
-flowchart TD
-    Start([User Opens App]) --> CheckToken{Token Exists?}
-    CheckToken -->|Yes| ValidateToken{Token Valid?}
-    ValidateToken -->|Yes| LoadMain[Load MainActivity]
-    ValidateToken -->|No| ClearToken[Clear Invalid Token]
-    ClearToken --> ShowLogin
-    CheckToken -->|No| ShowLogin[Show LoginActivity]
-    
-    ShowLogin --> DisplayForm[Display Login Form]
-    DisplayForm --> WaitInput[Wait for User Input]
-    WaitInput --> EnterEmail[User Enters Email]
-    EnterEmail --> EnterPassword[User Enters Password]
-    EnterPassword --> ClickLogin[User Clicks Login]
-    
-    ClickLogin --> ValidateInput{Input Valid?}
-    ValidateInput -->|Empty Fields| ShowError1[Show "Please fill all fields"]
-    ShowError1 --> WaitInput
-    ValidateInput -->|Valid| BuildCredentials[Build Credentials Map]
-    
-    BuildCredentials --> GetRetrofit[Get Retrofit Instance]
-    GetRetrofit --> CreateService[Create ApiService]
-    CreateService --> CallLoginAPI[Call login API]
-    
-    CallLoginAPI --> ShowProgress[Show Loading]
-    ShowProgress --> WaitResponse[Wait for Response]
-    WaitResponse --> CheckResponse{Response OK?}
-    
-    CheckResponse -->|Network Error| HideProgress1[Hide Loading]
-    HideProgress1 --> ShowNetworkError[Show "Network error"]
-    ShowNetworkError --> WaitInput
-    
-    CheckResponse -->|Failed 401| HideProgress2[Hide Loading]
-    HideProgress2 --> ShowLoginFailed[Show "Login failed"]
-    ShowLoginFailed --> WaitInput
-    
-    CheckResponse -->|Success 200| HideProgress3[Hide Loading]
-    HideProgress3 --> ParseResponse[Parse JSON Response]
-    ParseResponse --> ParseSuccess{Parse OK?}
-    
-    ParseSuccess -->|Failed| ShowParseError[Show "Failed to parse response"]
-    ShowParseError --> WaitInput
-    ParseSuccess -->|Success| ExtractToken[Extract JWT Token]
-    
-    ExtractToken --> GetSharedPrefs[Get SharedPreferences]
-    GetSharedPrefs --> SaveToken[Save Token to Preferences]
-    SaveToken --> CommitPrefs[Commit Changes]
-    CommitPrefs --> ShowSuccess[Show Success Message]
-    ShowSuccess --> NavigateMain[Navigate to MainActivity]
-    
-    NavigateMain --> FinishLogin[Finish LoginActivity]
-    FinishLogin --> LoadMain
-    LoadMain --> CheckMainToken{Token Exists?}
-    CheckMainToken -->|No| BackToLogin[Return to LoginActivity]
-    CheckMainToken -->|Yes| LoadHomeFragment[Load HomeFragment]
-    LoadHomeFragment --> End([User Logged In])
-    
-    BackToLogin --> ShowLogin
-    
-    style Start fill:#90EE90
-    style End fill:#98FB98
-    style ShowError1 fill:#FFB6C1
-    style ShowNetworkError fill:#FFB6C1
-    style ShowLoginFailed fill:#FFB6C1
-    style ShowParseError fill:#FFB6C1
-    style CallLoginAPI fill:#87CEEB
-    style SaveToken fill:#87CEEB
-    style ShowProgress fill:#E6E6FA
-```
-
----
-
-### Train Search Process
-
-This activity diagram illustrates the train search functionality flow.
-
-```mermaid
-flowchart TD
-    Start([HomeFragment Loaded]) --> FetchStations[Fetch Stations from API]
-    FetchStations --> ShowProgress1[Show Loading]
-    ShowProgress1 --> CallStationsAPI[Call getStations API]
-    
-    CallStationsAPI --> StationsResponse{Response OK?}
-    StationsResponse -->|Error| HideProgress1[Hide Loading]
-    HideProgress1 --> LogError[Log Error]
-    LogError --> ShowEmptyDropdowns[Show Empty Dropdowns]
-    StationsResponse -->|Success| HideProgress2[Hide Loading]
-    
-    HideProgress2 --> ParseStations[Parse Station List]
-    ParseStations --> BuildMaps[Build stationByName & stationById Maps]
-    BuildMaps --> ExtractNames[Extract Station Names]
-    ExtractNames --> CreateAdapter[Create ArrayAdapter]
-    CreateAdapter --> SetAdapters[Set Adapters to AutoCompleteTextViews]
-    SetAdapters --> RestoreSelections[Restore Previous Selections from Prefs]
-    
-    RestoreSelections --> WaitUserAction[Wait for User Action]
-    
-    WaitUserAction --> UserAction{User Action?}
-    UserAction -->|Clicks From Layout| ShowFromDropdown[Show From Dropdown]
-    ShowFromDropdown --> WaitFromSelect[Wait for Selection]
-    WaitFromSelect --> SelectFromStation[User Selects From Station]
-    SelectFromStation --> SaveFromPrefs[Save From to SharedPreferences]
-    SaveFromPrefs --> UpdateFromUI[Update From UI]
-    UpdateFromUI --> WaitUserAction
-    
-    UserAction -->|Clicks To Layout| ShowToDropdown[Show To Dropdown]
-    ShowToDropdown --> WaitToSelect[Wait for Selection]
-    WaitToSelect --> SelectToStation[User Selects To Station]
-    SelectToStation --> SaveToPrefs[Save To to SharedPreferences]
-    SaveToPrefs --> UpdateToUI[Update To UI]
-    UpdateToUI --> WaitUserAction
-    
-    UserAction -->|Clicks Date Layout| ShowDatePicker[Show DatePickerDialog]
-    ShowDatePicker --> SetMinDate[Set Min Date to Today]
-    SetMinDate --> WaitDateSelect[Wait for Selection]
-    WaitDateSelect --> SelectDate[User Selects Date]
-    SelectDate --> UpdateDateCalendar[Update selectedDate Calendar]
-    UpdateDateCalendar --> FormatDate[Format Date to yyyy-MM-dd]
-    FormatDate --> UpdateDateUI[Update Date TextView]
-    UpdateDateUI --> WaitUserAction
-    
-    UserAction -->|Clicks Search Button| StartValidation[Start Validation]
-    StartValidation --> LoadFromPrefs{Load Stations from Prefs?}
-    LoadFromPrefs -->|Not Selected| TryLoadPrefs[Load from SharedPreferences]
-    TryLoadPrefs --> LoadFromPrefs
-    LoadFromPrefs -->|Loaded| CheckStations{Both Stations Selected?}
-    
-    CheckStations -->|No| ShowAlert1[Show "Please select both stations"]
-    ShowAlert1 --> WaitUserAction
-    CheckStations -->|Yes| CompareStat{From != To?}
-    
-    CompareStat -->|Same| ShowAlert2[Show "Stations must be different"]
-    ShowAlert2 --> WaitUserAction
-    CompareStat -->|Different| PrepareSearch[Prepare Search Parameters]
-    
-    PrepareSearch --> FormatAPIDate[Format Date to yyyy-MM-dd]
-    FormatAPIDate --> ConvertIds[Convert Station IDs to String]
-    ConvertIds --> CreateIntent[Create Intent to TrainsActivity]
-    CreateIntent --> PutExtras[Put fromId, toId, date, names]
-    PutExtras --> StartActivity[Start TrainsActivity]
-    
-    StartActivity --> TrainsOnCreate[TrainsActivity onCreate]
-    TrainsOnCreate --> ReadExtras[Read Intent Extras]
-    ReadExtras --> ValidateExtras{Extras Valid?}
-    ValidateExtras -->|Invalid| FinishActivity[Finish Activity]
-    ValidateExtras -->|Valid| ShowProgressTrains[Show Progress Container]
-    
-    ShowProgressTrains --> HideRecycler[Hide RecyclerView]
-    HideRecycler --> CallSearchAPI[Call searchTrainSchedules API]
-    CallSearchAPI --> SearchResponse{Response OK?}
-    
-    SearchResponse -->|Network Error| HideProgressError[Hide Progress]
-    HideProgressError --> ShowEmptyState[Show Empty State]
-    ShowEmptyState --> SetCountZero[Set "0 Trains"]
-    SetCountZero --> End1([Search Failed])
-    
-    SearchResponse -->|Failed| HideProgressFailed[Hide Progress]
-    HideProgressFailed --> LogFailure[Log Response Code]
-    LogFailure --> ShowEmptyState
-    
-    SearchResponse -->|Success| HideProgressSuccess[Hide Progress]
-    HideProgressSuccess --> ReadBody[Read Response Body]
-    ReadBody --> ParseJSON[Parse JSON]
-    ParseJSON --> CheckArray{Array or Object?}
-    
-    CheckArray -->|Array| UseArray[Use as JsonArray]
-    CheckArray -->|Object with data| ExtractData[Extract "data" array]
-    ExtractData --> UseArray
-    UseArray --> CheckSize{Array Size > 0?}
-    
-    CheckSize -->|Empty| ShowNoTrains[Show "No Trains Found"]
-    ShowNoTrains --> End2([No Results])
-    CheckSize -->|Has Items| ConvertToList[Convert to List<TrainSchedule>]
-    
-    ConvertToList --> ShowRecycler[Show RecyclerView]
-    ShowRecycler --> HideEmpty[Hide Empty State]
-    HideEmpty --> SetCount[Set Train Count]
-    SetCount --> UpdateAdapter[adapter.setItems schedules]
-    UpdateAdapter --> DisplayTrains[Display Train Cards]
-    DisplayTrains --> End3([Search Complete])
-    
-    style Start fill:#90EE90
-    style End1 fill:#FFB6C1
-    style End2 fill:#FFA500
-    style End3 fill:#98FB98
-    style ShowAlert1 fill:#FFE4B5
-    style ShowAlert2 fill:#FFE4B5
-    style CallStationsAPI fill:#87CEEB
-    style CallSearchAPI fill:#87CEEB
-    style ShowProgress1 fill:#E6E6FA
-    style ShowProgressTrains fill:#E6E6FA
-```
-
----
-
-### Profile Management Process
-
-This activity diagram shows the profile viewing and navigation flow.
-
-```mermaid
-flowchart TD
-    Start([User Opens Profile]) --> LoadProfileFrag[Load ProfileFragment]
-    LoadProfileFrag --> InitViews[Initialize Views]
-    InitViews --> SetupListeners[Setup Click Listeners]
-    SetupListeners --> CallProfileAPI[Call getProfile API]
-    
-    CallProfileAPI --> ShowProgress[Show Loading]
-    ShowProgress --> WaitResponse[Wait for Response]
-    WaitResponse --> CheckResponse{Response OK?}
-    
-    CheckResponse -->|Network Error| HideProgress1[Hide Loading]
-    HideProgress1 --> ShowErrorToast[Show "Error loading user data"]
-    ShowErrorToast --> LogError[Log Error Details]
-    LogError --> ShowDefaultUI[Show Default Profile UI]
-    ShowDefaultUI --> WaitAction[Wait for User Action]
-    
-    CheckResponse -->|Failed| HideProgress2[Hide Loading]
-    HideProgress2 --> ShowFailToast[Show "Failed to load user data"]
-    ShowFailToast --> LogResponse[Log Response Code]
-    LogResponse --> ShowDefaultUI
-    
-    CheckResponse -->|Success| HideProgress3[Hide Loading]
-    HideProgress3 --> ReadBody[Read Response Body]
-    ReadBody --> ParseJSON[Parse JSON]
-    ParseJSON --> ParseSuccess{Parse OK?}
-    
-    ParseSuccess -->|Failed| ShowParseError[Show Parse Error]
-    ShowParseError --> ShowDefaultUI
-    ParseSuccess -->|Success| ExtractFields[Extract User Fields]
-    
-    ExtractFields --> GetFirstName[Get firstName]
-    GetFirstName --> GetLastName[Get lastName]
-    GetLastName --> GetEmail[Get email]
-    GetEmail --> GetPhone[Get phone]
-    GetPhone --> GetAddress[Get address]
-    GetAddress --> GetCreatedAt[Get createdAt]
-    
-    GetCreatedAt --> UpdateName[Update tvUserName]
-    UpdateName --> UpdateEmail[Update tvUserEmail]
-    UpdateEmail --> UpdatePhone[Update tvUserPhone]
-    UpdatePhone --> UpdateLocation[Update tvUserLocation]
-    UpdateLocation --> UpdateMemberDate[Update tvMemberDate]
-    UpdateMemberDate --> DisplayProfile[Display Complete Profile]
-    
-    DisplayProfile --> WaitAction
-    
-    WaitAction --> UserAction{User Action?}
-    
-    UserAction -->|Clicks Cover Photo| ShowCoverToast[Show "View cover photo"]
-    ShowCoverToast --> WaitAction
-    
-    UserAction -->|Clicks Edit Cover FAB| ShowEditCoverToast[Show "Change cover photo"]
-    ShowEditCoverToast --> WaitAction
-    
-    UserAction -->|Clicks Profile Avatar| ShowAvatarToast[Show "Change profile photo"]
-    ShowAvatarToast --> WaitAction
-    
-    UserAction -->|Clicks Edit Profile| ShowEditToast[Show "Edit Profile"]
-    ShowEditToast --> WaitAction
-    
-    UserAction -->|Clicks My Tickets| NavigateTickets[Navigate to MyTicketsActivity]
-    NavigateTickets --> LoadMyTickets[Load MyTicketsActivity]
-    LoadMyTickets --> ShowTicketProgress[Show Progress]
-    ShowTicketProgress --> CallTicketsAPI[Call getTickets API]
-    
-    CallTicketsAPI --> TicketsResponse{Response OK?}
-    TicketsResponse -->|Error| HideTicketProgress1[Hide Progress]
-    HideTicketProgress1 --> ShowNetworkError[Show "Network error"]
-    ShowNetworkError --> End1([Tickets Load Failed])
-    
-    TicketsResponse -->|Failed| HideTicketProgress2[Hide Progress]
-    HideTicketProgress2 --> ShowErrorMessage[Show Error Message]
-    ShowErrorMessage --> End1
-    
-    TicketsResponse -->|Success| HideTicketProgress3[Hide Progress]
-    HideTicketProgress3 --> ParseTickets[Parse Ticket Array]
-    ParseTickets --> ConvertToList[Convert to List<UserTicket>]
-    ConvertToList --> CalcStats[Calculate Statistics]
-    
-    CalcStats --> CountActive[Count Active Tickets]
-    CountActive --> CountUpcoming[Count Upcoming Trips]
-    CountUpcoming --> CountTotal[Count Total Bookings]
-    CountTotal --> UpdateStatsUI[Update Statistics TextViews]
-    
-    UpdateStatsUI --> CheckEmpty{Tickets Empty?}
-    CheckEmpty -->|Yes| ShowEmptyView[Show Empty State]
-    ShowEmptyView --> End2([No Tickets])
-    CheckEmpty -->|No| UpdateAdapter[adapter.setItems tickets]
-    
-    UpdateAdapter --> DisplayTicketList[Display Ticket Cards]
-    DisplayTicketList --> WaitTicketAction[Wait for Action]
-    WaitTicketAction --> BackPressed[User Clicks Back]
-    BackPressed --> ReturnProfile[Return to ProfileFragment]
-    ReturnProfile --> WaitAction
-    
-    UserAction -->|Clicks Settings| ShowSettingsToast[Show "Settings clicked"]
-    ShowSettingsToast --> WaitAction
-    
-    UserAction -->|Navigates Away| End3([Profile Session End])
-    
-    style Start fill:#90EE90
-    style End1 fill:#FFB6C1
-    style End2 fill:#FFA500
-    style End3 fill:#98FB98
-    style ShowErrorToast fill:#FFE4B5
-    style ShowFailToast fill:#FFE4B5
-    style ShowNetworkError fill:#FFE4B5
-    style CallProfileAPI fill:#87CEEB
-    style CallTicketsAPI fill:#87CEEB
-    style ShowProgress fill:#E6E6FA
-    style ShowTicketProgress fill:#E6E6FA
 ```
 
 ---
