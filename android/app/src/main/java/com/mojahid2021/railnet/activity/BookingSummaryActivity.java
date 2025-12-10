@@ -37,6 +37,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
         android.view.View cardPassenger = findViewById(R.id.cardPassenger);
         android.widget.TextView tvPriceView = findViewById(R.id.tvPrice);
         Button btnPay = findViewById(R.id.btnPay);
+        android.widget.TextView tvError = findViewById(R.id.tvError);
 
         // New professional UI elements
         TextView tvTicketId = findViewById(R.id.tvTicketId);
@@ -103,10 +104,16 @@ public class BookingSummaryActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                     Log.d("Booking", "onResponse called, isSuccessful: " + response.isSuccessful() + ", code: " + response.code());
+                    // Hide progress and re-enable button
+                    progressBooking.setVisibility(android.view.View.GONE);
+                    btnConfirm.setEnabled(true);
+                    tvError.setVisibility(android.view.View.GONE); // Hide any previous error
+
                     if (response.isSuccessful()) {
                         ResponseBody rb = response.body();
                         if (rb == null) {
-                            //tvSummary.setText(getString(R.string.booking_failed_empty));
+                            tvError.setText(getString(R.string.booking_failed_empty));
+                            tvError.setVisibility(android.view.View.VISIBLE);
                             return;
                         }
                         try (ResponseBody bodyRes = rb) {
@@ -164,32 +171,36 @@ public class BookingSummaryActivity extends AppCompatActivity {
                             progressBooking.setVisibility(android.view.View.GONE);
                         } catch (Exception ex) {
                             Log.e("Booking", "parse error", ex);
-                            //tvSummary.setText(getString(R.string.booking_response_error));
-                            progressBooking.setVisibility(android.view.View.GONE);
-                            btnConfirm.setEnabled(true);
+                            tvError.setText(getString(R.string.booking_response_error));
+                            tvError.setVisibility(android.view.View.VISIBLE);
                         }
                     } else {
                         Log.d("Booking", "Response not successful, code: " + response.code());
+                        String errorMessage = getString(R.string.booking_failed_code, response.code());
                         try {
                             if (response.errorBody() != null) {
                                 String errorBody = response.errorBody().string();
                                 Log.d("Booking", "Error body: " + errorBody);
+                                // Try to extract meaningful error message from response
+                                if (!errorBody.isEmpty()) {
+                                    errorMessage = "Booking failed: " + errorBody;
+                                }
                             }
                         } catch (Exception e) {
                             Log.e("Booking", "Failed to read error body", e);
                         }
-                        //tvSummary.setText(getString(R.string.booking_failed_code, response.code()));
-                        progressBooking.setVisibility(android.view.View.GONE);
-                        btnConfirm.setEnabled(true);
+                        tvError.setText(errorMessage);
+                        tvError.setVisibility(android.view.View.VISIBLE);
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ResponseBody> call, Throwable t) {
                     Log.e("Booking", "error", t);
-                    //tvSummary.setText(getString(R.string.network_error_booking, t.getMessage()));
                     progressBooking.setVisibility(android.view.View.GONE);
                     btnConfirm.setEnabled(true);
+                    tvError.setText(getString(R.string.network_error_booking, t.getMessage()));
+                    tvError.setVisibility(android.view.View.VISIBLE);
                 }
             });
         });
@@ -219,12 +230,15 @@ public class BookingSummaryActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call, retrofit2.Response<com.mojahid2021.railnet.network.PaymentInitiateResponse> response) {
                     progressBooking.setVisibility(android.view.View.GONE);
+                    btnPay.setEnabled(true);
+                    tvError.setVisibility(android.view.View.GONE); // Hide any previous error
+
                     if (response.isSuccessful()) {
                         com.mojahid2021.railnet.network.PaymentInitiateResponse pr = response.body();
                         if (pr == null) {
                             Log.e("Payment", "initiatePayment: parsed response is null");
-                            //tvSummary.setText(getString(R.string.booking_failed_empty));
-                            btnPay.setEnabled(true);
+                            tvError.setText(getString(R.string.booking_failed_empty));
+                            tvError.setVisibility(android.view.View.VISIBLE);
                             return;
                         }
                         Log.d("Payment", "parsed initiatePayment: paymentUrl=" + pr.paymentUrl + ", transactionId=" + pr.transactionId);
@@ -234,29 +248,35 @@ public class BookingSummaryActivity extends AppCompatActivity {
                             startActivity(intent);
                         } else {
                             Log.e("Payment", "initiatePayment: missing paymentUrl in parsed response");
-                            //tvSummary.setText("Payment initiation failed");
-                            btnPay.setEnabled(true);
+                            tvError.setText("Payment initiation failed: Missing payment URL");
+                            tvError.setVisibility(android.view.View.VISIBLE);
                         }
                     } else {
                         // Try to read error body for debugging
                         String errBody = null;
+                        String errorMessage = "Payment initiation failed: " + response.code();
                         try {
                             if (response.errorBody() != null) errBody = response.errorBody().string();
+                            Log.w("Payment", "failed to read errorBody: " + errBody);
+                            if (errBody != null && !errBody.isEmpty()) {
+                                errorMessage = "Payment failed: " + errBody;
+                            }
                         } catch (Exception e) {
                             Log.w("Payment", "failed to read errorBody", e);
                         }
                         Log.e("Payment", "initiatePayment failed: code=" + response.code() + ", errorBody=" + errBody);
-                        //tvSummary.setText("Payment initiation failed: " + response.code());
-                        btnPay.setEnabled(true);
+                        tvError.setText(errorMessage);
+                        tvError.setVisibility(android.view.View.VISIBLE);
                     }
                 }
 
                 @Override
                 public void onFailure(Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call, Throwable t) {
                     progressBooking.setVisibility(android.view.View.GONE);
-                    Log.e("Payment", "initiatePayment network error", t);
-                    //tvSummary.setText(getString(R.string.network_error_booking, t.getMessage()));
                     btnPay.setEnabled(true);
+                    Log.e("Payment", "initiatePayment network error", t);
+                    tvError.setText(getString(R.string.network_error_booking, t.getMessage()));
+                    tvError.setVisibility(android.view.View.VISIBLE);
                 }
             });
         });
