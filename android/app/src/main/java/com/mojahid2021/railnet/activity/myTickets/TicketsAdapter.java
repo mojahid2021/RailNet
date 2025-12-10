@@ -1,9 +1,16 @@
 package com.mojahid2021.railnet.activity.myTickets;
 
+import android.content.Context;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -66,6 +73,11 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.VH> {
         if (ut.pricing != null) {
             holder.tvPrice.setText(String.format(java.util.Locale.getDefault(), "%s %.2f", (ut.pricing.currency != null ? ut.pricing.currency : "BDT"), ut.pricing.amount));
         }
+
+        // Set up print button click listener
+        holder.btnPrint.setOnClickListener(v -> {
+            printTicket(holder.itemView.getContext(), ut);
+        });
     }
 
     @Override
@@ -75,6 +87,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.VH> {
 
     public static class VH extends RecyclerView.ViewHolder {
         final TextView tvTicketId, tvStatus, tvPaymentStatus, tvTrain, tvSeat, tvDate, tvPrice;
+        final Button btnPrint;
 
         VH(@NonNull View itemView) {
             super(itemView);
@@ -85,6 +98,34 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.VH> {
             tvSeat = itemView.findViewById(R.id.tvSeat);
             tvDate = itemView.findViewById(R.id.tvDate);
             tvPrice = itemView.findViewById(R.id.tvPrice);
+            btnPrint = itemView.findViewById(R.id.btnPrint);
+        }
+    }
+
+    private void printTicket(Context context, UserTicket ut) {
+        try {
+            // Show printing message
+            Toast.makeText(context, context.getString(R.string.printing_ticket), Toast.LENGTH_SHORT).show();
+
+            // Use Android's PrintManager to print the ticket
+            PrintManager printManager = (PrintManager) context.getSystemService(Context.PRINT_SERVICE);
+            if (printManager == null) {
+                Toast.makeText(context, "Print service not available", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            PrintDocumentAdapter adapter = new TicketPrintDocumentAdapter(context, ut);
+            PrintAttributes.Builder builder = new PrintAttributes.Builder();
+            builder.setMediaSize(PrintAttributes.MediaSize.ISO_A4);
+            builder.setResolution(new PrintAttributes.Resolution("pdf", "pdf", 600, 600));
+            builder.setMinMargins(PrintAttributes.Margins.NO_MARGINS);
+
+            String jobName = "RailNet_Ticket_" + (ut.ticket != null && ut.ticket.ticketId != null ? ut.ticket.ticketId : "Unknown");
+            printManager.print(jobName, adapter, builder.build());
+
+        } catch (Exception e) {
+            Log.e("TicketsAdapter", "Error printing ticket", e);
+            Toast.makeText(context, "Error printing ticket: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 }

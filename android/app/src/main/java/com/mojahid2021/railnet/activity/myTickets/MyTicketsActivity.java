@@ -3,7 +3,6 @@ package com.mojahid2021.railnet.activity.myTickets;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -11,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
@@ -34,7 +32,7 @@ public class MyTicketsActivity extends AppCompatActivity {
     private static final String TAG = "MyTicketsActivity";
 
     private RecyclerView rv;
-    private ProgressBar progress;
+    private View progress;
     private TextView tvEmpty;
     private TicketsAdapter adapter;
 
@@ -50,17 +48,24 @@ public class MyTicketsActivity extends AppCompatActivity {
         });
 
         rv = findViewById(R.id.recyclerViewTickets);
-        progress = findViewById(R.id.progressLoading);
+        progress = findViewById(R.id.progressContainer);
         tvEmpty = findViewById(R.id.tvEmpty);
 
-        // Use GridLayoutManager for a grid of ticket cards (not a simple list).
-        int spanCount = 2; // two columns; adjust if you want different behavior
-        GridLayoutManager glm = new GridLayoutManager(this, spanCount);
-        rv.setLayoutManager(glm);
+        // Use LinearLayoutManager for vertical list view instead of grid
+        androidx.recyclerview.widget.LinearLayoutManager layoutManager = new androidx.recyclerview.widget.LinearLayoutManager(this);
+        layoutManager.setOrientation(androidx.recyclerview.widget.LinearLayoutManager.VERTICAL);
+        rv.setLayoutManager(layoutManager);
 
-        // Add spacing between grid items (8dp)
-        int spacing = dpToPx(8);
-        rv.addItemDecoration(new GridSpacingItemDecoration(spanCount, spacing, true));
+        // Add simple vertical spacing between items (16dp)
+        int verticalSpacing = dpToPx(16);
+        rv.addItemDecoration(new androidx.recyclerview.widget.RecyclerView.ItemDecoration() {
+            @Override
+            public void getItemOffsets(android.graphics.Rect outRect, android.view.View view, androidx.recyclerview.widget.RecyclerView parent, androidx.recyclerview.widget.RecyclerView.State state) {
+                if (parent.getChildAdapterPosition(view) > 0) { // Add top margin to all items except first
+                    outRect.top = verticalSpacing;
+                }
+            }
+        });
 
         adapter = new TicketsAdapter();
         rv.setAdapter(adapter);
@@ -125,40 +130,5 @@ public class MyTicketsActivity extends AppCompatActivity {
     private int dpToPx(int dp) {
         float density = getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
-    }
-
-    // Simple item decoration that adds consistent spacing around grid items
-    private static class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
-        private final int spanCount;
-        private final int spacing;
-        private final boolean includeEdge;
-
-        GridSpacingItemDecoration(int spanCount, int spacing, boolean includeEdge) {
-            this.spanCount = spanCount;
-            this.spacing = spacing;
-            this.includeEdge = includeEdge;
-        }
-
-        @Override
-        public void getItemOffsets(android.graphics.Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-            int position = parent.getChildAdapterPosition(view); // item position
-            int column = position % spanCount; // item column
-
-            if (includeEdge) {
-                outRect.left = spacing - column * spacing / spanCount; // spacing - column * ((1f / spanCount) * spacing)
-                outRect.right = (column + 1) * spacing / spanCount; // (column + 1) * ((1f / spanCount) * spacing)
-
-                if (position < spanCount) { // top edge
-                    outRect.top = spacing;
-                }
-                outRect.bottom = spacing; // item bottom
-            } else {
-                outRect.left = column * spacing / spanCount; // column * ((1f / spanCount) * spacing)
-                outRect.right = spacing - (column + 1) * spacing / spanCount; // spacing - (column + 1) * ((1f / spanCount) * spacing)
-                if (position >= spanCount) {
-                    outRect.top = spacing; // item top
-                }
-            }
-        }
     }
 }

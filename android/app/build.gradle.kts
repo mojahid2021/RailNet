@@ -63,6 +63,8 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.okhttp)
     implementation(libs.core.ktx)
+    // ZXing core for QR generation used by ticket print
+    implementation("com.google.zxing:core:3.5.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

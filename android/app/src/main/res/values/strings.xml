@@ -210,4 +210,8 @@
     <string name="no_tickets_found">No tickets found</string>
     <string name="no_tickets_icon">No tickets icon</string>
     <string name="book_your_first_ticket">Book your first ticket to get started</string>
+    <string name="print_ticket">Print</string>
+    <string name="printing_ticket">Printing ticket...</string>
+    <string name="ticket_printed_successfully">Ticket printed successfully</string>
+    <string name="print_failed">Print failed</string>
 </resources>
