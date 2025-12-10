@@ -3,6 +3,7 @@ package com.mojahid2021.railnet.activity.myTickets;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -34,6 +35,11 @@ public class MyTicketsActivity extends AppCompatActivity {
     private RecyclerView rv;
     private View progress;
     private TextView tvEmpty;
+    private TextView tvError;
+    private TextView tvActiveTickets;
+    private TextView tvUpcomingTrips;
+    private TextView tvTotalBookings;
+    private ImageView btnBack;
     private TicketsAdapter adapter;
 
     @Override
@@ -47,9 +53,18 @@ public class MyTicketsActivity extends AppCompatActivity {
             return insets;
         });
 
+        // Initialize views
         rv = findViewById(R.id.recyclerViewTickets);
         progress = findViewById(R.id.progressContainer);
         tvEmpty = findViewById(R.id.tvEmpty);
+        tvError = findViewById(R.id.tvError);
+        tvActiveTickets = findViewById(R.id.tvActiveTickets);
+        tvUpcomingTrips = findViewById(R.id.tvUpcomingTrips);
+        tvTotalBookings = findViewById(R.id.tvTotalBookings);
+        btnBack = findViewById(R.id.btnBack);
+
+        // Set up back button
+        btnBack.setOnClickListener(v -> finish());
 
         // Use LinearLayoutManager for vertical list view instead of grid
         androidx.recyclerview.widget.LinearLayoutManager layoutManager = new androidx.recyclerview.widget.LinearLayoutManager(this);
@@ -77,12 +92,22 @@ public class MyTicketsActivity extends AppCompatActivity {
         progress.setVisibility(loading ? View.VISIBLE : View.GONE);
         rv.setVisibility(loading ? View.GONE : View.VISIBLE);
         tvEmpty.setVisibility(View.GONE);
+        tvError.setVisibility(View.GONE);
     }
 
     private void showEmpty() {
         progress.setVisibility(View.GONE);
         rv.setVisibility(View.GONE);
         tvEmpty.setVisibility(View.VISIBLE);
+        tvError.setVisibility(View.GONE);
+    }
+
+    private void showError(String errorMessage) {
+        progress.setVisibility(View.GONE);
+        rv.setVisibility(View.GONE);
+        tvEmpty.setVisibility(View.GONE);
+        tvError.setText(errorMessage);
+        tvError.setVisibility(View.VISIBLE);
     }
 
     private void fetchTickets() {
@@ -100,6 +125,10 @@ public class MyTicketsActivity extends AppCompatActivity {
                         Gson gson = new Gson();
                         UserTicket[] arr = gson.fromJson(body, UserTicket[].class);
                         List<UserTicket> list = Arrays.asList(arr != null ? arr : new UserTicket[0]);
+
+                        // Update statistics
+                        updateStatistics(list);
+
                         if (list.isEmpty()) {
                             showEmpty();
                         } else {
@@ -107,13 +136,24 @@ public class MyTicketsActivity extends AppCompatActivity {
                         }
                     } catch (IOException | JsonSyntaxException e) {
                         Log.e(TAG, "Failed to parse tickets: " + e.getMessage(), e);
-                        showEmpty();
+                        showError("Failed to load tickets. Please try again.");
                     } finally {
                         rb.close();
                     }
                 } else {
                     Log.e(TAG, "Tickets request failed: code=" + response.code());
-                    showEmpty();
+                    String errorMessage = "Failed to load tickets";
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            if (!errorBody.isEmpty()) {
+                                errorMessage = "Error: " + errorBody;
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Failed to read error body", e);
+                    }
+                    showError(errorMessage);
                 }
             }
 
@@ -121,9 +161,43 @@ public class MyTicketsActivity extends AppCompatActivity {
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 showLoading(false);
                 Log.e(TAG, "Tickets request error: " + t.getMessage(), t);
-                showEmpty();
+                showError("Network error. Please check your connection and try again.");
             }
         });
+    }
+
+    private void updateStatistics(List<UserTicket> tickets) {
+        int activeCount = 0;
+        int upcomingCount = 0;
+        int totalCount = tickets.size();
+
+        // Get current date in YYYY-MM-DD format for comparison
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+        String todayStr = sdf.format(new java.util.Date());
+
+        for (UserTicket ticket : tickets) {
+            // Count active tickets (confirmed status)
+            if (ticket.ticket != null && "confirmed".equalsIgnoreCase(ticket.ticket.status)) {
+                activeCount++;
+            }
+
+            // Count upcoming trips (future dates)
+            if (ticket.journey != null && ticket.journey.schedule != null && ticket.journey.schedule.date != null) {
+                try {
+                    String tripDateStr = ticket.journey.schedule.date;
+                    // Simple string comparison for dates in YYYY-MM-DD format
+                    if (tripDateStr.compareTo(todayStr) >= 0) {
+                        upcomingCount++;
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed to parse date: " + ticket.journey.schedule.date, e);
+                }
+            }
+        }
+
+        tvActiveTickets.setText(String.valueOf(activeCount));
+        tvUpcomingTrips.setText(String.valueOf(upcomingCount));
+        tvTotalBookings.setText(String.valueOf(totalCount));
     }
 
     // Convert dp to pixels for spacing

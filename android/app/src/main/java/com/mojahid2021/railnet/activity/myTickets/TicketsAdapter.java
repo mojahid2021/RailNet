@@ -46,30 +46,49 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.VH> {
         UserTicket ut = items.get(position);
         if (ut == null) return;
 
-        // Bind simple fields with null checks
+        // Bind ticket ID and status with color coding
         if (ut.ticket != null) {
-            holder.tvTicketId.setText(ut.ticket.ticketId != null ? ut.ticket.ticketId : "-");
-            holder.tvStatus.setText(ut.ticket.status != null ? ut.ticket.status : "-");
-            holder.tvPaymentStatus.setText(ut.ticket.paymentStatus != null ? ("Payment: " + ut.ticket.paymentStatus) : "Payment: -");
+            holder.tvTicketId.setText(ut.ticket.ticketId != null ? ut.ticket.ticketId : "N/A");
+            String status = ut.ticket.status != null ? ut.ticket.status : "Unknown";
+            holder.tvStatus.setText(getStatusWithEmoji(status));
+            holder.tvStatus.setTextColor(getStatusColor(status));
         } else {
-            holder.tvPaymentStatus.setText("Payment: -");
+            holder.tvStatus.setText("Unknown");
+            holder.tvStatus.setTextColor(android.graphics.Color.GRAY);
         }
 
+        // Bind payment status with color coding
+        if (ut.ticket != null && ut.ticket.paymentStatus != null) {
+            String paymentStatus = ut.ticket.paymentStatus;
+            holder.tvPaymentStatus.setText(getPaymentStatusText(paymentStatus));
+            holder.tvPaymentStatus.setTextColor(getPaymentStatusColor(paymentStatus));
+        } else {
+            holder.tvPaymentStatus.setText("Unknown");
+            holder.tvPaymentStatus.setTextColor(android.graphics.Color.GRAY);
+        }
+
+        // Bind train and route information
         if (ut.journey != null) {
             String train = (ut.journey.train != null ? (ut.journey.train.name != null ? ut.journey.train.name : "") + (ut.journey.train.number != null ? (" (" + ut.journey.train.number + ")") : "") : "-");
             String route = (ut.journey.route != null ? (ut.journey.route.from != null ? ut.journey.route.from : "") + " → " + (ut.journey.route.to != null ? ut.journey.route.to : "") : "-");
             holder.tvTrain.setText(train + "  " + route);
 
             if (ut.journey.schedule != null) {
-                holder.tvDate.setText(ut.journey.schedule.date != null ? ut.journey.schedule.date : "-");
+                String dateTime = ut.journey.schedule.date != null ? ut.journey.schedule.date : "-";
+                if (ut.journey.schedule.departureTime != null) {
+                    dateTime += " • " + ut.journey.schedule.departureTime;
+                }
+                holder.tvDate.setText(dateTime);
             }
         }
 
+        // Bind seat information
         if (ut.seat != null) {
             String seat = (ut.seat.compartment != null ? ut.seat.compartment + " " : "") + (ut.seat.number != null ? ut.seat.number : "");
             holder.tvSeat.setText(seat);
         }
 
+        // Bind pricing information
         if (ut.pricing != null) {
             holder.tvPrice.setText(String.format(java.util.Locale.getDefault(), "%s %.2f", (ut.pricing.currency != null ? ut.pricing.currency : "BDT"), ut.pricing.amount));
         }
@@ -126,6 +145,70 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.VH> {
         } catch (Exception e) {
             Log.e("TicketsAdapter", "Error printing ticket", e);
             Toast.makeText(context, "Error printing ticket: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String getStatusWithEmoji(String status) {
+        if (status == null) return "Unknown";
+        switch (status.toLowerCase()) {
+            case "confirmed":
+                return "✅ Confirmed";
+            case "pending":
+                return "⏳ Pending";
+            case "cancelled":
+                return "❌ Cancelled";
+            case "completed":
+                return "🎉 Completed";
+            default:
+                return status;
+        }
+    }
+
+    private int getStatusColor(String status) {
+        if (status == null) return android.graphics.Color.GRAY;
+        switch (status.toLowerCase()) {
+            case "confirmed":
+                return android.graphics.Color.parseColor("#4CAF50"); // Green
+            case "pending":
+                return android.graphics.Color.parseColor("#FF9800"); // Orange
+            case "cancelled":
+                return android.graphics.Color.parseColor("#F44336"); // Red
+            case "completed":
+                return android.graphics.Color.parseColor("#2196F3"); // Blue
+            default:
+                return android.graphics.Color.GRAY;
+        }
+    }
+
+    private String getPaymentStatusText(String paymentStatus) {
+        if (paymentStatus == null) return "Unknown";
+        switch (paymentStatus.toLowerCase()) {
+            case "paid":
+                return "Paid";
+            case "pending":
+                return "Pending";
+            case "failed":
+                return "Failed";
+            case "refunded":
+                return "Refunded";
+            default:
+                return paymentStatus;
+        }
+    }
+
+    private int getPaymentStatusColor(String paymentStatus) {
+        if (paymentStatus == null) return android.graphics.Color.GRAY;
+        switch (paymentStatus.toLowerCase()) {
+            case "paid":
+                return android.graphics.Color.parseColor("#4CAF50"); // Green
+            case "pending":
+                return android.graphics.Color.parseColor("#FF9800"); // Orange
+            case "failed":
+                return android.graphics.Color.parseColor("#F44336"); // Red
+            case "refunded":
+                return android.graphics.Color.parseColor("#2196F3"); // Blue
+            default:
+                return android.graphics.Color.GRAY;
         }
     }
 }
