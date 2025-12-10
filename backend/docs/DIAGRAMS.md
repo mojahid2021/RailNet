@@ -20,12 +20,12 @@ This diagram shows the database models and their relationships using Prisma ORM.
 ```mermaid
 classDiagram
     class User {
-        +Int id
-        +String email
-        +String firstName
-        +String lastName
-        +String phone
-        +String address
+        +Int id PK
+        +String email UK
+        +String? firstName
+        +String? lastName
+        +String? phone
+        +String? address
         +String password
         +String role
         +DateTime createdAt
@@ -33,8 +33,8 @@ classDiagram
     }
 
     class Station {
-        +Int id
-        +String name
+        +Int id PK
+        +String name UK
         +String city
         +Float latitude
         +Float longitude
@@ -43,28 +43,28 @@ classDiagram
     }
 
     class TrainRoute {
-        +Int id
-        +String name
-        +Int startStationId
-        +Int endStationId
+        +Int id PK
+        +String name UK
+        +Int startStationId FK
+        +Int endStationId FK
         +DateTime createdAt
         +DateTime updatedAt
     }
 
     class RouteStation {
-        +Int id
-        +Int trainRouteId
-        +Int previousStationId
-        +Int currentStationId
-        +Int nextStationId
-        +Float distance
+        +Int id PK
+        +Int trainRouteId FK
+        +Int? previousStationId FK
+        +Int currentStationId FK
+        +Int? nextStationId FK
+        +Float? distance
         +Float distanceFromStart
         +DateTime createdAt
         +DateTime updatedAt
     }
 
     class Compartment {
-        +Int id
+        +Int id PK
         +String name
         +String class
         +String type
@@ -75,26 +75,26 @@ classDiagram
     }
 
     class Train {
-        +Int id
+        +Int id PK
         +String name
-        +String number
-        +Int trainRouteId
+        +String number UK
+        +Int trainRouteId FK
         +DateTime createdAt
         +DateTime updatedAt
     }
 
     class TrainCompartment {
-        +Int id
-        +Int trainId
-        +Int compartmentId
+        +Int id PK
+        +Int trainId FK
+        +Int compartmentId FK
         +Int quantity
         +DateTime createdAt
         +DateTime updatedAt
     }
 
     class Seat {
-        +Int id
-        +Int trainCompartmentId
+        +Int id PK
+        +Int trainCompartmentId FK
         +String seatNumber
         +Boolean isAvailable
         +DateTime createdAt
@@ -102,9 +102,9 @@ classDiagram
     }
 
     class TrainSchedule {
-        +Int id
-        +Int trainId
-        +Int trainRouteId
+        +Int id PK
+        +Int trainId FK
+        +Int trainRouteId FK
         +DateTime date
         +String time
         +DateTime createdAt
@@ -112,25 +112,25 @@ classDiagram
     }
 
     class ScheduleStation {
-        +Int id
-        +Int trainScheduleId
-        +Int stationId
-        +String arrivalTime
-        +String departureTime
+        +Int id PK
+        +Int trainScheduleId FK
+        +Int stationId FK
+        +String? arrivalTime
+        +String? departureTime
         +Int sequence
         +DateTime createdAt
         +DateTime updatedAt
     }
 
     class Ticket {
-        +Int id
-        +String ticketId
-        +Int userId
-        +Int trainScheduleId
-        +Int fromStationId
-        +Int toStationId
-        +Int seatId
-        +Int trainCompartmentId
+        +Int id PK
+        +String ticketId UK
+        +Int userId FK
+        +Int trainScheduleId FK
+        +Int fromStationId FK
+        +Int toStationId FK
+        +Int seatId FK UK
+        +Int trainCompartmentId FK
         +String seatNumber
         +String passengerName
         +Int passengerAge
@@ -138,35 +138,35 @@ classDiagram
         +Float price
         +String status
         +String paymentStatus
-        +DateTime expiresAt
-        +DateTime confirmedAt
+        +DateTime? expiresAt
+        +DateTime? confirmedAt
         +DateTime createdAt
         +DateTime updatedAt
     }
 
     class PaymentTransaction {
-        +String id
-        +Int ticketId
-        +String transactionId
-        +String sessionKey
+        +String id PK
+        +Int ticketId FK UK
+        +String transactionId UK
+        +String? sessionKey
         +Float amount
         +String currency
         +String status
-        +String paymentMethod
-        +String bankTransactionId
-        +String valId
-        +String cardType
-        +DateTime completedAt
-        +String gatewayUrl
-        +String errorMessage
-        +Json metadata
-        +Json sslcommerzData
+        +String? paymentMethod
+        +String? bankTransactionId
+        +String? valId
+        +String? cardType
+        +DateTime? completedAt
+        +String? gatewayUrl
+        +String? errorMessage
+        +Json? metadata
+        +Json? sslcommerzData
         +DateTime createdAt
         +DateTime updatedAt
     }
 
     class PaymentLog {
-        +String id
+        +String id PK
         +String transactionId
         +String action
         +Json details
@@ -174,9 +174,9 @@ classDiagram
     }
 
     class CompartmentBooking {
-        +Int id
-        +Int trainScheduleId
-        +Int trainCompartmentId
+        +Int id PK
+        +Int trainScheduleId FK
+        +Int trainCompartmentId FK
         +Int bookedSeats
         +Int totalSeats
         +DateTime createdAt
@@ -212,9 +212,11 @@ classDiagram
     TrainSchedule "1" --o "many" Ticket : tickets
     TrainSchedule "1" --o "many" CompartmentBooking : bookings
     
-    Seat "1" --o "0..1" Ticket : assigned
+    Seat "1" -- "0..1" Ticket : assigned
     
-    Ticket "1" --o "many" PaymentTransaction : payments
+    Ticket "1" -- "1" PaymentTransaction : payments
+    
+    PaymentTransaction "1" --o "many" PaymentLog : logs
 ```
 
 ---
@@ -919,7 +921,7 @@ erDiagram
         datetime updatedAt
     }
 
-    SEAT ||--o| TICKET : assigned
+    SEAT ||--|| TICKET : assigned
     SEAT {
         int id PK
         int trainCompartmentId FK
@@ -953,7 +955,7 @@ erDiagram
         datetime updatedAt
     }
 
-    TICKET ||--o{ PAYMENT_TRANSACTION : payments
+    TICKET ||--|| PAYMENT_TRANSACTION : payments
     TICKET {
         int id PK
         string ticketId UK
