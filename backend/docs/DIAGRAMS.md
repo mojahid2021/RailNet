@@ -2,6 +2,8 @@
 
 This directory contains comprehensive UML and activity diagrams for the RailNet backend system. These diagrams provide visual documentation of the system architecture, data models, and key business processes.
 
+> 🚀 **Quick Start**: See [DIAGRAMS_QUICK_REF.md](./DIAGRAMS_QUICK_REF.md) for a quick reference guide.
+
 ## Table of Contents
 
 - [Overview](#overview)
