@@ -117,11 +117,29 @@
     <string name="currency_symbol">৳</string>
     <string name="duration_label">Duration: </string>
 
+    <!-- Trains Activity -->
+    <string name="example_route_title">Dhaka → Chittagong</string>
+    <string name="example_date">Today, Dec 10</string>
+    <string name="loading_text">Loading...</string>
+    <string name="filter_trains">Filter trains</string>
+    <string name="finding_trains">Finding trains...</string>
+    <string name="no_trains_icon">No trains</string>
+    <string name="try_different_search">Try searching for a different date\nor route</string>
+
     <!-- Compartment Activity -->
     <string name="select_compartment">Select Compartment</string>
     <string name="select_seat">Select Seat</string>
     <string name="continue_to_booking">Continue to Booking</string>
     <string name="seat_example">A1</string>
+    <string name="compartment_icon">Compartment icon</string>
+    <string name="seat_icon">Seat icon</string>
+    <string name="choose_preferred_class">Choose your preferred class</string>
+    <string name="tap_available_seats">Tap on available seats</string>
+    <string name="seat_available">Available</string>
+    <string name="seat_booked">Booked</string>
+    <string name="seat_selected">Selected</string>
+    <string name="select_your_seat">Select Your Seat</string>
+    <string name="train_compartment_placeholder">Train Name • Compartment</string>
 
     <!-- Booking summary strings -->
     <string name="journey_title">Journey</string>
