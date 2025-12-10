@@ -2,12 +2,6 @@
 
 A comprehensive railway management system API built with Fastify and TypeScript, featuring JWT authentication, PostgreSQL database with Prisma ORM, and complete train scheduling and ticket booking functionality.
 
-## Documentation
-
-- **[API Documentation](./docs/API.md)** - Complete API endpoint reference with examples
-- **[UML & Activity Diagrams](./docs/DIAGRAMS.md)** - System architecture and workflow diagrams
-- **[Usage Examples](./docs/examples.md)** - Sample API requests and responses
-
 ## Features
 
 - **Authentication**: JWT-based authentication with role-based access control (user/admin)
