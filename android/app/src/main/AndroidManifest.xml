@@ -20,7 +20,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RailNet">
         <activity
-            android:name=".activity.myTickets.MyTicketsActivity"
+            android:name=".activity.MyTicketsActivity"
             android:exported="false" />
         <activity
             android:name=".activity.TrainsActivity"

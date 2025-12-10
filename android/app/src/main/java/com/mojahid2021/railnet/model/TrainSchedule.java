@@ -1,4 +1,4 @@
-package com.mojahid2021.railnet.home.model;
+package com.mojahid2021.railnet.model;
 
 import com.google.gson.annotations.SerializedName;
 

@@ -13,21 +13,16 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.mojahid2021.railnet.R;
-import com.mojahid2021.railnet.activity.myTickets.MyTicketsActivity;
+import com.mojahid2021.railnet.activity.MyTicketsActivity;
 import com.mojahid2021.railnet.network.ApiService;
 import com.mojahid2021.railnet.network.ApiClient;
 
 import org.json.JSONObject;
-
-import java.io.IOException;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;

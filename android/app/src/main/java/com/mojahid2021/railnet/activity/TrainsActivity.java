@@ -19,14 +19,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.mojahid2021.railnet.R;
-import com.mojahid2021.railnet.home.TrainScheduleAdapter;
-import com.mojahid2021.railnet.home.model.TrainSchedule;
+import com.mojahid2021.railnet.adapter.TrainScheduleAdapter;
+import com.mojahid2021.railnet.model.TrainSchedule;
 import com.mojahid2021.railnet.network.ApiClient;
 import com.mojahid2021.railnet.network.ApiService;
-import com.mojahid2021.railnet.util.DateTimeUtils;
 
 import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.io.IOException;

@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/primaryBackground"
-    tools:context=".activity.myTickets.MyTicketsActivity">
+    tools:context=".activity.MyTicketsActivity">
 
     <!-- Custom Header -->
     <RelativeLayout

@@ -1,4 +1,4 @@
-package com.mojahid2021.railnet.activity.myTickets;
+package com.mojahid2021.railnet.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -24,6 +24,7 @@ import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.mojahid2021.railnet.model.UserTicket;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

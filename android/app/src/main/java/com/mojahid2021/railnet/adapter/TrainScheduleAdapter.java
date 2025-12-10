@@ -1,4 +1,4 @@
-package com.mojahid2021.railnet.home;
+package com.mojahid2021.railnet.adapter;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mojahid2021.railnet.R;
-import com.mojahid2021.railnet.home.model.TrainSchedule;
+import com.mojahid2021.railnet.model.TrainSchedule;
 import com.mojahid2021.railnet.util.DateTimeUtils;
 
 import java.util.ArrayList;

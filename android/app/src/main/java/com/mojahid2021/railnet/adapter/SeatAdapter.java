@@ -1,4 +1,4 @@
-package com.mojahid2021.railnet.home;
+package com.mojahid2021.railnet.adapter;
 
 import android.view.LayoutInflater;
 import android.view.View;

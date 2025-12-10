@@ -1,4 +1,4 @@
-package com.mojahid2021.railnet.activity.myTickets;
+package com.mojahid2021.railnet.model;
 
 /**
  * Model classes that match the API response for GET /tickets
@@ -24,13 +24,30 @@ public class UserTicket {
         public Route route;
         public Schedule schedule;
 
-        public static class Train { public String name; public String number; }
-        public static class Route { public String from; public String to; }
-        public static class Schedule { public String date; public String departureTime; }
+        public static class Train {
+            public String name;
+            public String number;
+        }
+
+        public static class Route {
+            public String from;
+            public String to;
+        }
+
+        public static class Schedule {
+            public String date;
+            public String departureTime;
+        }
     }
 
-    public static class Seat { public String number; public String compartment; }
+    public static class Seat {
+        public String number;
+        public String compartment;
+    }
 
-    public static class Pricing { public double amount; public String currency; }
+    public static class Pricing {
+        public double amount;
+        public String currency;
+    }
 }
 

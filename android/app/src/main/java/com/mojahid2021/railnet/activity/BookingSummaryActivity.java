@@ -99,10 +99,10 @@ public class BookingSummaryActivity extends AppCompatActivity {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             v.setPadding(
-                insets.getInsets(WindowInsetsCompat.Type.systemBars()).left,
-                insets.getInsets(WindowInsetsCompat.Type.systemBars()).top,
-                insets.getInsets(WindowInsetsCompat.Type.systemBars()).right,
-                insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).left,
+                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).top,
+                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).right,
+                    insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
             );
             return insets;
         });
@@ -159,7 +159,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
      */
     private void setupGenderDropdown() {
         android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(
-            this, android.R.layout.simple_dropdown_item_1line, GENDERS);
+                this, android.R.layout.simple_dropdown_item_1line, GENDERS);
         spinnerGender.setAdapter(adapter);
     }
 
@@ -204,7 +204,8 @@ public class BookingSummaryActivity extends AppCompatActivity {
         int age = -1;
         try {
             age = Integer.parseInt(ageStr);
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+        }
 
         return new PassengerData(name, age, gender);
     }
@@ -229,7 +230,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
      */
     private void logBookingRequest(PassengerData data) {
         Log.d(TAG, String.format("Booking request: name=%s, age=%d, gender=%s, trainScheduleId=%d, compartmentId=%d, seatNumber=%s",
-            data.name, data.age, data.gender, trainScheduleId, compartmentId, seatNumber));
+                data.name, data.age, data.gender, trainScheduleId, compartmentId, seatNumber));
     }
 
     /**
@@ -240,7 +241,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
         btnConfirm.setEnabled(false);
 
         TicketRequest request = new TicketRequest(trainScheduleId, fromStationId, toStationId,
-            compartmentId, seatNumber, data.name, data.age, data.gender);
+                compartmentId, seatNumber, data.name, data.age, data.gender);
 
         Gson gson = new Gson();
         String jsonRequest = gson.toJson(request);
@@ -409,7 +410,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
         call.enqueue(new Callback<com.mojahid2021.railnet.network.PaymentInitiateResponse>() {
             @Override
             public void onResponse(Call<com.mojahid2021.railnet.network.PaymentInitiateResponse> call,
-                                 Response<com.mojahid2021.railnet.network.PaymentInitiateResponse> response) {
+                                   Response<com.mojahid2021.railnet.network.PaymentInitiateResponse> response) {
                 handlePaymentResponse(response);
             }
 
@@ -540,7 +541,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
                 int day = Integer.parseInt(parts[2]);
 
                 String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
                 return monthNames[month - 1] + " " + day + ", " + year;
             }
         } catch (Exception e) {
@@ -555,11 +556,16 @@ public class BookingSummaryActivity extends AppCompatActivity {
     private String getStatusWithEmoji(String status) {
         if (status == null) return "Unknown";
         switch (status.toLowerCase()) {
-            case "confirmed": return "✅ Confirmed";
-            case "pending": return "⏳ Pending";
-            case "cancelled": return "❌ Cancelled";
-            case "completed": return "🎉 Completed";
-            default: return status;
+            case "confirmed":
+                return "✅ Confirmed";
+            case "pending":
+                return "⏳ Pending";
+            case "cancelled":
+                return "❌ Cancelled";
+            case "completed":
+                return "🎉 Completed";
+            default:
+                return status;
         }
     }
 
@@ -590,7 +596,7 @@ public class BookingSummaryActivity extends AppCompatActivity {
         String passengerGender;
 
         TicketRequest(int trainScheduleId, int fromStationId, int toStationId, int compartmentId,
-                     String seatNumber, String passengerName, int passengerAge, String passengerGender) {
+                      String seatNumber, String passengerName, int passengerAge, String passengerGender) {
             this.trainScheduleId = trainScheduleId;
             this.fromStationId = fromStationId;
             this.toStationId = toStationId;

@@ -1,4 +1,4 @@
-package com.mojahid2021.railnet.activity.myTickets;
+package com.mojahid2021.railnet.activity;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.mojahid2021.railnet.R;
+import com.mojahid2021.railnet.adapter.TicketsAdapter;
+import com.mojahid2021.railnet.model.UserTicket;
 import com.mojahid2021.railnet.network.ApiClient;
 import com.mojahid2021.railnet.network.ApiService;
 

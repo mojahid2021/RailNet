@@ -20,7 +20,9 @@ import java.util.TimeZone;
  */
 public final class DateTimeUtils {
 
-    private DateTimeUtils() {}
+    private DateTimeUtils() {
+
+    }
 
     // Display date format used in HomeFragment
     private static final String DISPLAY_DATE_PATTERN = "EEE, MMM d, yyyy"; // e.g. Sat, Dec 6, 2025

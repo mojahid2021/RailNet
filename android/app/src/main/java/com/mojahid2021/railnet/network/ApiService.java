@@ -1,6 +1,6 @@
 package com.mojahid2021.railnet.network;
 
-import com.mojahid2021.railnet.home.model.Station;
+import com.mojahid2021.railnet.model.Station;
 
 import java.util.List;
 import java.util.Map;

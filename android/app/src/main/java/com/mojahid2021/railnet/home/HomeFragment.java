@@ -21,7 +21,7 @@ import android.widget.TextView;
 
 import com.mojahid2021.railnet.R;
 import com.mojahid2021.railnet.activity.TrainsActivity;
-import com.mojahid2021.railnet.home.model.Station;
+import com.mojahid2021.railnet.model.Station;
 import com.mojahid2021.railnet.network.ApiClient;
 import com.mojahid2021.railnet.network.ApiService;
 
