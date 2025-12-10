@@ -1016,7 +1016,7 @@ flowchart TD
     StationsResponse -->|Success| HideProgress2[Hide Loading]
     
     HideProgress2 --> ParseStations[Parse Station List]
-    ParseStations --> BuildMaps[Build stationByName & stationById Maps]
+    ParseStations --> BuildMaps[Build stationByName &amp; stationById Maps]
     BuildMaps --> ExtractNames[Extract Station Names]
     ExtractNames --> CreateAdapter[Create ArrayAdapter]
     CreateAdapter --> SetAdapters[Set Adapters to AutoCompleteTextViews]
@@ -1099,7 +1099,7 @@ flowchart TD
     
     CheckSize -->|Empty| ShowNoTrains[Show "No Trains Found"]
     ShowNoTrains --> End2([No Results])
-    CheckSize -->|Has Items| ConvertToList[Convert to List<TrainSchedule>]
+    CheckSize -->|Has Items| ConvertToList[Convert to List&lt;TrainSchedule&gt;]
     
     ConvertToList --> ShowRecycler[Show RecyclerView]
     ShowRecycler --> HideEmpty[Hide Empty State]
@@ -1203,7 +1203,7 @@ flowchart TD
     
     TicketsResponse -->|Success| HideTicketProgress3[Hide Progress]
     HideTicketProgress3 --> ParseTickets[Parse Ticket Array]
-    ParseTickets --> ConvertToList[Convert to List<UserTicket>]
+    ParseTickets --> ConvertToList[Convert to List&lt;UserTicket&gt;]
     ConvertToList --> CalcStats[Calculate Statistics]
     
     CalcStats --> CountActive[Count Active Tickets]
