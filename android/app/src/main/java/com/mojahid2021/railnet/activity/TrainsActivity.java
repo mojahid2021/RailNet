@@ -90,8 +90,9 @@ public class TrainsActivity extends AppCompatActivity {
          });
          rvSchedules.setAdapter(adapter);
 
-        ProgressBar progress = findViewById(R.id.progress);
-        TextView tvEmpty = findViewById(R.id.tvEmpty);
+        View progressContainer = findViewById(R.id.progressContainer);
+        View emptyContainer = findViewById(R.id.emptyContainer);
+        TextView tvTrainCount = findViewById(R.id.tvTrainCount);
 
         String fromName = getIntent().getStringExtra("fromStationName");
         String toName = getIntent().getStringExtra("toStationName");
@@ -105,9 +106,9 @@ public class TrainsActivity extends AppCompatActivity {
         if (fromId == null || toId == null || date == null) return;
 
         // Show loading
-        progress.setVisibility(View.VISIBLE);
+        progressContainer.setVisibility(View.VISIBLE);
         rvSchedules.setVisibility(View.GONE);
-        tvEmpty.setVisibility(View.GONE);
+        emptyContainer.setVisibility(View.GONE);
 
         // Fetch schedules as raw response body
         ApiService apiService = ApiClient.getRetrofit(this).create(ApiService.class);
@@ -115,12 +116,13 @@ public class TrainsActivity extends AppCompatActivity {
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                progress.setVisibility(View.GONE);
+                progressContainer.setVisibility(View.GONE);
                 if (response.isSuccessful()) {
                     ResponseBody rb = response.body();
                     if (rb == null) {
                         Log.e("TrainsActivity", "empty body");
-                        tvEmpty.setVisibility(View.VISIBLE);
+                        emptyContainer.setVisibility(View.VISIBLE);
+                        tvTrainCount.setText("0 Trains");
                         return;
                     }
                     try (ResponseBody bodyRes = rb) {
@@ -138,8 +140,9 @@ public class TrainsActivity extends AppCompatActivity {
                         }
 
                         if (array == null || array.size() == 0) {
-                            tvEmpty.setVisibility(View.VISIBLE);
+                            emptyContainer.setVisibility(View.VISIBLE);
                             rvSchedules.setVisibility(View.GONE);
+                            tvTrainCount.setText("0 Trains");
                             return;
                         }
 
@@ -148,23 +151,27 @@ public class TrainsActivity extends AppCompatActivity {
                         List<TrainSchedule> schedules = gson.fromJson(array, listType);
 
                         rvSchedules.setVisibility(View.VISIBLE);
-                        tvEmpty.setVisibility(View.GONE);
+                        emptyContainer.setVisibility(View.GONE);
+                        tvTrainCount.setText(schedules.size() + " Trains");
                         adapter.setItems(schedules);
 
                     } catch (IOException e) {
                         Log.e("TrainsActivity", "error reading body", e);
-                        tvEmpty.setVisibility(View.VISIBLE);
+                        emptyContainer.setVisibility(View.VISIBLE);
+                        tvTrainCount.setText("0 Trains");
                     }
                 } else {
                     Log.e("TrainsActivity", "search failed: " + response.code());
-                    tvEmpty.setVisibility(View.VISIBLE);
+                    emptyContainer.setVisibility(View.VISIBLE);
+                    tvTrainCount.setText("0 Trains");
                 }
             }
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
-                progress.setVisibility(View.GONE);
-                tvEmpty.setVisibility(View.VISIBLE);
+                progressContainer.setVisibility(View.GONE);
+                emptyContainer.setVisibility(View.VISIBLE);
+                tvTrainCount.setText("0 Trains");
                 Log.e("TrainsActivity", "network error", t);
             }
         });
